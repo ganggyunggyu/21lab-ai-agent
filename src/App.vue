@@ -9,7 +9,10 @@ import {
   NRadio
 } from 'naive-ui'
 import { generateText } from './service/chat.service'
-
+const formatMessage = (text) => {
+  if (!text) return ''
+  return text.replace(/\n/g, '<br/>')
+}
 
 const keyword = ref('')
 const service = ref<'gpt' | 'claude'>('gpt')
@@ -54,51 +57,38 @@ const copyMsg = (text) => {
     </header> -->
 
     <section class="chat-messages">
-      <n-scrollbar>
-        <div v-for="(msg, idx) in messages" :key="idx" :class="['message', msg.role]">
-          <div class="bubble">
-            <p class="chat-content">
-            {{ msg.content }}
-            </p>
-            <n-button
-              v-if="msg.role === 'bot'"
-              class="copy-btn"
-              size="small"
-              text
-              @click="copyMsg(msg.content)"
-            >
-              복사
-            </n-button>
-          </div>
-        </div>
-        <div v-for="(msg, idx) in messages" :key="idx" :class="['message', msg.role]">
-          <div class="bubble">
-            <p class="chat-content">
-            {{ msg.content }}
-            </p>
-            <n-button
-              v-if="msg.role === 'bot'"
-              class="copy-btn"
-              size="small"
-              text
-              @click="copyMsg(msg.content)"
-            >
-              복사
-            </n-button>
-          </div>
-        </div>
-      </n-scrollbar>
-    </section>
+  <n-scrollbar>
+    <div
+      v-for="(msg, idx) in messages"
+      :key="idx"
+      :class="['message', msg.role]"
+    >
+      <div class="bubble">
+        <div
+          class="chat-content"
+          v-html="formatMessage(msg.content)"
+        />
+        <n-button
+          v-if="msg.role === 'bot'"
+          class="copy-btn"
+          size="tiny"
+          tertiary
+          quaternary
+          style="margin-left: auto;"
+          @click="copyMsg(msg.content)"
+        >
+          복사
+        </n-button>
+      </div>
+    </div>
+  </n-scrollbar>
+</section>
 
     <footer class="chat-input">
-  <n-radio-group v-model:value="service" name="service-toggle" style="margin-right: 12px">
-    <n-radio value="gpt">GPT</n-radio>
-    <n-radio value="claude">Claude</n-radio>
-  </n-radio-group>
   <n-input
     v-model:value="keyword"
     placeholder="키워드를 입력하세요"
-    size="small"
+    
     @keyup.enter="handleGenerate"
   />
   <n-button :loading="isLoading" @click="handleGenerate">
@@ -174,5 +164,10 @@ const copyMsg = (text) => {
 }
 .chat-input .n-button{
   color: white;
+}
+
+.chat-content {
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 </style>
