@@ -28,16 +28,18 @@ const handleGenerate = async () => {
   messages.value.push({ role: 'user', content: input })
   keyword.value = ''
   isLoading.value = true
-
+  const loadingIndex = messages.value.length
+  messages.value.push({ role: 'bot', content: 'loading' }) 
   try {
     const res = await generateText({
-      service: 'gpt',
+      service: 'solar',
       keyword: input
     })
     const botResponse = res?.response || '(응답 없음)'
-    messages.value.push({ role: 'bot', content: botResponse })
+
+    messages.value[loadingIndex] = { role: 'bot', content: botResponse }
   } catch (error) {
-    messages.value.push({ role: 'bot', content: '⚠️ 오류가 발생했어요.' })
+    messages.value[loadingIndex] = { role: 'bot', content: '⚠️ 오류가 발생했어요. 다시 시도해주세요!' }
   } finally {
     isLoading.value = false
   }
@@ -64,10 +66,10 @@ const copyMsg = (text) => {
       :class="['message', msg.role]"
     >
       <div class="bubble">
-        <div
-          class="chat-content"
-          v-html="formatMessage(msg.content)"
-        />
+<div
+  class="chat-content"
+  v-html="msg.content === 'loading' ? '<span class=loading-dots></span>' : formatMessage(msg.content)"
+/>
         <n-button
           v-if="msg.role === 'bot'"
           class="copy-btn"
