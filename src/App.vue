@@ -14,8 +14,13 @@ const formatMessage = (text) => {
   return text.replace(/\n/g, '<br/>')
 }
 
+const scrollToBottom = async () => {
+  await nextTick()
+  bottomAnchor.value?.scrollIntoView({ behavior: 'smooth' })
+}
+
 const keyword = ref('')
-const service = ref<'gpt' | 'claude'>('gpt')
+const service = ref<'gpt' | 'claude' | 'solar'>('gpt')
 const messages = ref([
   { role: 'bot', content: '원고 생성 챗봇입니다. 키워드를 입력하세요.' }
 ])
@@ -25,11 +30,18 @@ const handleGenerate = async () => {
   if (!keyword.value.trim()) return
 
   const input = keyword.value
+  
   messages.value.push({ role: 'user', content: input })
+  
+
+
   keyword.value = ''
   isLoading.value = true
   const loadingIndex = messages.value.length
+
   messages.value.push({ role: 'bot', content: 'loading' }) 
+  
+
   try {
     const res = await generateText({
       service: 'solar',
@@ -38,8 +50,12 @@ const handleGenerate = async () => {
     const botResponse = res?.response || '(응답 없음)'
 
     messages.value[loadingIndex] = { role: 'bot', content: botResponse }
+    
+
   } catch (error) {
     messages.value[loadingIndex] = { role: 'bot', content: '⚠️ 오류가 발생했어요. 다시 시도해주세요!' }
+    
+
   } finally {
     isLoading.value = false
   }
@@ -66,10 +82,16 @@ const copyMsg = (text) => {
       :class="['message', msg.role]"
     >
       <div class="bubble">
-<div
-  class="chat-content"
-  v-html="msg.content === 'loading' ? '<span class=loading-dots></span>' : formatMessage(msg.content)"
-/>
+        <div class="chat-content">
+          <template v-if="msg.content === 'loading'">
+            <div class="typing-dots">
+              <span></span><span></span><span></span>
+            </div>
+          </template>
+          <template v-else>
+            <div v-html="formatMessage(msg.content)" />
+          </template>
+        </div>
         <n-button
           v-if="msg.role === 'bot'"
           class="copy-btn"
@@ -84,6 +106,8 @@ const copyMsg = (text) => {
       </div>
     </div>
   </n-scrollbar>
+
+  <div ref="bottomAnchor" />
 </section>
 
     <footer class="chat-input">
