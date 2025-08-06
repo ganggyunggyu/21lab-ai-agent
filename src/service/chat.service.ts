@@ -1,7 +1,7 @@
 import { axios } from "../app";
 
 type GenerationRequest = {
-  service: "gpt" | "claude"
+  service: "gpt" | "claude" | 'solar'
   keyword: string
 }
 
