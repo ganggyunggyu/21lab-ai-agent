@@ -9,7 +9,7 @@ createDiscreteApi
 } from 'naive-ui'
 generateText
 import { delay } from 'es-toolkit'
-import { CopyOutline as CopyIcon } from '@vicons/ionicons5'
+import { CopyOutline as CopyIcon, DownloadOutline as DownloadIcon } from '@vicons/ionicons5'
 import { generateText } from '../service/chat.service'
 const splitSections = (text: string): string[] => {
   return text.split(/-{3,}/).map(part => part.trim())
@@ -83,6 +83,19 @@ const copyMsg = (text: string) => {
   .catch(()=>{ message.error('복사 실패')
   })
 }
+
+const downloadMsg = (text: string) => {
+  const blob = new Blob([text], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'message.txt'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+  message.success('다운로드 성공')
+}
 </script>
 
 <template>
@@ -133,6 +146,20 @@ const copyMsg = (text: string) => {
             <copy-icon />
           </template>
           복사
+        </n-button>
+        <n-button
+          v-if="msg.role === 'bot' && msg.content !== 'loading' && idx !== 0"
+          class="download-btn"
+          size="tiny"
+          tertiary
+          quaternary
+          style="margin-left: 8px;"
+          @click="downloadMsg(msg.content)"
+        >
+          <template #icon>
+            <download-icon />
+          </template>
+          다운로드
         </n-button>
       </div>
     </div>
