@@ -28,7 +28,7 @@ const { message } = createDiscreteApi(['message'])
 
 
 const keyword = ref('')
-const service = ref<'gpt' | 'claude' | 'solar'>('gpt')
+const service = ref<'gpt' | 'claude' | 'solar' | 'gemini'>('gpt')
 const isLoading = ref(false)
 
 const messages = ref([
@@ -45,15 +45,15 @@ const handleGenerate = async () => {
   const loadingIndex = messages.value.length
   messages.value.push({ role: 'bot', content: 'loading' }) 
 
-  await scrollToBottom()
+  await scrollToBottom() 
 try {
   const res = await generateText({
     service: service.value,
     keyword: input
   })
 
-  const botResponse = res?.response || '(응답 없음)'
-
+  const botResponse = res?.content || '(응답 없음)'
+  
   const parts = botResponse.split(/-{3,}/).map(p => p.trim())
 
   messages.value.splice(loadingIndex, 1)
@@ -70,6 +70,7 @@ try {
     role: 'bot',
     content: '⚠️ 오류가 발생했어요. 다시 시도해주세요!'
   }
+  console.error(error)
 } finally {
     isLoading.value = false
 
@@ -78,11 +79,38 @@ try {
 }
 
 const copyMsg = (text: string) => {
-  navigator.clipboard.writeText(text)
-  .then(()=> message.success('복사 성공'))
-  .catch(()=>{ message.error('복사 실패')
-  })
-}
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => message.success('복사 성공'))
+      .catch(() => message.error('복사 실패'));
+  } else {
+    // Fallback for older browsers or insecure contexts
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    
+    // Make the textarea out of sight
+    textArea.style.position = 'fixed';
+    textArea.style.top = '-9999px';
+    textArea.style.left = '-9999px';
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        message.success('복사 성공');
+      } else {
+        message.error('복사 실패');
+      }
+    } catch (err) {
+      message.error('복사 실패');
+    }
+
+    document.body.removeChild(textArea);
+  }
+};
 
 const downloadMsg = (text: string) => {
   const blob = new Blob([text], { type: 'text/plain' })
@@ -153,7 +181,7 @@ const downloadMsg = (text: string) => {
           size="tiny"
           tertiary
           quaternary
-          style="margin-left: 8px;"
+          style="margin-left: 8px; color: white;"
           @click="downloadMsg(msg.content)"
         >
           <template #icon>
@@ -233,6 +261,7 @@ const downloadMsg = (text: string) => {
   background: #2d2d2d;
   color: #f0f0f0;
   border-top-left-radius: 0;
+  max-width: 70vw;
 }
 .copy-btn { 
   color: white;

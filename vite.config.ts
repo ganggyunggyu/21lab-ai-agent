@@ -20,10 +20,10 @@ export default {
     ],
   },
   server: {
-    host: true,
-    https: {
-      key,
-      cert,
-    },
+    host: '0.0.0.0',
+    // https: {
+    //   key,
+    //   cert,
+    // },
   },
 };
