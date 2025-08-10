@@ -8,7 +8,7 @@ type GenerationRequest = {
 export const generateText = async (params: GenerationRequest) => {
  
   try {
-    const response = await axios.post(`http://43.201.97.68:8000/generate/${params.service}`, params)
+    const response = await axios.post(`http://localhost:8000/generate/${params.service}`, params)
     return response.data
   } catch (error: any) {
     console.error(error)

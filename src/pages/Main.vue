@@ -7,11 +7,17 @@ import {
   NSelect,
 createDiscreteApi
 } from 'naive-ui'
-generateText
 import { delay } from 'es-toolkit'
 import { CopyOutline as CopyIcon, DownloadOutline as DownloadIcon } from '@vicons/ionicons5'
 import { generateText } from '../service/chat.service'
 import MagicCard from '../components/MagicCard.vue'
+
+interface Message {
+  role: 'user' | 'bot';
+  content: string;
+  keyword?: string;
+}
+
 const splitSections = (text: string): string[] => {
   return text.split(/-{3,}/).map(part => part.trim())
 }
@@ -32,19 +38,19 @@ const keyword = ref('')
 const service = ref<'gpt' | 'claude' | 'solar' | 'gemini'>('gpt')
 const isLoading = ref(false)
 
-const messages = ref([
+const messages = ref<Message[]>([
   { role: 'bot', content: '원고 생성 챗봇입니다. 키워드를 입력하세요.' }
 ])
 
 const handleGenerate = async () => {
   if (!keyword.value.trim()) return
   const input = keyword.value
-  messages.value.push({ role: 'user', content: input })
+  messages.value.push({ role: 'user', content: input, keyword: input })
   keyword.value = ''
   isLoading.value = true
 
   const loadingIndex = messages.value.length
-  messages.value.push({ role: 'bot', content: 'loading' }) 
+  messages.value.push({ role: 'bot', content: 'loading', keyword: input })
 
   await scrollToBottom() 
 try {
@@ -53,7 +59,7 @@ try {
     keyword: input
   })
 
-  const botResponse = res?.content || '(응답 없음)'
+  const botResponse: string = res?.content || '(응답 없음)'
   
   const parts = botResponse.split(/-{3,}/).map(p => p.trim())
 
@@ -63,13 +69,15 @@ try {
   for (const part of parts) {
     messages.value.push({
       role: 'bot',
-      content: part
+      content: part,
+      keyword: input
     })
   }
 } catch (error) {
   messages.value[loadingIndex] = {
     role: 'bot',
-    content: '⚠️ 오류가 발생했어요. 다시 시도해주세요!'
+    content: '⚠️ 오류가 발생했어요. 다시 시도해주세요!',
+    keyword: input
   }
   console.error(error)
 } finally {
@@ -113,13 +121,12 @@ const copyMsg = (text: string) => {
   }
 };
 
-const downloadMsg = (text: string) => {
-  const blob = new Blob([text], { type: 'text/plain' })
+const downloadMsg = (msg: Message) => {
+  const blob = new Blob([msg.content], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'message.txt'
-  document.body.appendChild(a)
+  a.download = `${msg.keyword}_${msg.content.trim().replace(/\s+/g, '').length}.txt`;  document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
@@ -182,7 +189,8 @@ const downloadMsg = (text: string) => {
             <copy-icon />
           </template>
           복사
-        </n-button>
+        
+</n-button>
         <n-button
           v-if="msg.role === 'bot' && msg.content !== 'loading' && idx !== 0"
           class="download-btn"
@@ -190,16 +198,18 @@ const downloadMsg = (text: string) => {
           tertiary
           quaternary
           style="margin-left: 8px; color: white;"
-          @click="downloadMsg(msg.content)"
+          @click="downloadMsg(msg)"
         >
           <template #icon>
             <download-icon />
           </template>
           다운로드
-        </n-button>
+        
+</n-button>
       </div>
     </div>
-  </n-scrollbar>
+  
+</n-scrollbar>
 
   <div style="height: 10px;" ref="bottomAnchor" />
 </section>
@@ -213,7 +223,8 @@ const downloadMsg = (text: string) => {
   />
   <n-button :loading="isLoading" @click="handleGenerate">
     전송
-  </n-button>
+  
+</n-button>
 </footer>
   </div>
 </template>
