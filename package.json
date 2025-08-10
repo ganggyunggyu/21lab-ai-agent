@@ -14,7 +14,8 @@
     "es-toolkit": "^1.39.8",
     "fs": "^0.0.1-security",
     "naive-ui": "^2.42.0",
-    "vue": "^3.5.17"
+    "vue": "^3.5.17",
+    "vue-router": "4"
   },
   "devDependencies": {
     "@types/node": "^24.2.0",
