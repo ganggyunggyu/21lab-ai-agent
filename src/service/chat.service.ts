@@ -3,6 +3,7 @@ import { axios } from "../app";
 type GenerationRequest = {
   service: "gpt" | "claude" | 'solar' | 'gemini'
   keyword: string
+  ref: string
 }
 
 export const generateText = async (params: GenerationRequest) => {

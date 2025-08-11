@@ -35,8 +35,10 @@ const { message } = createDiscreteApi(['message'])
 
 
 const keyword = ref('')
+const refMsg = ref('')
 const service = ref<'gpt' | 'claude' | 'solar' | 'gemini'>('gpt')
 const isLoading = ref(false)
+
 
 const messages = ref<Message[]>([
   { role: 'bot', content: '원고 생성 챗봇입니다. 키워드를 입력하세요.' }
@@ -56,7 +58,8 @@ const handleGenerate = async () => {
 try {
   const res = await generateText({
     service: service.value,
-    keyword: input
+    keyword: input,
+    ref: refMsg.value
   })
 
   const botResponse: string = res?.content || '(응답 없음)'
@@ -214,10 +217,19 @@ const downloadMsg = (msg: Message) => {
   <div style="height: 10px;" ref="bottomAnchor" />
 </section>
 
-    <footer class="chat-input">
+    <footer class="chat-footer">
+<div class="chat-input">
+  <n-input
+    v-model:value="refMsg"
+    placeholder="참고 문서를 입력해주세요"
+    
+    @keyup.enter="handleGenerate"
+  />
+</div>
+<div class="chat-input">
   <n-input
     v-model:value="keyword"
-    placeholder="키워드를 입력하세요"
+    placeholder="키워드를 입력하세요 (예시: 스마일라식 다음날)"
     
     @keyup.enter="handleGenerate"
   />
@@ -225,6 +237,7 @@ const downloadMsg = (msg: Message) => {
     전송
   
 </n-button>
+</div>
 </footer>
   </div>
 </template>
@@ -257,7 +270,7 @@ const downloadMsg = (msg: Message) => {
 }
 .message.user {
   justify-content: flex-end;
-}
+} 
 .message.bot {
   justify-content: flex-start;
 }
@@ -285,8 +298,10 @@ const downloadMsg = (msg: Message) => {
 .copy-btn { 
   color: white;
 }
-.chat-input {
+.chat-footer {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 16px;
   padding: 16px;
   background: #2d2d2d;
@@ -352,5 +367,8 @@ const downloadMsg = (msg: Message) => {
 
 .service-selector {
   width: 120px;
+}
+.chat-input{
+  display: flex;
 }
 </style>
