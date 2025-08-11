@@ -9,7 +9,7 @@ createDiscreteApi
 } from 'naive-ui'
 import { delay } from 'es-toolkit'
 import { CopyOutline as CopyIcon, DownloadOutline as DownloadIcon } from '@vicons/ionicons5'
-import { generateText } from '../service/chat.service'
+import { generateText, getCategory } from '../service/chat.service'
 import MagicCard from '../components/MagicCard.vue'
 
 interface Message {
@@ -18,9 +18,6 @@ interface Message {
   keyword?: string;
 }
 
-const splitSections = (text: string): string[] => {
-  return text.split(/-{3,}/).map(part => part.trim())
-}
 const formatMessage = (text:string) => {
   if (!text) return ''
   return text.replace(/\n/g, '<br/>')
@@ -38,6 +35,8 @@ const keyword = ref('')
 const refMsg = ref('')
 const service = ref<'gpt' | 'claude' | 'solar' | 'gemini'>('gpt')
 const isLoading = ref(false)
+const isCategoryLoading = ref(false)
+const category = ref('')
 
 
 const messages = ref<Message[]>([
@@ -88,6 +87,27 @@ try {
 
   } 
   await scrollToBottom()  
+}
+
+const handleCategoryClick = async () => {
+  isCategoryLoading.value = true
+try {
+    if(keyword.value.length === 0) {
+      message.warning('키워드를 입력해주세요.')
+      return
+    }
+    const res = await getCategory({keyword: keyword.value})
+
+    category.value  = res
+
+    message.info(`해당 키워드의 카테고리는 ${category.value} 입니다.`)
+  } catch (error) {
+    console.error(error)
+
+    // message.error(error)
+  }finally{
+    isCategoryLoading.value = false
+  }
 }
 
 const copyMsg = (text: string) => {
@@ -235,6 +255,10 @@ const downloadMsg = (msg: Message) => {
   />
   <n-button :loading="isLoading" @click="handleGenerate">
     전송
+  
+</n-button>
+  <n-button :loading="isLoading" @click="handleCategoryClick">
+    카테고리 확인
   
 </n-button>
 </div>
