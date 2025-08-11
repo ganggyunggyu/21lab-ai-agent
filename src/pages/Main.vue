@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import {  ref, watch } from 'vue'
 import {
   NScrollbar,
   NInput,
@@ -10,7 +10,9 @@ createDiscreteApi
 import { delay } from 'es-toolkit'
 import { CopyOutline as CopyIcon, DownloadOutline as DownloadIcon } from '@vicons/ionicons5'
 import { generateText, getCategory } from '../service/chat.service'
-import MagicCard from '../components/MagicCard.vue'
+import LoadingDots from '../components/LoadingDots.vue'
+import { formatMessage } from '../utils/formatMsg'
+import { downloadText } from '../utils/downloadText'
 
 interface Message {
   role: 'user' | 'bot';
@@ -18,19 +20,11 @@ interface Message {
   keyword?: string;
 }
 
-const formatMessage = (text:string) => {
-  if (!text) return ''
-  return text.replace(/\n/g, '<br/>')
-}
-
-const scrollToBottom = async () => {
-  await nextTick()
-  await delay(500)
-  
-}
 const { message } = createDiscreteApi(['message'])
 
-
+const messages = ref<Message[]>([
+  { role: 'bot', content: '키워드를 입력해 원고를 생성해보세요.' }
+])
 const keyword = ref('')
 const refMsg = ref('')
 const service = ref<'gpt' | 'claude' | 'solar' | 'gemini'>('gpt')
@@ -38,10 +32,19 @@ const isLoading = ref(false)
 const isCategoryLoading = ref(false)
 const category = ref('')
 
+const chatMessagesRef = ref<HTMLDivElement | null>(null)
+const lastMessageRef = ref<HTMLDivElement | null>(null)
+const scrollbarRef = ref<InstanceType<typeof NScrollbar> | null>(null) 
 
-const messages = ref<Message[]>([
-  { role: 'bot', content: '원고 생성 챗봇입니다. 키워드를 입력하세요.' }
-])
+const scrollToLast = async () => {
+  
+  const lastEl = lastMessageRef.value
+  const sc = scrollbarRef.value
+  if (lastEl && sc) {
+
+    sc.scrollTo({ top: lastEl.offsetTop, behavior: 'smooth' })
+  }
+}
 
 const handleGenerate = async () => {
   if (!keyword.value.trim()) return
@@ -53,7 +56,6 @@ const handleGenerate = async () => {
   const loadingIndex = messages.value.length
   messages.value.push({ role: 'bot', content: 'loading', keyword: input })
 
-  await scrollToBottom() 
 try {
   const res = await generateText({
     service: service.value,
@@ -67,7 +69,6 @@ try {
 
   messages.value.splice(loadingIndex, 1)
 
-  
   for (const part of parts) {
     messages.value.push({
       role: 'bot',
@@ -84,9 +85,7 @@ try {
   console.error(error)
 } finally {
     isLoading.value = false
-
   } 
-  await scrollToBottom()  
 }
 
 const handleCategoryClick = async () => {
@@ -103,8 +102,7 @@ try {
     message.info(`해당 키워드의 카테고리는 ${category.value} 입니다.`)
   } catch (error) {
     console.error(error)
-
-    // message.error(error)
+    
   }finally{
     isCategoryLoading.value = false
   }
@@ -116,11 +114,11 @@ const copyMsg = (text: string) => {
       .then(() => message.success('복사 성공'))
       .catch(() => message.error('복사 실패'));
   } else {
-    // Fallback for older browsers or insecure contexts
+    
     const textArea = document.createElement('textarea');
     textArea.value = text;
     
-    // Make the textarea out of sight
+    
     textArea.style.position = 'fixed';
     textArea.style.top = '-9999px';
     textArea.style.left = '-9999px';
@@ -144,28 +142,30 @@ const copyMsg = (text: string) => {
   }
 };
 
-const downloadMsg = (msg: Message) => {
-  const blob = new Blob([msg.content], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${msg.keyword}_${msg.content.trim().replace(/\s+/g, '').length}.txt`;  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-  message.success('다운로드 성공')
+const handleDownloadClick = (msg: Message) => {
+  const fileName = `${msg.keyword}_${msg.content.trim().replace(/\s+/g, '').length}`;  
+  const content = msg?.content
+
+  try {
+    downloadText({
+      fileName, content
+    })
+    message.success('다운로드가 완료되었습니다.')
+  } catch (error) {
+    message.error('다운로드에 실패하였습니다.')
+  }
 }
+
+watch(() => messages.value.length, async () => {
+  await delay(1000)
+  scrollToLast()
+})
 </script>
 
 <template>
 
   <div class="chat-container">
-    <MagicCard>
-      <div style="padding: 20px; color: white;">
-        <h2>Magic Card</h2>
-        <p>This is a cool magic card from Vue Bits!</p>
-      </div>
-    </MagicCard>
+
  <header class="chat-header">
       <div class="header-title"></div>
       <n-select
@@ -181,19 +181,24 @@ const downloadMsg = (msg: Message) => {
       />
     </header>
 
-    <section class="chat-messages">
+    <section ref="chatMessagesRef" class="chat-messages">
   <n-scrollbar>
     <div
       v-for="(msg, idx) in messages"
       :key="idx"
       :class="['message', msg.role]"
     >
-      <div class="bubble">
+        <div
+          class="bubble"
+          :ref="(el) => {                   
+            if (idx === messages.length - 1) {
+              lastMessageRef = el as HTMLDivElement
+            }
+          }"
+        >
         <div class="chat-content">
           <template v-if="msg.content === 'loading'">
-            <div class="typing-dots">
-              <span></span><span></span><span></span>
-            </div>
+            <LoadingDots/>
           </template>
           <template v-else>
             <div v-html="formatMessage(msg.content)" />
@@ -221,7 +226,7 @@ const downloadMsg = (msg: Message) => {
           tertiary
           quaternary
           style="margin-left: 8px; color: white;"
-          @click="downloadMsg(msg)"
+          @click="handleDownloadClick(msg)"
         >
           <template #icon>
             <download-icon />
@@ -257,7 +262,7 @@ const downloadMsg = (msg: Message) => {
     전송
   
 </n-button>
-  <n-button :loading="isLoading" @click="handleCategoryClick">
+  <n-button :loading="isCategoryLoading" @click="handleCategoryClick">
     카테고리 확인
   
 </n-button>
@@ -352,28 +357,7 @@ const downloadMsg = (msg: Message) => {
   color: white;
   transform: scale(1.05);
 }
-.typing-dots {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.typing-dots span {
-  width: 6px;
-  height: 6px;
-  background: #888;
-  border-radius: 50%;
-  animation: blink 1.4s infinite both;
-}
-.typing-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.typing-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0 }
-  40% { opacity: 1 }
-}
+
 
 .chat-header {
   display: flex;
