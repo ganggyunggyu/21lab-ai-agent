@@ -13,11 +13,13 @@
     "axios": "^1.11.0",
     "es-toolkit": "^1.39.8",
     "fs": "^0.0.1-security",
+    "markdown-it": "^14.1.0",
     "naive-ui": "^2.42.0",
     "vue": "^3.5.17",
     "vue-router": "4"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.2.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",

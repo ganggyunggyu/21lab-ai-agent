@@ -11,9 +11,14 @@ import { delay } from 'es-toolkit'
 import { CopyOutline as CopyIcon, DownloadOutline as DownloadIcon } from '@vicons/ionicons5'
 import { generateText, getCategory } from '../service/chat.service'
 import LoadingDots from '../components/LoadingDots.vue'
-import { formatMessage } from '../utils/formatMsg'
 import { downloadText } from '../utils/downloadText'
+import MarkdownIt from 'markdown-it'
+import { formatMessage } from '../utils/formatMsg'
 
+const md = new MarkdownIt({ linkify: true, breaks: true })
+
+// 마크다운 렌더 헬퍼
+const renderMarkdown = (raw: string) => md.render(raw)
 interface Message {
   role: 'user' | 'bot';
   content: string;
@@ -23,7 +28,50 @@ interface Message {
 const { message } = createDiscreteApi(['message'])
 
 const messages = ref<Message[]>([
-  { role: 'bot', content: '키워드를 입력해 원고를 생성해보세요.' }
+  {
+    role: 'bot',
+    content: `
+# **시작하려면 아래 순서대로 입력하세요.**
+
+## 1. 키워드 입력
+- 예시: \`위고비 가격\`
+
+## 2. 카테고리 선택
+- 예시: \`위고비 가격 카테고리: 다이어트\`
+
+### 사용 가능 카테고리
+- 뷰티제품
+- 뷰티시술
+- 다이어트
+- 건강기능식품
+- 가전제품
+- 병원
+- 법률
+- 안과
+- 애완/애견
+- 창업
+- 여행
+
+## 3. 원고 형태 선택
+- 리뷰형 또는 정보성
+- 예시:
+  - \`위고비 가격 카테고리: 다이어트 (리뷰형 요망)\`
+  - \`주식리딩방사기 카테고리: 법률 (정보성 요망)\`
+
+## 4. 강조 사항 지정 (선택)
+- 특정 화자/타겟 설정 가능
+- 예시: \`위고비 가격 카테고리: 다이어트 (20대 여성을 화자로 입력 요망)\`
+
+## 5. 참조 문서
+- 카테고리에 없는 글을 넣을 경우 첨부해주세요.
+- 글의 흐름 및 제품의 정보를 인식하는 역할을 합니다.
+
+> 아래 입력창에 **참고 문서**(선택)와 **키워드**를 넣고 전송을 누르면 원고를 생성합니다.
+
+
+
+`
+  }
 ])
 const keyword = ref('')
 const refMsg = ref('')
@@ -201,7 +249,7 @@ watch(() => messages.value.length, async () => {
             <LoadingDots/>
           </template>
           <template v-else>
-            <div v-html="formatMessage(msg.content)" />
+            <div v-html="idx === 0 ? renderMarkdown(msg.content) : formatMessage(msg.content)" />
           </template>
         </div>
         <n-button
@@ -378,5 +426,16 @@ watch(() => messages.value.length, async () => {
 }
 .chat-input{
   display: flex;
+}
+
+.bubble :deep(h1) { font-size: 20px;  color: #e5e7eb; }
+.bubble :deep(h2) { font-size: 18px;  color: #e5e7eb; }
+.bubble :deep(h3) { font-size: 16px;  color: #e5e7eb; }
+.bubble :deep(ul) { margin: 0 0 0 20px; list-style: disc; }
+.bubble :deep(ol) { margin: 0 0 0 20px; list-style: decimal; }
+.bubble :deep(code),
+.bubble :deep(kbd) { background: #111827; padding: 2px 6px; border-radius: 6px; }
+.bubble :deep(blockquote) {
+   padding: 8px 12px; border-left: 3px solid #4f46e5; background: #1f2937; border-radius: 6px;
 }
 </style>
