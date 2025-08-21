@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import {  ref, watch } from 'vue'
-import {
-  NScrollbar,
-  NInput,
-  NButton,
-  NSelect,
-createDiscreteApi
-} from 'naive-ui'
+import { ref, watch, nextTick, onMounted, type ComponentPublicInstance } from 'vue'
+import { NScrollbar, NInput, NButton, NSelect, createDiscreteApi } from 'naive-ui'
 import { delay } from 'es-toolkit'
 import { CopyOutline as CopyIcon, DownloadOutline as DownloadIcon } from '@vicons/ionicons5'
 import { generateText, getCategory } from '../service/chat.service'
@@ -14,8 +8,13 @@ import LoadingDots from '../components/LoadingDots.vue'
 import { downloadText } from '../utils/downloadText'
 import MarkdownIt from 'markdown-it'
 import { formatMessage } from '../utils/formatMsg'
+import { MODEL_OPTIONS, type ModelService } from '../constants/models'
+import { INTRO_MARKDOWN, MSG_COPY_FAIL, MSG_COPY_SUCCESS, MSG_DOWNLOAD_FAIL, MSG_DOWNLOAD_SUCCESS, MSG_WARN_ENTER_KEYWORD, categoryInfo } from '../constants/texts'
+import { AUTO_SCROLL_DELAY } from '../constants/timings'
+import { PART_SEPARATOR } from '../constants/regex'
+import { MARKDOWN_OPTIONS } from '../constants/markdown'
 
-const md = new MarkdownIt({ linkify: true, breaks: true })
+const md = new MarkdownIt(MARKDOWN_OPTIONS)
 
 // 마크다운 렌더 헬퍼
 const renderMarkdown = (raw: string) => md.render(raw)
@@ -30,67 +29,30 @@ const { message } = createDiscreteApi(['message'])
 const messages = ref<Message[]>([
   {
     role: 'bot',
-    content: `
-# **시작하려면 아래 순서대로 입력하세요.**
-
-## 1. 키워드 입력
-- 예시: \`위고비 가격\`
-
-## 2. 카테고리 선택
-- 예시: \`위고비 가격 카테고리: 다이어트\`
-
-### 사용 가능 카테고리
-- 뷰티제품
-- 뷰티시술
-- 다이어트
-- 건강기능식품
-- 가전제품
-- 병원
-- 법률
-- 안과
-- 애완/애견
-- 창업
-- 여행
-- 치과
-- 웨딩
-
-## 3. 원고 형태 선택
-- 리뷰형 또는 정보성
-- 예시:
-  - \`위고비 가격 카테고리: 다이어트 (리뷰형 요망)\`
-  - \`주식리딩방사기 카테고리: 법률 (정보성 요망)\`
-
-## 4. 강조 사항 지정 (선택)
-- 특정 화자/타겟 설정 가능
-- 예시: \`위고비 가격 카테고리: 다이어트 (20대 여성을 화자로 입력 요망)\`
-
-## 5. 참조 문서
-- 카테고리에 없는 글을 넣을 경우 첨부해주세요.
-- 글의 흐름 및 제품의 정보를 인식하는 역할을 합니다.
-
-> 아래 입력창에 **참고 문서**(선택)와 **키워드**를 넣고 전송을 누르면 원고를 생성합니다.
-`
+    content: INTRO_MARKDOWN
   }
 ])
 const keyword = ref('')
 const refMsg = ref('')
-const service = ref<'gpt' | 'claude' | 'solar' | 'gemini' | 'gpt-5'>('gpt')
+const service = ref<ModelService>('gpt')
 const isLoading = ref(false)
 const isCategoryLoading = ref(false)
 const category = ref('')
 
-const chatMessagesRef = ref<HTMLDivElement | null>(null)
 const lastMessageRef = ref<HTMLDivElement | null>(null)
-const scrollbarRef = ref<InstanceType<typeof NScrollbar> | null>(null) 
+const scrollbarRef = ref<InstanceType<typeof NScrollbar> | null>(null)
+
+const setLastMessageRef = (el: Element | ComponentPublicInstance | null, idx: number) => {
+  if (idx === messages.value.length - 1) {
+    lastMessageRef.value = (el as unknown as HTMLDivElement) || null
+  }
+}
 
 const scrollToLast = async () => {
-  
+  await nextTick()
   const lastEl = lastMessageRef.value
   const sc = scrollbarRef.value
-  if (lastEl && sc) {
-
-    sc.scrollTo({ top: lastEl.offsetTop, behavior: 'smooth' })
-  }
+  if (lastEl && sc) sc.scrollTo({ top: lastEl.offsetTop, behavior: 'smooth' })
 }
 
 const handleGenerate = async () => {
@@ -111,8 +73,7 @@ try {
   })
 
   const botResponse: string = res?.content || '(응답 없음)'
-  
-  const parts = botResponse.split(/-{3,}/).map(p => p.trim())
+  const parts = botResponse.split(PART_SEPARATOR).map(p => p.trim()).filter(Boolean)
 
   messages.value.splice(loadingIndex, 1)
 
@@ -137,57 +98,42 @@ try {
 
 const handleCategoryClick = async () => {
   isCategoryLoading.value = true
-try {
-    if(keyword.value.length === 0) {
-      message.warning('키워드를 입력해주세요.')
+  try {
+    if (keyword.value.length === 0) {
+      message.warning(MSG_WARN_ENTER_KEYWORD)
       return
     }
-    const res = await getCategory({keyword: keyword.value})
-
-    category.value  = res
-
-    message.info(`해당 키워드의 카테고리는 ${category.value} 입니다.`)
+    const res = await getCategory({ keyword: keyword.value })
+    category.value = res
+    message.info(categoryInfo(category.value))
   } catch (error) {
     console.error(error)
-    
-  }finally{
+  } finally {
     isCategoryLoading.value = false
   }
 }
 
-const copyMsg = (text: string) => {
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text)
-      .then(() => message.success('복사 성공'))
-      .catch(() => message.error('복사 실패'));
-  } else {
-    
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    
-    
-    textArea.style.position = 'fixed';
-    textArea.style.top = '-9999px';
-    textArea.style.left = '-9999px';
-
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        message.success('복사 성공');
-      } else {
-        message.error('복사 실패');
-      }
-    } catch (err) {
-      message.error('복사 실패');
+const copyMsg = async (text: string) => {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      textArea.style.position = 'fixed'
+      textArea.style.top = '-9999px'
+      textArea.style.left = '-9999px'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
     }
-
-    document.body.removeChild(textArea);
+    message.success(MSG_COPY_SUCCESS)
+  } catch {
+    message.error(MSG_COPY_FAIL)
   }
-};
+}
 
 const handleDownloadClick = (msg: Message) => {
   const fileName = `${msg.keyword}_${msg.content.trim().replace(/\s+/g, '').length}`;  
@@ -197,15 +143,27 @@ const handleDownloadClick = (msg: Message) => {
     downloadText({
       fileName, content
     })
-    message.success('다운로드가 완료되었습니다.')
+    message.success(MSG_DOWNLOAD_SUCCESS)
   } catch (error) {
-    message.error('다운로드에 실패하였습니다.')
+    message.error(MSG_DOWNLOAD_FAIL)
   }
 }
 
 watch(() => messages.value.length, async () => {
-  await delay(1000)
+  await delay(AUTO_SCROLL_DELAY)
   scrollToLast()
+})
+
+onMounted(()=>{
+//   document.addEventListener("keydown", (e) => {
+//   if (e.key === "Tab") {
+//     e.preventDefault(); // 기본 탭 이동 막음
+//     const keywordInput = document.getElementById("keyword-input")
+//     if(keywordInput){
+//       keywordInput.focus();
+//     }
+//   }
+// });
 })
 </script>
 
@@ -217,33 +175,16 @@ watch(() => messages.value.length, async () => {
       <div class="header-title"></div>
       <n-select
         v-model:value="service"
-        :options="[
-          { label: 'GPT', value: 'gpt' },
-          { label: 'GPT5', value: 'gpt-5' },
-          { label: 'Gemini', value: 'gemini' },
-          { label: 'Claude', value: 'claude' },
-          { label: 'Solar', value: 'solar' }, 
-        ]"
+        :options="MODEL_OPTIONS"
         size="small"
         class="service-selector"
       />
     </header>
 
-    <section ref="chatMessagesRef" class="chat-messages">
-  <n-scrollbar>
-    <div
-      v-for="(msg, idx) in messages"
-      :key="idx"
-      :class="['message', msg.role]"
-    >
-        <div
-          class="bubble"
-          :ref="(el) => {                   
-            if (idx === messages.length - 1) {
-              lastMessageRef = el as HTMLDivElement
-            }
-          }"
-        >
+    <section class="chat-messages">
+  <n-scrollbar ref="scrollbarRef">
+    <div v-for="(msg, idx) in messages" :key="idx" :class="['message', msg.role]">
+        <div class="bubble" :ref="(el) => setLastMessageRef(el, idx)">
         <div class="chat-content">
           <template v-if="msg.content === 'loading'">
             <LoadingDots/>
@@ -287,7 +228,7 @@ watch(() => messages.value.length, async () => {
   
 </n-scrollbar>
 
-  <div style="height: 10px;" ref="bottomAnchor" />
+  <div style="height: 10px;" />
 </section>
 
     <footer class="chat-footer">
@@ -302,10 +243,11 @@ watch(() => messages.value.length, async () => {
 </div>
 <div class="chat-input">
   <n-input
+    id="keyword-input"
     v-model:value="keyword"
     placeholder="키워드를 입력하세요 (예시: 스마일라식 다음날)"
     tabindex="1"
-    
+    autofocus    
     @keyup.enter="handleGenerate"
   />
   <n-button :loading="isLoading" @click="handleGenerate">
@@ -331,13 +273,7 @@ watch(() => messages.value.length, async () => {
   background: #1a1a1a;
   color: #f0f0f0;
 }
-.chat-header {
-  padding: 16px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #444;
-  font-size: 18px;
-  font-weight: bold;
-}
+/* unify header block with compact header below */
 .chat-messages {
   flex: 1;
   padding: 16px;
@@ -374,9 +310,7 @@ watch(() => messages.value.length, async () => {
   border-top-left-radius: 0;
   max-width: 70vw;
 }
-.copy-btn { 
-  color: white;
-}
+.copy-btn { color: white; }
 .chat-footer {
   display: flex;
   flex-direction: column;
