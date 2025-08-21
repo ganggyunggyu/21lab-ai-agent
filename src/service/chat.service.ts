@@ -1,7 +1,7 @@
 import { axios } from "../app";
 
 type GenerationRequest = {
-  service: "gpt" | "claude" | 'solar' | 'gemini'
+  service: "gpt" | "claude" | 'solar' | 'gemini' | 'gpt-5'
   keyword: string
   ref: string
 }
@@ -9,10 +9,12 @@ type GetCategoryReq = {
   keyword: string
 }
 
+const API = import.meta.env.VITE_API_URL
+
 export const generateText = async (params: GenerationRequest) => {
  
   try {
-    const response = await axios.post(`http://192.168.0.90:8000/generate/${params.service}`, params)
+    const response = await axios.post(`${API}/generate/${params.service}`, params)
     return response.data
   } catch (error: any) {
     console.error(error)
@@ -24,7 +26,7 @@ export const generateText = async (params: GenerationRequest) => {
 export const getCategory = async (params:GetCategoryReq) => {
   try {
     
-    const response = await axios.get(`http://192.168.0.90:8000/category/${params.keyword}`)
+    const response = await axios.get(`${API}/generate/${params.keyword}`)
     
     return response.data
   } catch (error) {
@@ -35,3 +37,5 @@ export const getCategory = async (params:GetCategoryReq) => {
 }
 
 // http://43.201.97.68
+
+// http://192.168.0.90

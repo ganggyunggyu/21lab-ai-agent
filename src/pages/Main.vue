@@ -69,15 +69,12 @@ const messages = ref<Message[]>([
 - 글의 흐름 및 제품의 정보를 인식하는 역할을 합니다.
 
 > 아래 입력창에 **참고 문서**(선택)와 **키워드**를 넣고 전송을 누르면 원고를 생성합니다.
-
-
-
 `
   }
 ])
 const keyword = ref('')
 const refMsg = ref('')
-const service = ref<'gpt' | 'claude' | 'solar' | 'gemini'>('gpt')
+const service = ref<'gpt' | 'claude' | 'solar' | 'gemini' | 'gpt-5'>('gpt')
 const isLoading = ref(false)
 const isCategoryLoading = ref(false)
 const category = ref('')
@@ -222,9 +219,10 @@ watch(() => messages.value.length, async () => {
         v-model:value="service"
         :options="[
           { label: 'GPT', value: 'gpt' },
+          { label: 'GPT5', value: 'gpt-5' },
+          { label: 'Gemini', value: 'gemini' },
           { label: 'Claude', value: 'claude' },
           { label: 'Solar', value: 'solar' }, 
-          { label: 'Gemini', value: 'gemini' }
         ]"
         size="small"
         class="service-selector"
@@ -293,10 +291,11 @@ watch(() => messages.value.length, async () => {
 </section>
 
     <footer class="chat-footer">
-<div class="chat-input">
+  <div class="chat-input">
   <n-input
     v-model:value="refMsg"
     placeholder="참고 문서를 입력해주세요"
+    tabindex="2"
     
     @keyup.enter="handleGenerate"
   />
@@ -305,6 +304,7 @@ watch(() => messages.value.length, async () => {
   <n-input
     v-model:value="keyword"
     placeholder="키워드를 입력하세요 (예시: 스마일라식 다음날)"
+    tabindex="1"
     
     @keyup.enter="handleGenerate"
   />
