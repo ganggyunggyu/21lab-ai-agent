@@ -1,22 +1,23 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Main from '../pages/Main.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import ChatPage from '../pages/ChatPage.vue';
+import UploadPage from '../pages/UploadPage.vue';
 
 const routes = [
   {
     path: '/',
-    name: 'Main',
-    component: Main
+    name: 'ChatPage',
+    component: ChatPage,
   },
   {
-    path: '/ghost',
-    name: 'Ghost',
-    component: Main
-  }
-]
+    path: '/upload',
+    name: 'Upload',
+    component: UploadPage,
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;
