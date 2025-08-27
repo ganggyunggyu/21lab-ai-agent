@@ -4,11 +4,13 @@ export type ModelService =
   | 'solar'
   | 'gemini'
   | 'gpt-5'
+  | 'gpt-5-v2'
   | 'gpt-4-v2';
 
 export const MODEL_OPTIONS: { label: string; value: ModelService }[] = [
   { label: 'GPT', value: 'gpt' },
   { label: 'GPT5', value: 'gpt-5' },
+  { label: 'GPT5V2', value: 'gpt-5-v2' },
   { label: 'GPT4V2', value: 'gpt-4-v2' },
   { label: 'Gemini', value: 'gemini' },
   { label: 'Claude', value: 'claude' },

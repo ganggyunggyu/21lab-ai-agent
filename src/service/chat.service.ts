@@ -1,7 +1,14 @@
-import { axios } from "../app";
+import { axios } from '../app';
 
 type GenerationRequest = {
-  service: "gpt" | "claude" | "solar" | "gemini" | "gpt-5" | "gpt-4-v2";
+  service:
+    | 'gpt'
+    | 'claude'
+    | 'solar'
+    | 'gemini'
+    | 'gpt-5'
+    | 'gpt-4-v2'
+    | 'gpt-5-v2';
   keyword: string;
   ref: string;
 };
@@ -19,8 +26,12 @@ export const generateText = async (params: GenerationRequest) => {
     );
     return response.data;
   } catch (error: any) {
+    if (error.response && error.response.status === 429) {
+      throw new Error(
+        'API 요청 할당량을 초과했습니다. 잠시 후 다시 시도해주세요.'
+      );
+    }
     console.error(error);
-
     throw error;
   }
 };
