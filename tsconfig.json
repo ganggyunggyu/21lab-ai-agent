@@ -1,13 +1,18 @@
 {
-  "files": [],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@pages/*": ["src/pages/*"],
+      "@utils/*": ["src/utils/*"]
+    },
+    "types": ["node"],
+    "moduleResolution": "node",
+    "typeRoots": ["./types", "./node_modules/@types"]
+  },
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ],
-  "compilerOptions": {
-      "types": ["node"],
-    "moduleResolution": "node",
-    "typeRoots": ["./types", "./node_modules/@types"]
-
-  }
+  ]
 }

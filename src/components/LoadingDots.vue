@@ -1,7 +1,5 @@
 <template>
-    <div class="typing-dots">
-              <span></span><span></span><span></span>
-            </div>
+  <div class="typing-dots"><span></span><span></span><span></span></div>
 </template>
 
 <style scoped>
@@ -24,7 +22,13 @@
   animation-delay: 0.4s;
 }
 @keyframes blink {
-  0%, 80%, 100% { opacity: 0 }
-  40% { opacity: 1 }
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
 }
 </style>

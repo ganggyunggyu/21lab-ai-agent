@@ -176,7 +176,6 @@ onMounted(() => {
 <template>
   <div class="chat-container">
     <header class="chat-header">
-      <div class="header-title">🤖 21Lab AI Agent</div>
       <n-select
         v-model:value="service"
         :options="MODEL_OPTIONS"

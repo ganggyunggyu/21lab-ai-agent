@@ -1,14 +1,8 @@
 import { axios } from '../app';
+import type { ChatService } from '../types/chat';
 
 type GenerationRequest = {
-  service:
-    | 'gpt'
-    | 'claude'
-    | 'solar'
-    | 'gemini'
-    | 'gpt-5'
-    | 'gpt-4-v2'
-    | 'gpt-5-v2';
+  service: ChatService;
   keyword: string;
   ref: string;
 };
@@ -38,7 +32,7 @@ export const generateText = async (params: GenerationRequest) => {
 
 export const getCategory = async (params: GetCategoryReq) => {
   try {
-    const response = await axios.get(`${API}/generate/${params.keyword}`);
+    const response = await axios.get(`${API}/category/${params.keyword}`);
 
     return response.data;
   } catch (error) {
