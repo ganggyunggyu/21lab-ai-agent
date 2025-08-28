@@ -176,7 +176,7 @@ onMounted(() => {
 <template>
   <div class="chat-container">
     <header class="chat-header">
-      <div class="header-title"></div>
+      <div class="header-title">🤖 21Lab AI Agent</div>
       <n-select
         v-model:value="service"
         :options="MODEL_OPTIONS"
@@ -234,9 +234,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family: 'Pretendard', sans-serif;
-  background: #1a1a1a;
-  color: #f0f0f0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f1f5f9;
 }
 /* unify header block with compact header below */
 .chat-messages {
@@ -250,8 +250,9 @@ onMounted(() => {
   gap: 4px;
   font-size: 16px;
   padding: 16px;
-  background: #2d2d2d;
-  border-top: 1px solid #444;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 .chat-input .n-input {
   flex: 1;
@@ -266,13 +267,19 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #444;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   font-size: 16px;
 }
 
 .header-title {
-  font-weight: bold;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 20px;
 }
 
 .service-selector {

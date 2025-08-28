@@ -1,5 +1,4 @@
 // services/uploadText.api.ts
-import { axiosConfig } from '../app/config/axios.instancce';
 import { api } from './_axios';
 
 export type UploadTextItem = {

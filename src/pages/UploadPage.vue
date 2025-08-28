@@ -6,7 +6,6 @@ import type { UploadFileInfo } from 'naive-ui';
 import {
   uploadTextApi,
   type UploadTextsRes,
-  type UploadTextItem,
 } from '../service/upload.service';
 
 // 상태
@@ -42,7 +41,7 @@ const handleUpload = async () => {
 <template>
   <div class="upload-container">
     <header class="upload-header">
-      <h1>파일 업로드</h1>
+      <h1>📁 파일 업로드</h1>
     </header>
 
     <main class="upload-body">
@@ -114,17 +113,22 @@ const handleUpload = async () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #1a1a1a;
-  color: #f0f0f0;
-  font-family: 'Pretendard', sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #f1f5f9;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .upload-header {
   padding: 16px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #444;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .upload-body {
