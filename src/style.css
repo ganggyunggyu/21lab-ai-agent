@@ -24,7 +24,6 @@ body {
   overflow: hidden;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -65,30 +64,35 @@ button {
   box-sizing: border-box;
 }
 
-/* placeholder 색 통일 */
 input::placeholder,
 textarea::placeholder {
   color: inherit;
   opacity: 0.5;
 }
 
-/* number input의 스핀 버튼 제거 */
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 input[type='number'] {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
 }
 
-/* search input의 X 버튼 제거 */
 input[type='search']::-webkit-search-decoration,
 input[type='search']::-webkit-search-cancel-button {
   -webkit-appearance: none;
 }
 
-/* 모바일 iOS 특유 스타일 제거 */
 textarea {
-  resize: none; /* 원하면 조절 가능 */
+  resize: none;
+}
+
+:root {
+  --header-h: 80px;
+  --footer-h: 180px;
+  --container-max: 1000px;
+  --page-pad-x: 16px;
+  --main-top-pad: 16px;
+  --main-bot-pad: 16px;
 }

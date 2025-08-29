@@ -22,9 +22,12 @@ export const useChatActions = () => {
   };
 
   const handleDownloadClick = (msg: Message) => {
-    const fileName = `${msg.keyword || 'message'}_${msg.content.trim().length}`;
     try {
-      downloadText({ fileName, content: msg.content });
+      const fileName = `${msg.keyword || 'message'}_${
+        msg.content.replace(/\s/g, '').length
+      }`;
+      const content = msg.content;
+      downloadText({ fileName, content });
       message.success(MSG_DOWNLOAD_SUCCESS);
     } catch {
       message.error(MSG_DOWNLOAD_FAIL);
@@ -34,7 +37,9 @@ export const useChatActions = () => {
   const downloadChatHistory = (exportChat: () => string) => {
     try {
       const chatData = exportChat();
-      const fileName = `chat-history_${new Date().toISOString().split('T')[0]}.json`;
+      const fileName = `chat-history_${
+        new Date().toISOString().split('T')[0]
+      }.json`;
       downloadText({ fileName, content: chatData });
       message.success('채팅 내역이 다운로드되었습니다');
     } catch {

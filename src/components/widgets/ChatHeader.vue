@@ -2,7 +2,6 @@
 import { ref, watch, onMounted, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { NScrollbar, NSelect } from 'naive-ui';
-import { delay } from 'es-toolkit';
 
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores/chat';
@@ -10,23 +9,17 @@ import { useChatActions } from '@/composables/useChatActions';
 import { useScrollToBottom } from '@/composables/useScrollToBottom';
 import { useLayoutManager } from '@/composables/useLayoutManager';
 import { MODEL_OPTIONS, ModelService } from '@/constants/models';
-import { AUTO_SCROLL_DELAY } from '@/constants/timings';
 import { useAutoScroll } from '@/composables/useAutoScroll';
+import ModernButton from '../ui/ModernButton.vue';
 
 const chatStore = useChatStore();
 
-const {
-  messages,
-
-  service,
-} = storeToRefs(chatStore);
+const { messages, service } = storeToRefs(chatStore);
 
 const { updateService, clearChat, exportChat } = chatStore;
 
-// Chat Actions
 const { downloadChatHistory } = useChatActions();
 
-// Scroll Management
 const scrollbarRef: Ref<InstanceType<typeof NScrollbar> | null> = ref(null);
 const { scrollToLast } = useAutoScroll({
   containerRef: scrollbarRef,
@@ -37,23 +30,8 @@ const { hardScrollToBottom } = useScrollToBottom(scrollbarRef);
 
 const router = useRouter();
 
-// Layout Management
 const { headerRef } = useLayoutManager();
 
-watch(
-  () => messages.value.length,
-  async () => {
-    await delay(AUTO_SCROLL_DELAY);
-    scrollToLast();
-    hardScrollToBottom(true);
-  }
-);
-
-watch(service, (newService) => {
-  updateService(newService as ModelService);
-});
-
-// Handlers
 const handleChatHistoryDownload = () => {
   downloadChatHistory(exportChat);
 };
@@ -62,7 +40,10 @@ const handlePrevChat = () => {
   router.push('/prev');
 };
 
-// Lifecycle
+watch(service, (newService) => {
+  updateService(newService as ModelService);
+});
+
 onMounted(async () => {
   scrollToLast();
   hardScrollToBottom(false);
