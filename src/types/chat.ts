@@ -13,4 +13,5 @@ export type ChatService =
   | 'gemini'
   | 'gpt-5'
   | 'gpt-4-v2'
-  | 'gpt-5-v2';
+  | 'gpt-5-v2'
+  | 'test';
