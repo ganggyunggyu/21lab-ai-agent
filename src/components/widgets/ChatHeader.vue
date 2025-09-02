@@ -4,13 +4,15 @@ import { storeToRefs } from 'pinia';
 import { NScrollbar, NSelect } from 'naive-ui';
 
 import { useRouter } from 'vue-router';
-import { useChatStore } from '@/stores/chat';
-import { useChatActions } from '@/composables/useChatActions';
-import { useScrollToBottom } from '@/composables/useScrollToBottom';
-import { useLayoutManager } from '@/composables/useLayoutManager';
-import { MODEL_OPTIONS, ModelService } from '@/constants/models';
-import { useAutoScroll } from '@/composables/useAutoScroll';
+import { useChatStore } from '@/stores';
+import { useChatActions } from '@/hooks/useChatActions';
+import { useScrollToBottom } from '@/hooks/useScrollToBottom';
+import { useLayoutManager } from '@/hooks/useLayoutManager';
+import { MODEL_OPTIONS } from '@/constants/_models';
+
+import { useAutoScroll } from '@/hooks/useAutoScroll';
 import ModernButton from '../ui/ModernButton.vue';
+import { ChatService } from '@/types';
 
 const chatStore = useChatStore();
 
@@ -41,7 +43,7 @@ const handlePrevChat = () => {
 };
 
 watch(service, (newService) => {
-  updateService(newService as ModelService);
+  updateService(newService as ChatService);
 });
 
 onMounted(async () => {

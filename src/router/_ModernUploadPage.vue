@@ -10,7 +10,7 @@
             <p class="logo-subtitle">Document Analysis</p>
           </div>
         </div>
-        
+
         <div class="header-stats" v-if="result">
           <div class="stat-item">
             <span class="stat-number">{{ result.count }}</span>
@@ -29,13 +29,13 @@
       <div class="upload-container">
         <!-- Upload Zone -->
         <section class="upload-section">
-          <ModernCard 
+          <ModernCard
             :class="[
               'upload-zone',
-              { 
+              {
                 'upload-zone--dragging': isDragOver,
-                'upload-zone--uploading': isUploading 
-              }
+                'upload-zone--uploading': isUploading,
+              },
             ]"
             variant="glass"
             hoverable
@@ -52,7 +52,13 @@
                   <div class="spinner-ring"></div>
                   <div class="spinner-icon">📤</div>
                 </div>
-                <div v-else :class="['upload-icon', { 'upload-icon--active': isDragOver }]">
+                <div
+                  v-else
+                  :class="[
+                    'upload-icon',
+                    { 'upload-icon--active': isDragOver },
+                  ]"
+                >
                   {{ isDragOver ? '📥' : '📁' }}
                 </div>
               </div>
@@ -60,12 +66,18 @@
               <!-- Upload Text -->
               <div class="upload-text">
                 <h3 class="upload-title">
-                  {{ isUploading ? '업로드 중...' : isDragOver ? '파일을 놓아주세요' : '파일 업로드' }}
+                  {{
+                    isUploading
+                      ? '업로드 중...'
+                      : isDragOver
+                      ? '파일을 놓아주세요'
+                      : '파일 업로드'
+                  }}
                 </h3>
                 <p class="upload-description">
-                  {{ 
-                    isUploading 
-                      ? '파일을 분석하고 있습니다' 
+                  {{
+                    isUploading
+                      ? '파일을 분석하고 있습니다'
                       : 'TXT 파일을 드래그하거나 클릭하여 선택하세요'
                   }}
                 </p>
@@ -88,9 +100,14 @@
               </div>
 
               <!-- File List -->
-              <div v-if="fileList.length > 0 && !isUploading" class="selected-files">
+              <div
+                v-if="fileList.length > 0 && !isUploading"
+                class="selected-files"
+              >
                 <div class="files-header">
-                  <h4 class="files-title">선택된 파일 {{ fileList.length }}개</h4>
+                  <h4 class="files-title">
+                    선택된 파일 {{ fileList.length }}개
+                  </h4>
                   <ModernButton
                     variant="ghost"
                     size="sm"
@@ -99,17 +116,19 @@
                     icon-only
                   />
                 </div>
-                
+
                 <div class="files-list">
-                  <div 
-                    v-for="(file, index) in fileList" 
+                  <div
+                    v-for="(file, index) in fileList"
                     :key="index"
                     class="file-item"
                   >
                     <div class="file-icon">📄</div>
                     <div class="file-info">
                       <div class="file-name">{{ file.name }}</div>
-                      <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                      <div class="file-size">
+                        {{ formatFileSize(file.size) }}
+                      </div>
                     </div>
                     <ModernButton
                       variant="ghost"
@@ -146,7 +165,9 @@
                   <div class="results-icon">✅</div>
                   <div>
                     <h3>분석 완료</h3>
-                    <p class="results-subtitle">{{ result.count }}개 파일 처리됨</p>
+                    <p class="results-subtitle">
+                      {{ result.count }}개 파일 처리됨
+                    </p>
                   </div>
                 </div>
                 <ModernButton
@@ -177,14 +198,16 @@
               </div>
 
               <div class="results-list">
-                <div 
-                  v-for="(item, index) in result.results" 
+                <div
+                  v-for="(item, index) in result.results"
                   :key="index"
                   :class="['result-item', { 'result-item--error': !item.ok }]"
                 >
                   <div class="result-header">
                     <div class="result-status">
-                      <div :class="['status-icon', item.ok ? 'success' : 'error']">
+                      <div
+                        :class="['status-icon', item.ok ? 'success' : 'error']"
+                      >
                         {{ item.ok ? '✅' : '❌' }}
                       </div>
                       <div class="result-info">
@@ -194,7 +217,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <div v-if="item.ok" class="result-actions">
                       <ModernButton
                         variant="ghost"
@@ -215,7 +238,9 @@
                   <!-- Error -->
                   <div v-else-if="!item.ok" class="result-error">
                     <div class="error-icon">⚠️</div>
-                    <div class="error-message">{{ item.error || '알 수 없는 오류' }}</div>
+                    <div class="error-message">
+                      {{ item.error || '알 수 없는 오류' }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -260,10 +285,7 @@
             >
               복사
             </ModernButton>
-            <ModernButton
-              variant="primary"
-              @click="closeFullText"
-            >
+            <ModernButton variant="primary" @click="closeFullText">
               닫기
             </ModernButton>
           </div>
@@ -294,8 +316,12 @@ import {
   Copy as CopyIcon,
 } from '@vicons/ionicons5';
 import { createDiscreteApi } from 'naive-ui';
-import { uploadTextApi, type UploadTextsRes, type UploadTextItem } from '../service/upload.service';
-import { copyToClipboard } from '../utils/clipboard';
+import {
+  uploadTextApi,
+  type UploadTextsRes,
+  type UploadTextItem,
+} from '../service/_upload.service';
+import { copyToClipboard } from '../utils/_clipboard';
 import ModernButton from '../components/ui/ModernButton.vue';
 import ModernCard from '../components/ui/ModernCard.vue';
 
@@ -311,18 +337,19 @@ const selectedItem = ref<UploadTextItem | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
 // Computed
-const successCount = computed(() => 
-  result.value?.results.filter(r => r.ok).length || 0
+const successCount = computed(
+  () => result.value?.results.filter((r) => r.ok).length || 0
 );
 
-const failureCount = computed(() => 
+const failureCount = computed(() =>
   result.value ? result.value.count - successCount.value : 0
 );
 
-const totalCharacters = computed(() => 
-  result.value?.results
-    .filter(r => r.ok)
-    .reduce((sum, r) => sum + (r.length || 0), 0) || 0
+const totalCharacters = computed(
+  () =>
+    result.value?.results
+      .filter((r) => r.ok)
+      .reduce((sum, r) => sum + (r.length || 0), 0) || 0
 );
 
 // Methods
@@ -351,10 +378,11 @@ const handleDragOver = (e: DragEvent) => {
 const handleDrop = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = false;
-  
-  const files = Array.from(e.dataTransfer?.files || [])
-    .filter(file => file.type === 'text/plain' || file.name.endsWith('.txt'));
-  
+
+  const files = Array.from(e.dataTransfer?.files || []).filter(
+    (file) => file.type === 'text/plain' || file.name.endsWith('.txt')
+  );
+
   if (files.length > 0) {
     addFiles(files);
   } else {
@@ -369,28 +397,30 @@ const triggerFileInput = () => {
 const handleFileSelect = (e: Event) => {
   const target = e.target as HTMLInputElement;
   const files = Array.from(target.files || []);
-  
+
   if (files.length > 0) {
     addFiles(files);
   }
-  
+
   target.value = '';
 };
 
 const addFiles = (newFiles: File[]) => {
-  const filteredFiles = newFiles.filter(newFile => 
-    !fileList.value.some(existingFile => 
-      existingFile.name === newFile.name && 
-      existingFile.size === newFile.size
-    )
+  const filteredFiles = newFiles.filter(
+    (newFile) =>
+      !fileList.value.some(
+        (existingFile) =>
+          existingFile.name === newFile.name &&
+          existingFile.size === newFile.size
+      )
   );
-  
+
   fileList.value.push(...filteredFiles);
-  
+
   if (filteredFiles.length !== newFiles.length) {
     message.warning('중복된 파일은 제외되었습니다');
   }
-  
+
   if (filteredFiles.length > 0) {
     message.success(`${filteredFiles.length}개 파일이 선택되었습니다`);
   }
@@ -416,23 +446,26 @@ const handleUpload = async () => {
 
   try {
     const res = await uploadTextApi(fileList.value);
-    
+
     if (!res.ok) {
       throw new Error('업로드 실패');
     }
-    
+
     result.value = res;
     fileList.value = [];
-    
-    const successCount = res.results.filter(r => r.ok).length;
+
+    const successCount = res.results.filter((r) => r.ok).length;
     const failCount = res.count - successCount;
-    
+
     if (failCount === 0) {
-      message.success(`🎉 모든 파일이 성공적으로 처리되었습니다! (${successCount}개)`);
+      message.success(
+        `🎉 모든 파일이 성공적으로 처리되었습니다! (${successCount}개)`
+      );
     } else {
-      message.warning(`업로드 완료: ${successCount}개 성공, ${failCount}개 실패`);
+      message.warning(
+        `업로드 완료: ${successCount}개 성공, ${failCount}개 실패`
+      );
     }
-    
   } catch (error: any) {
     console.error('Upload error:', error);
     message.error(`업로드 오류: ${error.message || error}`);
@@ -453,7 +486,7 @@ const closeFullText = () => {
 
 const copyFullText = async () => {
   if (!selectedItem.value?.full_text) return;
-  
+
   try {
     await copyToClipboard(selectedItem.value.full_text);
     message.success('텍스트가 클립보드에 복사되었습니다');
@@ -464,16 +497,18 @@ const copyFullText = async () => {
 
 const downloadResults = () => {
   if (!result.value) return;
-  
+
   const dataStr = JSON.stringify(result.value, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(dataBlob);
-  
+
   const link = document.createElement('a');
   link.href = url;
-  link.download = `upload-results-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = `upload-results-${new Date()
+    .toISOString()
+    .slice(0, 10)}.json`;
   link.click();
-  
+
   URL.revokeObjectURL(url);
   message.success('결과 파일이 다운로드되었습니다');
 };
@@ -1051,7 +1086,7 @@ const downloadResults = () => {
   .upload-container:has(.results-section) {
     grid-template-columns: 1fr;
   }
-  
+
   .header-stats {
     display: none;
   }
@@ -1062,25 +1097,25 @@ const downloadResults = () => {
     top: 8px;
     width: calc(100% - 16px);
   }
-  
+
   .header-content {
     padding: 12px 16px;
     border-radius: 16px;
   }
-  
+
   .upload-main {
     padding: 80px 8px 16px;
   }
-  
+
   .upload-features {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .results-summary {
     grid-template-columns: 1fr;
   }
-  
+
   .full-text-modal {
     max-height: 90vh;
     margin: 0 8px;
@@ -1089,7 +1124,9 @@ const downloadResults = () => {
 
 /* Animations */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes modalIn {

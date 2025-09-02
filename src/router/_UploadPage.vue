@@ -3,12 +3,8 @@ import { ref } from 'vue';
 import { NUpload, NButton, NCard, NScrollbar } from 'naive-ui';
 import { CloudUploadOutline as UploadIcon } from '@vicons/ionicons5';
 import type { UploadFileInfo } from 'naive-ui';
-import {
-  uploadTextApi,
-  type UploadTextsRes,
-} from '../service/upload.service';
+import { uploadTextApi, type UploadTextsRes } from '../service/_upload.service';
 
-// 상태
 const fileList = ref<UploadFileInfo[]>([]);
 const isUploading = ref(false);
 const result = ref<UploadTextsRes | null>(null);
@@ -21,12 +17,11 @@ const handleUpload = async () => {
   isUploading.value = true;
   result.value = null;
   try {
-    // UploadFileInfo -> File 배열로 변환
     const files = fileList.value
       .map((f) => f.file as File | null)
       .filter((f): f is File => !!f);
 
-    const res = await uploadTextApi(files); // 다중 업로드 API
+    const res = await uploadTextApi(files);
     if (!res.ok) throw new Error('업로드 실패');
     result.value = res;
     alert(`업로드 완료: ${res.count}개 처리됨`);

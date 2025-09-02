@@ -1,14 +1,7 @@
-export type ModelService =
-  | 'gpt'
-  | 'claude'
-  | 'solar'
-  | 'gemini'
-  | 'gpt-5'
-  | 'gpt-5-v2'
-  | 'gpt-4-v2'
-  | 'test';
+import type { ChatService } from '../types';
 
-export const MODEL_OPTIONS: { label: string; value: ModelService }[] = [
+export const MODEL_OPTIONS: { label: string; value: ChatService }[] = [
+  { label: 'Chunk', value: 'chunk' },
   { label: 'GPT', value: 'gpt' },
   { label: 'GPT5', value: 'gpt-5' },
   { label: 'GPT5V2', value: 'gpt-5-v2' },

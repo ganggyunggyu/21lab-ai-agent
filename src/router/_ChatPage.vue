@@ -8,9 +8,9 @@ import {
   createDiscreteApi,
 } from 'naive-ui';
 import { delay } from 'es-toolkit';
-import { generateText, getCategory } from '../service/chat.service';
-import { downloadText } from '../utils/downloadText';
-import { MODEL_OPTIONS, type ModelService } from '../constants/models';
+import { generateText, getCategory } from '../service/_chat.service';
+import { downloadText } from '../utils/_downloadText';
+import { MODEL_OPTIONS, type ModelService } from '../constants/_models';
 import {
   INTRO_MARKDOWN,
   MSG_COPY_FAIL,
@@ -19,14 +19,14 @@ import {
   MSG_DOWNLOAD_SUCCESS,
   MSG_WARN_ENTER_KEYWORD,
   categoryInfo,
-} from '../constants/texts';
-import { AUTO_SCROLL_DELAY } from '../constants/timings';
-import { PART_SEPARATOR } from '../constants/regex';
-import { copyToClipboard } from '../utils/clipboard';
-import { getSelectedService, setSelectedService } from '../utils/localStorage';
+} from '../constants/_texts';
+import { AUTO_SCROLL_DELAY } from '../constants/_timings';
+import { PART_SEPARATOR } from '../constants/_regex';
+import { copyToClipboard } from '../utils/_clipboard';
+import { getSelectedService, setSelectedService } from '../utils/_localStorage';
 import MessageItem from '../components/MessageItem.vue';
-import { useAutoScroll } from '../composables/useAutoScroll';
-import type { Message } from '../types/chat';
+import { useAutoScroll } from '../hooks/useAutoScroll';
+import type { Message } from '../types/_chat';
 
 const { message } = createDiscreteApi(['message']);
 

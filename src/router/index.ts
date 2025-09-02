@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import ModernChatPage from '../pages/ModernChatPage.vue';
-import ModernUploadPage from '../pages/ModernUploadPage.vue';
-import ChatPage from '../pages/ChatPage.vue';
+import ModernChatPage from './_ModernChatPage.vue';
+import ModernUploadPage from './_ModernUploadPage.vue';
+import ChatPage from './_ChatPage.vue';
 
 const routes = [
   {

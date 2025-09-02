@@ -1,13 +1,13 @@
 import { createDiscreteApi } from 'naive-ui';
-import { copyToClipboard } from '../utils/clipboard';
-import { downloadText } from '../utils/downloadText';
+import { copyToClipboard } from '../utils/_clipboard';
+import { downloadText } from '../utils/_downloadText';
 import {
   MSG_COPY_SUCCESS,
   MSG_COPY_FAIL,
   MSG_DOWNLOAD_SUCCESS,
   MSG_DOWNLOAD_FAIL,
-} from '../constants/texts';
-import type { Message } from '../types/chat';
+} from '../constants/_texts';
+import type { Message } from '../types/_chat';
 
 export const useChatActions = () => {
   const { message } = createDiscreteApi(['message']);

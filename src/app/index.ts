@@ -1,3 +1,3 @@
-import { axiosConfig } from "./config/axios.instancce";
+import { axiosConfig } from './config';
 
-export const axios = axiosConfig
+export const axios = axiosConfig;

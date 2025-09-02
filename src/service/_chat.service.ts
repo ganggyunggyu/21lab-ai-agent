@@ -1,5 +1,5 @@
 import { axios } from '../app';
-import type { ChatService } from '../types/chat';
+import type { ChatService } from '../types/_chat';
 
 type GenerationRequest = {
   service: ChatService;

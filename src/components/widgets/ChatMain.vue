@@ -5,12 +5,12 @@ import { NScrollbar } from 'naive-ui';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import MessageBubble from '@/components/ui/MessageBubble.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
-import { useChatStore } from '@/stores/chat';
-import { useChatActions } from '@/composables/useChatActions';
-import { useScrollToBottom } from '@/composables/useScrollToBottom';
-import { useAutoScroll } from '@/composables/useAutoScroll';
+import { useChatStore } from '@/stores/_chat';
+import { useChatActions } from '@/hooks/useChatActions';
+import { useScrollToBottom } from '@/hooks/useScrollToBottom';
+import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { delay } from 'es-toolkit';
-import { AUTO_SCROLL_DELAY } from '@/constants/timings';
+import { AUTO_SCROLL_DELAY } from '@/constants/_timings';
 
 const chatStore = useChatStore();
 
@@ -65,6 +65,7 @@ onMounted(async () => {
               :key="`${idx}-${msg.timestamp}`"
               :message="msg"
               :index="idx"
+              :render-md="idx === 0"
               @copy="copyMsg"
               @download="handleDownloadClick"
               @regenerate="handleRegenerate"

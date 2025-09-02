@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useLayoutManager } from '@/composables/useLayoutManager';
+import { useLayoutManager } from '@/hooks/useLayoutManager';
 import ChatFooter from '@/components/widgets/ChatFooter.vue';
 import ChatMain from '@/components/widgets/ChatMain.vue';
 import ChatHeader from '@/components/widgets/ChatHeader.vue';

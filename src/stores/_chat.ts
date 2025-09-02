@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref, computed, reactive } from 'vue';
-import { generateText } from '../service/chat.service';
-import { MODEL_OPTIONS, type ModelService } from '../constants/models';
-import { INTRO_MARKDOWN } from '../constants/texts';
-import { PART_SEPARATOR } from '../constants/regex';
-import { getSelectedService, setSelectedService } from '../utils/localStorage';
-import type { Message } from '../types/chat';
+import { generateText } from '../service/_chat.service';
+import { MODEL_OPTIONS, type ModelService } from '../constants/_models';
+import { INTRO_MARKDOWN } from '../constants/_texts';
+import { PART_SEPARATOR } from '../constants/_regex';
+import { getSelectedService, setSelectedService } from '../utils/_localStorage';
+import type { Message } from '../types/_chat';
 
 export const useChatStore = defineStore(
   'chat',

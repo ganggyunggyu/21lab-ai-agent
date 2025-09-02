@@ -4,12 +4,11 @@ import {
   CopyOutline as CopyIcon,
   DownloadOutline as DownloadIcon,
 } from '@vicons/ionicons5';
-import { renderMarkdown } from '../utils/markdown';
-import { formatMessage } from '../utils/formatMsg';
+import { renderMarkdown } from '../utils/_markdown';
+import { formatMessage } from '../utils/_formatMsg';
 import { type ComponentPublicInstance } from 'vue';
-import type { Message } from '../types/chat';
+import type { Message } from '../types/_chat';
 import LoadingDots from './LoadingDots.vue';
-
 
 const props = defineProps<{
   msg: Message;

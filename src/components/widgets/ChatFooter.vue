@@ -4,7 +4,8 @@ import { NInput, NTag, NText } from 'naive-ui';
 import { Document as DocumentIcon, Send as SendIcon } from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import ModernCard from '@/components/ui/ModernCard.vue';
-import { useChatStore } from '@/stores/chat';
+import { useChatStore } from '@/stores/_chat';
+import { watch } from 'vue';
 
 const chatStore = useChatStore();
 
@@ -13,6 +14,19 @@ const { keyword, refMsg, isLoading, showRefInput } = storeToRefs(chatStore);
 const { handleGenerate, handleKeyPress } = chatStore;
 
 const actionChips = ['스마일라식', '라섹수술', '안구건조증', '시력교정'];
+
+watch(keyword, (newVal) => {
+  if (!newVal) return;
+
+  const cleaned = newVal
+    .replace(/Previous imageNext image/gi, ' ')
+    // 분리된 것도 제거
+    .replace(/\b(Previous image|Next image)\b/gi, ' ');
+
+  if (cleaned !== newVal) {
+    keyword.value = cleaned;
+  }
+});
 </script>
 <template>
   <footer class="floating-input" ref="footerRef">
@@ -26,7 +40,7 @@ const actionChips = ['스마일라식', '라섹수술', '안구건조증', '시�
                 type="textarea"
                 :rows="1"
                 :autosize="{ minRows: 1, maxRows: 3 }"
-                placeholder="📄 참고 문서나 컨텍스트를 입력해주세요 (선택사항)"
+                placeholder="참고 문서나 컨텍스트를 입력해주세요 (선택사항)"
                 class="ref-input"
               />
             </div>
@@ -37,6 +51,8 @@ const actionChips = ['스마일라식', '라섹수술', '안구건조증', '시�
           <div class="input-wrapper">
             <n-input
               v-model:value="keyword"
+              type="textarea"
+              :rows="1"
               placeholder="메시지를 입력하세요..."
               class="main-input"
               @keyup.enter="handleKeyPress"

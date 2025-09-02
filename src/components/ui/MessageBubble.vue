@@ -6,8 +6,8 @@ import {
   Refresh as RefreshIcon,
   Close as CloseIcon,
 } from '@vicons/ionicons5';
-import { renderMarkdown } from '../../utils/markdown';
-import type { Message } from '../../types/chat';
+import { renderMarkdown } from '../../utils/_markdown';
+import type { Message } from '../../types/_chat';
 import ModernButton from '../ui/ModernButton.vue';
 
 interface Props {
@@ -43,10 +43,8 @@ const formatTime = (timestamp?: number) => {
 <template>
   <div :class="['message-bubble', `message-bubble--${message.role}`]">
     <div class="message-content">
-      <!-- Avatar -->
       <div class="message-avatar"></div>
 
-      <!-- Message Body -->
       <div class="message-body">
         <div class="message-header">
           <span class="message-sender">
@@ -58,7 +56,6 @@ const formatTime = (timestamp?: number) => {
         </div>
 
         <div class="message-text">
-          <!-- Loading State -->
           <div v-if="message.content === 'loading'" class="loading-message">
             <div class="typing-indicator">
               <span></span>
@@ -68,7 +65,6 @@ const formatTime = (timestamp?: number) => {
             <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
           </div>
 
-          <!-- Regular Message -->
           <div
             v-else
             class="message-content-text"
@@ -76,11 +72,8 @@ const formatTime = (timestamp?: number) => {
           ></div>
         </div>
 
-        <!-- Message Actions -->
-        <div
-          class="message-actions"
-        >
-          <div v-if="message.role === 'bot' && message.content !== 'loading'" class="bot-actions">
+        <div class="message-actions">
+          <div v-if="message.content !== 'loading'" class="bot-actions">
             <ModernButton
               variant="ghost"
               size="sm"
@@ -112,7 +105,6 @@ const formatTime = (timestamp?: number) => {
             </ModernButton>
           </div>
 
-          <!-- Delete button for all messages except first one -->
           <ModernButton
             v-if="index > 0"
             variant="ghost"
