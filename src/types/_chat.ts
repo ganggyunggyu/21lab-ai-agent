@@ -7,12 +7,8 @@ export interface Message {
 }
 
 export type ChatService =
-  | 'gpt'
-  | 'claude'
-  | 'solar'
-  | 'gemini'
-  | 'gpt-5'
   | 'gpt-4-v2'
   | 'gpt-5-v2'
   | 'test'
-  | 'chunk';
+  | 'chunk'
+  | 'gpt-merge';
