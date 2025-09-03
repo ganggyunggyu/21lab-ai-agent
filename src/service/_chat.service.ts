@@ -41,7 +41,3 @@ export const getCategory = async (params: GetCategoryReq) => {
     throw error;
   }
 };
-
-// http://43.201.97.68
-
-// http://192.168.0.90
