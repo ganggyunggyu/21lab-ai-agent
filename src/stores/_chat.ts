@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed, reactive } from 'vue';
 import { generateText } from '../service/_chat.service';
-import { MODEL_OPTIONS, type ModelService } from '../constants/_models';
+import { MODEL_OPTIONS } from '../constants/_models';
+import type { ChatService } from '../types/_chat';
 import { INTRO_MARKDOWN } from '../constants/_texts';
 import { PART_SEPARATOR } from '../constants/_regex';
 import { getSelectedService, setSelectedService } from '../utils/_localStorage';
@@ -11,9 +12,9 @@ export const useChatStore = defineStore(
   'chat',
   () => {
     const defaultService = (MODEL_OPTIONS?.[0]?.value ??
-      'openai') as ModelService;
+      'openai') as ChatService;
     const storedService =
-      (getSelectedService() as ModelService) || defaultService;
+      (getSelectedService() as ChatService) || defaultService;
 
     const messages = ref<Message[]>([
       {
@@ -26,7 +27,7 @@ export const useChatStore = defineStore(
 
     const keyword = ref('');
     const refMsg = ref('');
-    const service = ref<ModelService>(storedService);
+    const service = ref<ChatService>(storedService);
     const pendingMessages = reactive(new Set<string>());
     const showRefInput = ref(true);
     const activeRequests = reactive(new Map<string, AbortController>());
@@ -42,7 +43,7 @@ export const useChatStore = defineStore(
       const refSnapshot = refMsg.value;
       const messageId = `msg-${Date.now()}-${Math.random()
         .toString(36)
-        .substr(2, 9)}`;
+        .slice(2, 11)}`;
 
       // User 메시지 추가
       messages.value.push({
@@ -50,6 +51,8 @@ export const useChatStore = defineStore(
         role: 'user',
         content: input,
         keyword: input,
+        ref: refSnapshot,
+        service: service.value,
         timestamp: Date.now(),
       });
 
@@ -60,6 +63,8 @@ export const useChatStore = defineStore(
         role: 'bot',
         content: 'loading',
         keyword: input,
+        ref: refSnapshot,
+        service: service.value,
         timestamp: Date.now(),
       });
 
@@ -95,10 +100,12 @@ export const useChatStore = defineStore(
             messages.value[currentLoadingIndex] = {
               id: `bot-${Date.now()}-${Math.random()
                 .toString(36)
-                .substr(2, 9)}`,
+                .slice(2, 11)}`,
               role: 'bot',
               content: parts[0],
               keyword: input,
+              ref: refSnapshot,
+              service: service.value,
               timestamp: Date.now(),
             };
 
@@ -107,10 +114,12 @@ export const useChatStore = defineStore(
               messages.value.splice(currentLoadingIndex + i, 0, {
                 id: `bot-${Date.now()}-${Math.random()
                   .toString(36)
-                  .substr(2, 9)}`,
+                  .slice(2, 11)}`,
                 role: 'bot',
                 content: parts[i],
                 keyword: input,
+                ref: refSnapshot,
+                service: service.value,
                 timestamp: Date.now(),
               });
             }
@@ -121,6 +130,8 @@ export const useChatStore = defineStore(
               role: 'bot',
               content: '(응답 없음)',
               keyword: input,
+              ref: refSnapshot,
+              service: service.value,
               timestamp: Date.now(),
             };
           }
@@ -141,6 +152,8 @@ export const useChatStore = defineStore(
               '오류가 발생했어요. 다시 시도해주세요!'
             }`,
             keyword: input,
+            ref: refSnapshot,
+            service: service.value,
             timestamp: Date.now(),
           };
         }
@@ -163,12 +176,14 @@ export const useChatStore = defineStore(
     const handleRegenerate = (msg: Message) => {
       if (msg.keyword) {
         keyword.value = msg.keyword;
-        // 참조 메시지 기능이 필요하다면 여기서 refMsg.value도 설정
+        // 저장된 ref와 service 정보 복원
+        if (msg.ref) refMsg.value = msg.ref;
+        if (msg.service) service.value = msg.service as ChatService;
         handleGenerate();
       }
     };
 
-    const updateService = (newService: ModelService) => {
+    const updateService = (newService: ChatService) => {
       service.value = newService;
       setSelectedService(newService || defaultService);
     };
@@ -210,6 +225,8 @@ export const useChatStore = defineStore(
           role: msg.role,
           content: msg.content,
           keyword: msg.keyword,
+          ref: msg.ref,
+          service: msg.service,
           timestamp: msg.timestamp,
           time: new Date(msg.timestamp || 0).toLocaleString('ko-KR'),
         })),

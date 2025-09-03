@@ -8,6 +8,7 @@ import {
 } from '@vicons/ionicons5';
 import { renderMarkdown } from '../../utils/_markdown';
 import type { Message } from '../../types/_chat';
+import { MODEL_OPTIONS } from '../../constants/_models';
 import ModernButton from '../ui/ModernButton.vue';
 
 interface Props {
@@ -32,7 +33,7 @@ const renderedContent = computed(() => {
   if (props.index === 0) {
     return renderMarkdown(props.message.content);
   }
-  
+
   // 그 외 메시지는 일반 텍스트로 처리 (줄바꿈만 적용)
   return props.message.content.replace(/\n/g, '<br>');
 });
@@ -44,6 +45,12 @@ const formatTime = (timestamp?: number) => {
     hour: '2-digit',
     minute: '2-digit',
   });
+};
+
+const getServiceLabel = (service?: string) => {
+  if (!service) return 'Unknown';
+  const option = MODEL_OPTIONS.find((opt) => opt.value === service);
+  return option?.label || service;
 };
 </script>
 
@@ -72,11 +79,26 @@ const formatTime = (timestamp?: number) => {
             <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
           </div>
 
-          <div
-            v-else
-            class="message-content-text"
-            v-html="renderedContent"
-          ></div>
+          <div v-else>
+            <!-- 사용자 메시지일 때 추가 정보 표시 -->
+            <div v-if="message.role === 'user'" class="user-message-info">
+              <div class="generation-info">
+                <span class="keyword-label">키워드:</span>
+                {{ message.keyword }}
+                <span class="service-label">서비스:</span>
+                {{ getServiceLabel(message.service) }}
+                <span class="ref-status" :class="{ 'has-ref': message.ref }">
+                  {{ message.ref ? '참조원고 있음' : '참조원고 없음' }}
+                </span>
+              </div>
+            </div>
+
+            <div
+              v-show="message.role === 'bot'"
+              class="message-content-text"
+              v-html="renderedContent"
+            ></div>
+          </div>
         </div>
 
         <div class="message-actions">
@@ -339,11 +361,47 @@ const formatTime = (timestamp?: number) => {
   border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
+/* User Message Info */
+.user-message-info {
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.generation-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.keyword-label,
+.service-label {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.ref-status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.ref-status.has-ref {
+  background: #059669;
+  color: white;
+}
+
+.ref-status:not(.has-ref) {
+  background: #dc2626;
+  color: white;
+}
+
 /* Content Styling */
 .message-content-text {
   line-height: 1.6;
   font-size: 16px;
-
   word-break: break-word;
 }
 

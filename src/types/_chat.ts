@@ -4,6 +4,8 @@ export interface Message {
   keyword?: string;
   timestamp?: number;
   id?: string;
+  ref?: string;
+  service?: string;
 }
 
 export type ChatService =
