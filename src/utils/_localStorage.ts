@@ -27,5 +27,7 @@ export const removeStoredValue = (key: string): void => {
   }
 };
 
-export const getSelectedService = () => getStoredValue(STORAGE_KEYS.SELECTED_SERVICE, 'gpt-5-v2');
-export const setSelectedService = (service: string) => setStoredValue(STORAGE_KEYS.SELECTED_SERVICE, service);
+export const getSelectedService = () =>
+  getStoredValue(STORAGE_KEYS.SELECTED_SERVICE, 'gpt-5-v2');
+export const setSelectedService = (service: string) =>
+  setStoredValue(STORAGE_KEYS.SELECTED_SERVICE, service);

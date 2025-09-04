@@ -15,12 +15,35 @@ const { handleGenerate, handleKeyPress } = chatStore;
 
 const actionChips = ['스마일라식', '라섹수술', '안구건조증', '시력교정'];
 
+const { service } = storeToRefs(chatStore);
+
+const placeholderMap: Record<string, string> = {
+  'gpt-merge': '원고 제목을 입력해주세요 (필수)',
+  'gpt-5': '참조원고를 입력해주세요 (선택)',
+  'gpt-4': '참조원고를 입력해주세요 (선택)',
+  chunk: '입력하지 않아도 됩니다.',
+};
+const keywordPlaceholder: Record<string, string> = {
+  'gpt-merge': '키워드를 입력해주세요.',
+  'gpt-5': '키워드를 입력해주세요.',
+  'gpt-4': '키워드를 입력해주세요.',
+  chunk: '참조원고를 입력해주세요 (필수)',
+};
+
+const defaultPlaceholder = '참고 문서나 컨텍스트를 입력해주세요 (선택사항)';
+const keywordDefaultPlaceholder = '키워드를 입력해주세요.';
+
+const getPlaceholder = (service: string) => {
+  return placeholderMap[service] || defaultPlaceholder;
+};
+const getKeywordPlaceholder = (service: string) => {
+  return keywordPlaceholder[service] || keywordDefaultPlaceholder;
+};
 watch(keyword, (newVal) => {
   if (!newVal) return;
 
   const cleaned = newVal
     .replace(/Previous imageNext image/gi, ' ')
-    // 분리된 것도 제거
     .replace(/\b(Previous image|Next image)\b/gi, ' ');
 
   if (cleaned !== newVal) {
@@ -40,8 +63,10 @@ watch(keyword, (newVal) => {
                 type="textarea"
                 :rows="1"
                 :autosize="{ minRows: 1, maxRows: 3 }"
-                placeholder="참고 문서나 컨텍스트를 입력해주세요 (선택사항)"
+                :placeholder="getPlaceholder(service)"
                 class="ref-input"
+                @focus="showRefInput = true"
+                @blur="showRefInput = false"
               />
             </div>
           </div>
@@ -53,9 +78,11 @@ watch(keyword, (newVal) => {
               v-model:value="keyword"
               type="textarea"
               :rows="1"
-              placeholder="메시지를 입력하세요..."
+              :placeholder="getKeywordPlaceholder(service)"
               class="main-input"
               @keyup.enter="handleKeyPress"
+              @focus="showRefInput = true"
+              @blur="showRefInput = false"
             />
 
             <div class="input-actions">
