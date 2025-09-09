@@ -1,11 +1,39 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { NInput, NTag, NText } from 'naive-ui';
-import { Document as DocumentIcon, Send as SendIcon } from '@vicons/ionicons5';
+import {
+  NInput,
+  NTag,
+  NText,
+  NPopover,
+  NCard,
+  NButton,
+  NSpace,
+  NModal,
+} from 'naive-ui';
+import {
+  Document as DocumentIcon,
+  Send as SendIcon,
+  StarOutline as StarOutlineIcon,
+  ChevronBack as ChevronBackIcon,
+  ChevronForward as ChevronForwardIcon,
+} from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import ModernCard from '@/components/ui/ModernCard.vue';
 import { useChatStore } from '@/stores/_chat';
-import { watch } from 'vue';
+import { computed, watch, ref, onMounted } from 'vue';
+import { MODEL_OPTIONS } from '@/constants/_models';
+import {
+  getFrequentKeywords,
+  addKeywordToFrequent,
+  type FrequentKeyword,
+  getFavoriteSearches,
+  addFavoriteSearch,
+  removeFavoriteSearch,
+  type FavoriteSearch,
+  getSearchHistory,
+  addSearchHistory,
+  type SearchHistory,
+} from '@/utils/_localStorage';
 
 const chatStore = useChatStore();
 
@@ -13,7 +41,26 @@ const { keyword, refMsg, isLoading, showRefInput } = storeToRefs(chatStore);
 
 const { handleGenerate, handleKeyPress } = chatStore;
 
-const actionChips = ['스마일라식', '라섹수술', '안구건조증', '시력교정'];
+const frequentKeywords = ref<FrequentKeyword[]>([]);
+
+const favoriteSearches = ref<FavoriteSearch[]>([]);
+const showFavorites = ref(false);
+
+const searchHistory = ref<SearchHistory[]>([]);
+
+const userMessages = computed(() => {
+  return chatStore.messages
+    .filter((msg) => msg.role === 'user' && msg.keyword)
+    .reverse()
+    .slice(0, 12)
+    .map((msg) => ({
+      id: msg.id || Date.now().toString(),
+      keyword: msg.keyword || '',
+      ref: msg.ref,
+      service: msg.service || 'gpt-5-v2',
+      timestamp: new Date(msg.timestamp || Date.now()),
+    }));
+});
 
 const { service } = storeToRefs(chatStore);
 
@@ -30,24 +77,166 @@ const keywordPlaceholder: Record<string, string> = {
   chunk: '참조원고를 입력해주세요 (필수)',
 };
 
+const isChunk = computed(() => service.value === 'chunk');
+
 const defaultPlaceholder = '참고 문서나 컨텍스트를 입력해주세요 (선택사항)';
 const keywordDefaultPlaceholder = '키워드를 입력해주세요.';
 
-const getPlaceholder = (service: string) => {
-  return placeholderMap[service] || defaultPlaceholder;
-};
 const getKeywordPlaceholder = (service: string) => {
   return keywordPlaceholder[service] || keywordDefaultPlaceholder;
 };
+
+const refPlaceholder = computed(
+  () => placeholderMap[service.value] ?? defaultPlaceholder
+);
+
+const loadFrequentKeywords = () => {
+  frequentKeywords.value = getFrequentKeywords();
+};
+
+const loadFavoriteSearches = () => {
+  favoriteSearches.value = getFavoriteSearches();
+};
+
+const loadSearchHistory = () => {
+  searchHistory.value = getSearchHistory();
+};
+
+const handleAddFavorite = () => {
+  const title = prompt('즐겨찾기 이름을 입력하세요:', keyword.value);
+  if (title) {
+    addFavoriteSearch(keyword.value, refMsg.value, title);
+    loadFavoriteSearches();
+  }
+};
+
+const handleFavoriteClick = (favorite: FavoriteSearch) => {
+  keyword.value = favorite.keyword;
+  if (favorite.refMsg) {
+    refMsg.value = favorite.refMsg;
+    showRefInput.value = true;
+  } else {
+    showRefInput.value = false;
+  }
+  showFavorites.value = false;
+
+  handleGenerate();
+};
+
+const handleRemoveFavorite = (id: string, event: Event) => {
+  event.stopPropagation();
+  removeFavoriteSearch(id);
+  loadFavoriteSearches();
+};
+
+const handleUserMessageClick = (userMsg: any) => {
+  openActionModal(userMsg);
+};
+
+// 사용하지 않는 함수 제거
+
+const getServiceLabel = (serviceValue: string) => {
+  const option = MODEL_OPTIONS.find((opt) => opt.value === serviceValue);
+  return option?.label || serviceValue;
+};
+
+// 스크롤 기능
+const chipsScrollRef = ref<HTMLElement | null>(null);
+
+const scrollChips = (direction: 'left' | 'right') => {
+  if (!chipsScrollRef.value) return;
+  
+  const scrollAmount = 200;
+  const currentScroll = chipsScrollRef.value.scrollLeft;
+  
+  if (direction === 'left') {
+    chipsScrollRef.value.scrollTo({
+      left: currentScroll - scrollAmount,
+      behavior: 'smooth'
+    });
+  } else {
+    chipsScrollRef.value.scrollTo({
+      left: currentScroll + scrollAmount,
+      behavior: 'smooth'
+    });
+  }
+};
+
+// 텍스트 정리 함수
+const cleanText = (text: string) => {
+  return text
+    .replace(/Previous imageNext image/gi, ' ')
+    .replace(/\b(Previous image|Next image)\b/gi, ' ')
+    .trim();
+};
+
+// 칩 클릭 액션 선택 모달
+const showActionModal = ref(false);
+const selectedUserMessage = ref<any>(null);
+
+const openActionModal = (userMsg: any) => {
+  selectedUserMessage.value = userMsg;
+  showActionModal.value = true;
+};
+
+const handleGenerateFromModal = () => {
+  if (!selectedUserMessage.value) return;
+  
+  keyword.value = selectedUserMessage.value.keyword;
+  if (selectedUserMessage.value.ref) {
+    refMsg.value = cleanText(selectedUserMessage.value.ref);
+    showRefInput.value = true;
+  } else {
+    showRefInput.value = false;
+  }
+  chatStore.updateService(selectedUserMessage.value.service as any);
+  
+  showActionModal.value = false;
+  handleGenerate();
+};
+
+const handleCopyRefFromModal = () => {
+  if (!selectedUserMessage.value?.ref) return;
+  
+  const cleanedRef = cleanText(selectedUserMessage.value.ref);
+  navigator.clipboard.writeText(cleanedRef);
+  showActionModal.value = false;
+  
+  // 성공 알림 (선택적)
+  console.log('참조원고가 클립보드에 복사되었습니다.');
+};
+
+const handleGenerateWithKeyword = () => {
+  if (keyword.value.trim()) {
+    addKeywordToFrequent(keyword.value.trim());
+    addSearchHistory(keyword.value.trim(), refMsg.value, service.value);
+    loadFrequentKeywords();
+    loadSearchHistory();
+  }
+  handleGenerate();
+};
+
+onMounted(() => {
+  loadFrequentKeywords();
+  loadFavoriteSearches();
+  loadSearchHistory();
+});
+
+// 키워드 텍스트 정리
 watch(keyword, (newVal) => {
   if (!newVal) return;
-
-  const cleaned = newVal
-    .replace(/Previous imageNext image/gi, ' ')
-    .replace(/\b(Previous image|Next image)\b/gi, ' ');
-
+  const cleaned = cleanText(newVal);
   if (cleaned !== newVal) {
     keyword.value = cleaned;
+  }
+});
+
+// 참조원고 텍스트 정리
+watch(refMsg, (newVal) => {
+  if (!newVal) return;
+  const cleaned = cleanText(newVal);
+  if (cleaned !== newVal) {
+    refMsg.value = cleaned;
   }
 });
 </script>
@@ -60,11 +249,11 @@ watch(keyword, (newVal) => {
             <div class="input-surface">
               <n-input
                 v-model:value="refMsg"
-                type="textarea"
+                :type="'textarea'"
                 :rows="1"
-                :autosize="{ minRows: 1, maxRows: 3 }"
-                :placeholder="getPlaceholder(service)"
-                class="ref-input"
+                :autosize="{ minRows: 1, maxRows: 4 }"
+                :placeholder="refPlaceholder"
+                class="main-input"
                 @focus="showRefInput = true"
                 @blur="showRefInput = false"
               />
@@ -76,8 +265,9 @@ watch(keyword, (newVal) => {
           <div class="input-wrapper">
             <n-input
               v-model:value="keyword"
-              type="textarea"
+              :type="isChunk ? 'textarea' : 'text'"
               :rows="1"
+              :autosize="{ minRows: 1, maxRows: 4 }"
               :placeholder="getKeywordPlaceholder(service)"
               class="main-input"
               @keyup.enter="handleKeyPress"
@@ -95,6 +285,83 @@ watch(keyword, (newVal) => {
                 :class="{ active: showRefInput }"
                 aria-label="참조 입력 토글"
               />
+
+              <!-- 즐겨찾기 버튼 -->
+              <n-popover
+                trigger="click"
+                v-model:show="showFavorites"
+                placement="top"
+              >
+                <template #trigger>
+                  <ModernButton
+                    variant="ghost"
+                    size="sm"
+                    icon-only
+                    :icon="StarOutlineIcon"
+                    aria-label="즐겨찾기"
+                  />
+                </template>
+
+                <n-card
+                  style="max-width: 300px; max-height: 400px; overflow-y: auto"
+                  size="small"
+                >
+                  <template #header>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                      "
+                    >
+                      <span>즐겨찾기 검색</span>
+                      <n-button
+                        v-if="keyword.trim()"
+                        size="small"
+                        type="primary"
+                        @click="handleAddFavorite"
+                      >
+                        추가
+                      </n-button>
+                    </div>
+                  </template>
+
+                  <div
+                    v-if="favoriteSearches.length === 0"
+                    style="text-align: center; color: #999; padding: 20px"
+                  >
+                    저장된 즐겨찾기가 없습니다
+                  </div>
+
+                  <n-space v-else vertical size="small">
+                    <div
+                      v-for="favorite in favoriteSearches"
+                      :key="favorite.id"
+                      class="favorite-item"
+                      @click="handleFavoriteClick(favorite)"
+                    >
+                      <div class="favorite-content">
+                        <div class="favorite-title">{{ favorite.title }}</div>
+                        <div class="favorite-keyword">
+                          {{ favorite.keyword }}
+                        </div>
+                        <div v-if="favorite.refMsg" class="favorite-ref">
+                          참조: {{ favorite.refMsg.slice(0, 50) }}...
+                        </div>
+                      </div>
+                      <n-button
+                        size="tiny"
+                        type="error"
+                        @click="handleRemoveFavorite(favorite.id, $event)"
+                        style="margin-left: auto"
+                      >
+                        삭제
+                      </n-button>
+                    </div>
+                  </n-space>
+                </n-card>
+              </n-popover>
+
               <ModernButton
                 v-if="keyword"
                 variant="primary"
@@ -102,7 +369,7 @@ watch(keyword, (newVal) => {
                 icon-only
                 :icon="SendIcon"
                 :loading="isLoading"
-                @click="handleGenerate"
+                @click="handleGenerateWithKeyword"
                 aria-label="메시지 전송"
               />
             </div>
@@ -110,27 +377,128 @@ watch(keyword, (newVal) => {
         </div>
 
         <div class="bottom-actions">
-          <div class="action-chips">
-            <n-tag
-              v-for="chip in actionChips"
-              :key="chip"
-              size="small"
-              :bordered="false"
-              @click="keyword = chip"
-              class="action-chip"
-            >
-              {{ chip }}
-            </n-tag>
+          <div class="smart-suggestions">
+            <div v-if="userMessages.length > 0" class="suggestion-section">
+              <div class="chips-scroll-container">
+                <!-- 왼쪽 스크롤 버튼 -->
+                <button 
+                  class="scroll-button scroll-button-left"
+                  @click="scrollChips('left')"
+                  aria-label="왼쪽으로 스크롤"
+                >
+                  <component :is="ChevronBackIcon" />
+                </button>
+                
+                <!-- 칩 컨테이너 -->
+                <div 
+                  ref="chipsScrollRef" 
+                  class="suggestion-chips"
+                >
+                  <n-tag
+                    v-for="userMsg in userMessages.slice(0, 12)"
+                    :key="userMsg.id"
+                    size="large"
+                    :bordered="false"
+                    @click="handleUserMessageClick(userMsg)"
+                    class="smart-chip user-message-chip"
+                    type="primary"
+                  >
+                    <div class="chip-content">
+                      <div class="chip-main">
+                        <span class="chip-keyword">{{ userMsg.keyword }}</span>
+                        <div class="chip-badges">
+                          <span class="service-badge">{{
+                            getServiceLabel(userMsg.service)
+                          }}</span>
+                          <span v-if="userMsg.ref" class="ref-badge">📎</span>
+                        </div>
+                      </div>
+                    </div>
+                  </n-tag>
+                </div>
+                
+                <!-- 오른쪽 스크롤 버튼 -->
+                <button 
+                  class="scroll-button scroll-button-right"
+                  @click="scrollChips('right')"
+                  aria-label="오른쪽으로 스크롤"
+                >
+                  <component :is="ChevronForwardIcon" />
+                </button>
+              </div>
+            </div>
+            <div v-if="favoriteSearches.length > 0" class="suggestion-section">
+              <div class="section-label">즐겨찾기</div>
+              <div class="suggestion-chips">
+                <n-tag
+                  v-for="favorite in favoriteSearches.slice(0, 6)"
+                  :key="favorite.id"
+                  size="medium"
+                  :bordered="false"
+                  @click="handleFavoriteClick(favorite)"
+                  class="smart-chip favorite-chip"
+                  type="success"
+                >
+                  <div class="chip-content">
+                    <span class="chip-keyword">{{ favorite.title }}</span>
+                    <span class="star-icon">⭐</span>
+                  </div>
+                </n-tag>
+              </div>
+            </div>
           </div>
 
-          <div class="status-info">
-            <n-text depth="3" v-if="keyword.length > 0">
-              {{ keyword.length }}/1000
-            </n-text>
+          <div class="footer-info">
+            <div class="char-count" v-if="keyword.length > 0">
+              <n-text depth="3">{{ keyword.length }}/1000</n-text>
+            </div>
           </div>
         </div>
       </ModernCard>
     </div>
+
+    <!-- 액션 선택 모달 -->
+    <n-modal v-model:show="showActionModal">
+      <n-card
+        style="width: 400px"
+        title="작업 선택"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <template #header-extra> </template>
+        <div style="margin-bottom: 16px;">
+          <p><strong>키워드:</strong> {{ selectedUserMessage?.keyword }}</p>
+          <p v-if="selectedUserMessage?.ref" style="margin-top: 8px;">
+            <strong>참조원고:</strong> {{ selectedUserMessage?.ref?.slice(0, 100) }}...
+          </p>
+          <p style="margin-top: 8px;">
+            <strong>서비스:</strong> {{ getServiceLabel(selectedUserMessage?.service || '') }}
+          </p>
+        </div>
+        <p style="color: #666; font-size: 14px;">
+          어떤 작업을 수행하시겠습니까?
+        </p>
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="showActionModal = false">
+              취소
+            </n-button>
+            <n-button 
+              v-if="selectedUserMessage?.ref" 
+              type="info" 
+              @click="handleCopyRefFromModal"
+            >
+              참조원고 복사
+            </n-button>
+            <n-button type="primary" @click="handleGenerateFromModal">
+              원고 작성
+            </n-button>
+          </n-space>
+        </template>
+      </n-card>
+    </n-modal>
   </footer>
 </template>
 <style scoped>
@@ -141,8 +509,14 @@ watch(keyword, (newVal) => {
   left: 50%;
   transform: translateX(-50%);
   width: 100vw;
-  max-width: var(--container-max, 1000px);
+  max-width: 90vw;
   z-index: 100;
+  
+  /* 작은 화면에서 100vw */
+  @media (max-width: 768px) {
+    width: 100vw;
+    max-width: 100vw;
+  }
 }
 .input-container {
   position: relative;
@@ -325,29 +699,253 @@ watch(keyword, (newVal) => {
 .input-actions .modern-btn.active {
   opacity: 1;
 }
+/* 새로운 스마트 제안 UI */
 .bottom-actions {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 12px 16px 8px;
+}
+
+.smart-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggestion-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chips-scroll-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+.suggestion-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  flex: 1;
+}
+
+.suggestion-chips::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
+.scroll-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  color: rgba(99, 102, 241, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.scroll-button:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: rgba(99, 102, 241, 1);
+  transform: scale(1.1);
+}
+
+.scroll-button:active {
+  transform: scale(0.95);
+}
+
+.scroll-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.smart-chip {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0; /* 칩이 줄어들지 않도록 */
+}
+
+.smart-chip:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.chip-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chip-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chip-keyword {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  line-height: 1.2;
+}
+
+.chip-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.service-badge {
+  font-size: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 0, 0, 0.8);
+  padding: 2px 5px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.ref-badge {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.usage-badge {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.4);
+  color: rgba(0, 0, 0, 0.8);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
+.star-icon {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* 유저 메시지 칩 스타일 */
+.user-message-chip {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.12),
+    rgba(99, 102, 241, 0.08)
+  );
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.user-message-chip:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.18),
+    rgba(99, 102, 241, 0.12)
+  );
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+/* 즐겨찾기 칩 스타일 */
+.favorite-chip {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.12),
+    rgba(34, 197, 94, 0.08)
+  );
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.favorite-chip:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.18),
+    rgba(34, 197, 94, 0.12)
+  );
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.footer-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 5px;
-  padding-top: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
-.action-chips {
+
+.char-count {
+  font-size: 12px;
+}
+
+.quick-actions {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* 즐겨찾기 스타일 */
+.favorite-item {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.action-chip {
+  align-items: flex-start;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: rgba(99, 102, 241, 0.1);
-  color: #000;
-  border: 1px solid rgba(99, 102, 241, 0.2);
 }
-.action-chip:hover {
-  background: rgba(99, 102, 241, 0.15);
-  transform: translateY(-1px);
+.favorite-item:hover {
+  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+.favorite-content {
+  flex: 1;
+}
+.favorite-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #000;
+  margin-bottom: 4px;
+}
+.favorite-keyword {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 2px;
+}
+.favorite-ref {
+  font-size: 11px;
+  color: #999;
 }
 
 /* ===== KEYFRAMES ===== */
