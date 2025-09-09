@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { NScrollbar, NSelect } from 'naive-ui';
+import { NScrollbar, NSelect, NModal, NCard, NSpace, NButton } from 'naive-ui';
 
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores';
@@ -34,12 +34,27 @@ const router = useRouter();
 
 const { headerRef } = useLayoutManager();
 
+const showClearModal = ref(false);
+
 const handleChatHistoryDownload = () => {
   downloadChatHistory(exportChat);
 };
 
 const handlePrevChat = () => {
   router.push('/prev');
+};
+
+const handleClearChat = () => {
+  showClearModal.value = true;
+};
+
+const confirmClearChat = () => {
+  clearChat();
+  showClearModal.value = false;
+};
+
+const cancelClearChat = () => {
+  showClearModal.value = false;
 };
 
 watch(service, (newService) => {
@@ -78,7 +93,7 @@ onMounted(async () => {
         <ModernButton
           variant="ghost"
           size="sm"
-          @click="clearChat"
+          @click="handleClearChat"
           :disabled="messages.length <= 1"
           title="채팅 삭제"
         >
@@ -96,6 +111,29 @@ onMounted(async () => {
         </ModernButton>
       </div>
     </div>
+
+    <n-modal v-model:show="showClearModal">
+      <n-card
+        style="width: 400px"
+        title="초기화 확인"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <template #header-extra> </template>
+        <p>채팅 내역을 초기화하시겠습니까?</p>
+        <p style="color: #999; font-size: 14px; margin-top: 8px">
+          이 작업은 되돌릴 수 없습니다.
+        </p>
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="cancelClearChat"> 취소 </n-button>
+            <n-button type="error" @click="confirmClearChat"> 초기화 </n-button>
+          </n-space>
+        </template>
+      </n-card>
+    </n-modal>
   </header>
 </template>
 <style lang="css" scoped>
@@ -106,8 +144,14 @@ onMounted(async () => {
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
-  width: calc(100% - 32px);
-  max-width: var(--container-max);
+  width: 100vw;
+  max-width: 90vw;
+  
+  /* 작은 화면에서 100vw */
+  @media (max-width: 768px) {
+    width: 100vw;
+    max-width: calc(100vw - 32px);
+  }
 }
 .header-content {
   display: flex;
