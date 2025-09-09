@@ -100,11 +100,16 @@ onMounted(async () => {
   overflow: hidden;
 }
 .chat-container {
-  max-width: var(--container-max, 1000px);
+  max-width: 90vw;
   margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
+  
+  /* 작은 화면에서 100vw */
+  @media (max-width: 768px) {
+    max-width: calc(100vw - 32px);
+  }
 }
 .messages-container {
   height: calc(100dvh - var(--header-h, 80px) - var(--footer-h, 180px));
@@ -133,7 +138,7 @@ onMounted(async () => {
 }
 .scroll-btn {
   position: fixed;
-  bottom: 200px;
+  bottom: 230px;
   left: 50%;
   translate: -50% 0;
   z-index: 100;
