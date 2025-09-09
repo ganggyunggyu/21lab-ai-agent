@@ -39,7 +39,16 @@ const chatStore = useChatStore();
 
 const { keyword, refMsg, isLoading, showRefInput } = storeToRefs(chatStore);
 
-const { handleGenerate, handleKeyPress } = chatStore;
+const { handleGenerate } = chatStore;
+
+// 로컬 키보드 핸들러 (스페이스바 문제 해결용)
+const handleKeyboardEvent = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleGenerate();
+  }
+  // 다른 키(스페이스바 포함)는 기본 동작 허용
+};
 
 const frequentKeywords = ref<FrequentKeyword[]>([]);
 
@@ -206,6 +215,16 @@ const handleCopyRefFromModal = () => {
   console.log('참조원고가 클립보드에 복사되었습니다.');
 };
 
+const handleCopyKeywordFromModal = () => {
+  if (!selectedUserMessage.value?.keyword) return;
+  
+  navigator.clipboard.writeText(selectedUserMessage.value.keyword);
+  showActionModal.value = false;
+  
+  // 성공 알림 (선택적)
+  console.log('키워드가 클립보드에 복사되었습니다.');
+};
+
 const handleGenerateWithKeyword = () => {
   if (keyword.value.trim()) {
     addKeywordToFrequent(keyword.value.trim());
@@ -222,9 +241,9 @@ onMounted(() => {
   loadSearchHistory();
 });
 
-// 키워드 텍스트 정리
+// 키워드 텍스트 정리 (chunk 서비스일 때만)
 watch(keyword, (newVal) => {
-  if (!newVal) return;
+  if (!newVal || !isChunk.value) return;
   const cleaned = cleanText(newVal);
   if (cleaned !== newVal) {
     keyword.value = cleaned;
@@ -270,7 +289,7 @@ watch(refMsg, (newVal) => {
               :autosize="{ minRows: 1, maxRows: 4 }"
               :placeholder="getKeywordPlaceholder(service)"
               class="main-input"
-              @keyup.enter="handleKeyPress"
+              @keydown="handleKeyboardEvent"
               @focus="showRefInput = true"
               @blur="showRefInput = false"
             />
@@ -469,13 +488,45 @@ watch(refMsg, (newVal) => {
       >
         <template #header-extra> </template>
         <div style="margin-bottom: 16px;">
-          <p><strong>키워드:</strong> {{ selectedUserMessage?.keyword }}</p>
-          <p v-if="selectedUserMessage?.ref" style="margin-top: 8px;">
-            <strong>참조원고:</strong> {{ selectedUserMessage?.ref?.slice(0, 100) }}...
-          </p>
-          <p style="margin-top: 8px;">
+          <div class="modal-item">
+            <div class="modal-item-header">
+              <strong>키워드:</strong>
+              <n-button 
+                size="tiny" 
+                type="default"
+                @click="handleCopyKeywordFromModal"
+                style="margin-left: 8px;"
+              >
+                복사
+              </n-button>
+            </div>
+            <p class="modal-text">
+              {{ selectedUserMessage?.keyword && selectedUserMessage.keyword.length > 80 
+                ? selectedUserMessage.keyword.slice(0, 80) + '...' 
+                : selectedUserMessage?.keyword }}
+            </p>
+          </div>
+          
+          <div v-if="selectedUserMessage?.ref" class="modal-item" style="margin-top: 12px;">
+            <div class="modal-item-header">
+              <strong>참조원고:</strong>
+              <n-button 
+                size="tiny" 
+                type="default"
+                @click="handleCopyRefFromModal"
+                style="margin-left: 8px;"
+              >
+                복사
+              </n-button>
+            </div>
+            <p class="modal-text">
+              {{ selectedUserMessage.ref.slice(0, 100) }}...
+            </p>
+          </div>
+          
+          <div class="modal-item" style="margin-top: 12px;">
             <strong>서비스:</strong> {{ getServiceLabel(selectedUserMessage?.service || '') }}
-          </p>
+          </div>
         </div>
         <p style="color: #666; font-size: 14px;">
           어떤 작업을 수행하시겠습니까?
@@ -484,13 +535,6 @@ watch(refMsg, (newVal) => {
           <n-space justify="end">
             <n-button @click="showActionModal = false">
               취소
-            </n-button>
-            <n-button 
-              v-if="selectedUserMessage?.ref" 
-              type="info" 
-              @click="handleCopyRefFromModal"
-            >
-              참조원고 복사
             </n-button>
             <n-button type="primary" @click="handleGenerateFromModal">
               원고 작성
@@ -946,6 +990,25 @@ watch(refMsg, (newVal) => {
 .favorite-ref {
   font-size: 11px;
   color: #999;
+}
+
+/* 모달 스타일 */
+.modal-item {
+  margin-bottom: 8px;
+}
+
+.modal-item-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.modal-text {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
+  word-break: break-all;
 }
 
 /* ===== KEYFRAMES ===== */
