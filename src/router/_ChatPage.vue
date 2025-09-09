@@ -10,7 +10,7 @@ import {
 import { delay } from 'es-toolkit';
 import { generateText, getCategory } from '../service/_chat.service';
 import { downloadText } from '../utils/_downloadText';
-import { MODEL_OPTIONS, type ModelService } from '../constants/_models';
+import { MODEL_OPTIONS } from '../constants/_models';
 import {
   INTRO_MARKDOWN,
   MSG_COPY_FAIL,
@@ -26,7 +26,7 @@ import { copyToClipboard } from '../utils/_clipboard';
 import { getSelectedService, setSelectedService } from '../utils/_localStorage';
 import MessageItem from '../components/MessageItem.vue';
 import { useAutoScroll } from '../hooks/useAutoScroll';
-import type { Message } from '../types/_chat';
+import type { ChatService, Message } from '../types/_chat';
 
 const { message } = createDiscreteApi(['message']);
 
@@ -38,7 +38,7 @@ const messages = ref<Message[]>([
 ]);
 const keyword = ref('');
 const refMsg = ref('');
-const service = ref<ModelService>(getSelectedService() as ModelService);
+const service = ref<ChatService>(getSelectedService() as ChatService);
 const isLoading = ref(false);
 const isCategoryLoading = ref(false);
 const category = ref('');

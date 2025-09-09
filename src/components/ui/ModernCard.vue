@@ -1,23 +1,23 @@
 <template>
-  <div 
+  <div
     :class="[
       'modern-card',
       `modern-card--${variant}`,
       {
         'modern-card--hover': hoverable,
         'modern-card--bordered': bordered,
-        'modern-card--elevated': elevated
-      }
+        'modern-card--elevated': elevated,
+      },
     ]"
   >
     <div v-if="$slots.header" class="modern-card__header">
       <slot name="header" />
     </div>
-    
+
     <div class="modern-card__body">
       <slot />
     </div>
-    
+
     <div v-if="$slots.footer" class="modern-card__footer">
       <slot name="footer" />
     </div>
@@ -66,9 +66,11 @@ withDefaults(defineProps<Props>(), {
 }
 
 .modern-card--gradient {
-  background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.1) 0%, 
-    rgba(16, 185, 129, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(16, 185, 129, 0.1) 100%
+  );
   backdrop-filter: blur(20px);
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
@@ -78,15 +80,13 @@ withDefaults(defineProps<Props>(), {
 }
 
 .modern-card--elevated {
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .modern-card--hover:hover {
   transform: translateY(-4px);
-  box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
@@ -96,9 +96,11 @@ withDefaults(defineProps<Props>(), {
 }
 
 .modern-card--hover:hover.modern-card--gradient {
-  background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.15) 0%, 
-    rgba(16, 185, 129, 0.15) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.15) 0%,
+    rgba(16, 185, 129, 0.15) 100%
+  );
   border-color: rgba(59, 130, 246, 0.3);
 }
 
@@ -128,7 +130,7 @@ withDefaults(defineProps<Props>(), {
     padding-left: 16px;
     padding-right: 16px;
   }
-  
+
   .modern-card__body {
     padding-top: 16px;
     padding-bottom: 16px;
