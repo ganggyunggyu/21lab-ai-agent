@@ -251,6 +251,41 @@ const displayList = computed(() => {
   }
   return filtered;
 });
+
+// 블로그 ID별 그룹 정보 계산
+const getBlogIdGroups = computed(() => {
+  const groups = new Map<string, FavoriteSearch[]>();
+  
+  displayList.value.forEach(item => {
+    if (item.blogId) {
+      if (!groups.has(item.blogId)) {
+        groups.set(item.blogId, []);
+      }
+      groups.get(item.blogId)!.push(item);
+    }
+  });
+  
+  return groups;
+});
+
+// 아이템이 그룹의 몇 번째인지 확인
+const getItemGroupInfo = (item: FavoriteSearch) => {
+  if (!item.blogId) return null;
+  
+  const group = getBlogIdGroups.value.get(item.blogId);
+  if (!group || group.length <= 1) return null;
+  
+  const sortedGroup = [...group].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  
+  const index = sortedGroup.findIndex(g => g.id === item.id);
+  return {
+    total: group.length,
+    position: index + 1,
+    isLatest: index === 0
+  };
+};
 </script>
 
 <template>
@@ -345,6 +380,11 @@ const displayList = computed(() => {
                 <div class="item-title-section">
                   <CheckIcon class="published-badge-icon" />
                   <h3 class="item-title">{{ item.title }}</h3>
+                  <!-- 그룹 뱃지 -->
+                  <span v-if="getItemGroupInfo(item)" class="group-version-badge">
+                    {{ getItemGroupInfo(item)?.isLatest ? '최신' : `v${getItemGroupInfo(item)?.position}` }} 
+                    / {{ getItemGroupInfo(item)?.total }}
+                  </span>
                 </div>
                 <div class="item-actions">
                   <ModernButton
@@ -1018,6 +1058,17 @@ const displayList = computed(() => {
   display: flex;
   align-items: center;
   gap: 3px;
+}
+
+.group-version-badge {
+  font-size: 10px;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 6px;
 }
 .item-footer {
   margin-top: 8px;
