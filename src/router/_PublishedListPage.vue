@@ -337,9 +337,17 @@ const displayList = computed(() => {
 .published-list-container {
   min-height: 100vh;
   padding: 16px;
-  background: radial-gradient(1200px 600px at 50% -20%, rgba(59,130,246,0.12), transparent),
-              radial-gradient(900px 500px at 80% 10%, rgba(16,185,129,0.12), transparent),
-              radial-gradient(900px 500px at 20% 10%, rgba(236,72,153,0.08), transparent);
+  /* Light theme: airy colorful halos */
+  background: radial-gradient(1200px 600px at 50% -20%, rgba(59,130,246,0.16), transparent),
+              radial-gradient(900px 500px at 80% 10%, rgba(16,185,129,0.14), transparent),
+              radial-gradient(900px 500px at 20% 10%, rgba(236,72,153,0.12), transparent);
+}
+
+/* Dark theme tuning: deeper base + neon glows */
+:global(.dark) .published-list-container {
+  background: #0b1220 radial-gradient(1200px 600px at 50% -20%, rgba(59,130,246,0.22), transparent),
+              radial-gradient(900px 500px at 80% 10%, rgba(16,185,129,0.20), transparent),
+              radial-gradient(900px 500px at 20% 10%, rgba(236,72,153,0.16), transparent);
 }
 
 .page-header {
@@ -380,6 +388,10 @@ const displayList = computed(() => {
 .toolbar-card {
   padding: 12px 16px;
   backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.6);
+}
+:global(.dark) .toolbar-card {
+  background: rgba(17, 24, 39, 0.5);
 }
 .toolbar-row {
   display: flex;
@@ -406,6 +418,9 @@ const displayList = computed(() => {
   font-size: 13px;
   color: #555;
 }
+:global(.dark) .switch-label {
+  color: #cbd5e1;
+}
 
 /* List */
 .list-container {
@@ -415,10 +430,12 @@ const displayList = computed(() => {
 .published-item-card {
   cursor: pointer;
   transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  border: 1px solid rgba(59, 130, 246, 0.14);
 }
 .published-item-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18), 0 6px 14px rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.28);
 }
 .item-header {
   display: flex;
@@ -438,11 +455,12 @@ const displayList = computed(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #10b981;
+  background: linear-gradient(135deg, #34d399, #10b981);
   color: #fff;
   border-radius: 50%;
   font-size: 11px;
   font-weight: 700;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18), 0 6px 18px rgba(16, 185, 129, 0.25);
 }
 .item-title {
   margin: 0;
