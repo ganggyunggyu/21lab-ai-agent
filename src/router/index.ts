@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import ModernChatPage from './_ModernChatPage.vue';
 import ModernUploadPage from './_ModernUploadPage.vue';
 import ChatPage from './_ChatPage.vue';
+import PublishedListPage from './_PublishedListPage.vue';
 
 const routes = [
   {
@@ -26,6 +27,14 @@ const routes = [
     component: ModernUploadPage,
     meta: {
       title: '파일 업로드',
+    },
+  },
+  {
+    path: '/published',
+    name: 'PublishedList',
+    component: PublishedListPage,
+    meta: {
+      title: '발행원고',
     },
   },
 ];
