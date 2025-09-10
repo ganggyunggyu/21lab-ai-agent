@@ -7,6 +7,7 @@ import {
   NTag,
   NModal,
   NInput,
+  NInputNumber,
   NText,
   NEmpty,
   NGrid,
@@ -20,12 +21,20 @@ import {
   Trash as TrashIcon,
   Star as StarIcon,
   ArrowBack as BackIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
+  Link as LinkIcon,
+  ChatboxEllipses as ChatIcon,
+  CheckmarkCircle as CheckIcon,
+  Newspaper as NewsIcon,
 } from '@vicons/ionicons5';
 import ModernCard from '@/components/ui/ModernCard.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import {
   getFavoriteSearches,
   removeFavoriteSearch,
+  updatePublishedMemo,
+  updatePublishedExposure,
   type FavoriteSearch,
 } from '@/utils/_localStorage';
 import { useChatStore } from '@/stores/_chat';
@@ -34,6 +43,10 @@ const chatStore = useChatStore();
 const publishedList = ref<FavoriteSearch[]>([]);
 const showDetailModal = ref(false);
 const selectedItem = ref<FavoriteSearch | null>(null);
+
+// 메모 편집용 상태
+const editingMemo = ref<string | null>(null);
+const tempMemo = ref<string>('');
 
 // Toolbar state
 const searchQuery = ref<string>('');
@@ -59,21 +72,6 @@ const handleCopyRef = (item: FavoriteSearch) => {
   if (item.refMsg) {
     navigator.clipboard.writeText(item.refMsg);
     console.log('참조원고 전체가 클립보드에 복사되었습니다.');
-  }
-};
-
-const handleCopyRefPreview = (item: FavoriteSearch) => {
-  if (item.refMsg) {
-    const preview = item.refMsg.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n');
-    navigator.clipboard.writeText(preview);
-    console.log('참조원고 3줄 미리보기가 클립보드에 복사되었습니다.');
-  }
-};
-
-const handleCopyResult = (item: FavoriteSearch) => {
-  if (item.resultSample) {
-    navigator.clipboard.writeText(item.resultSample);
-    console.log('결과 원고 예시가 클립보드에 복사되었습니다.');
   }
 };
 
@@ -106,6 +104,46 @@ const handleDelete = (item: FavoriteSearch) => {
 
 const goBack = () => {
   window.history.back();
+};
+
+// 메모 편집 관련 함수
+const startEditMemo = (item: FavoriteSearch) => {
+  editingMemo.value = item.id;
+  tempMemo.value = item.memo || '';
+};
+
+const saveMemo = (item: FavoriteSearch) => {
+  updatePublishedMemo(item.id, tempMemo.value);
+  item.memo = tempMemo.value; // 즉시 화면 업데이트
+  editingMemo.value = null;
+  loadPublishedList(); // 전체 데이터 다시 로드
+};
+
+const cancelEditMemo = () => {
+  editingMemo.value = null;
+  tempMemo.value = '';
+};
+
+const handleMemoKeydown = (e: KeyboardEvent, item: FavoriteSearch) => {
+  if (e.key === 'Enter' && e.shiftKey) {
+    e.preventDefault();
+    saveMemo(item);
+  }
+};
+
+// 노출 설정 관련 함수들
+const toggleVisibility = (item: FavoriteSearch) => {
+  const newVisibility = !item.isVisible;
+  updatePublishedExposure(item.id, newVisibility, item.exposureRank);
+  item.isVisible = newVisibility; // 즉시 화면 업데이트
+  loadPublishedList(); // 전체 데이터 다시 로드
+};
+
+const updateRank = (item: FavoriteSearch, rank: number | null) => {
+  const newRank = rank || undefined;
+  updatePublishedExposure(item.id, item.isVisible || false, newRank);
+  item.exposureRank = newRank; // 즉시 화면 업데이트
+  loadPublishedList(); // 전체 데이터 다시 로드
 };
 
 const formatDate = (date: Date) => {
@@ -153,23 +191,42 @@ const displayList = computed(() => {
   <div class="published-list-container">
     <!-- 헤더 -->
     <div class="page-header">
+      <div class="header-background">
+        <div class="header-decoration"></div>
+      </div>
       <ModernCard variant="glass" class="header-card">
         <div class="header-content">
-          <ModernButton
-            variant="ghost"
-            size="sm"
-            :icon="BackIcon"
-            @click="goBack"
-            class="back-button"
-          />
-          <div class="header-text">
-            <h1 class="page-title">📝 발행원고 리스트</h1>
-            <p class="page-subtitle">검증된 원고 템플릿 목록</p>
+          <div class="header-left">
+            <ModernButton
+              variant="ghost"
+              size="sm"
+              :icon="BackIcon"
+              @click="goBack"
+              class="back-button"
+            />
           </div>
-          <div class="header-stats">
-            <n-tag type="success" size="large">
-              총 {{ publishedList.length }}개
-            </n-tag>
+          <div class="header-center">
+            <div class="header-icon-wrapper">
+              <NewsIcon class="header-main-icon" />
+            </div>
+            <div class="header-text">
+              <h1 class="page-title">발행원고 리스트</h1>
+              <p class="page-subtitle">검증된 원고 템플릿 관리</p>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="header-stats">
+              <div class="stats-item">
+                <span class="stats-number">{{ publishedList.length }}</span>
+                <span class="stats-label">총 원고</span>
+              </div>
+              <div class="stats-item">
+                <span class="stats-number">{{
+                  publishedList.filter((item) => item.isVisible).length
+                }}</span>
+                <span class="stats-label">노출중</span>
+              </div>
+            </div>
           </div>
         </div>
       </ModernCard>
@@ -233,7 +290,7 @@ const displayList = computed(() => {
             <div class="published-item">
               <div class="item-header">
                 <div class="item-title-section">
-                  <span class="published-badge">✓</span>
+                  <CheckIcon class="published-badge-icon" />
                   <h3 class="item-title">{{ item.title }}</h3>
                 </div>
                 <div class="item-actions">
@@ -252,7 +309,7 @@ const displayList = computed(() => {
                     icon-only
                     :icon="StarIcon"
                     @click.stop="handleUseTemplate(item)"
-                    title="템플릿 사용"
+                    title="원고 발행"
                     class="action-btn use-button"
                   />
                   <ModernButton
@@ -270,7 +327,31 @@ const displayList = computed(() => {
               <div class="item-content compact">
                 <div class="keyword-line">
                   <span class="keyword">{{ item.keyword }}</span>
-                  <span v-if="item.refMsg" class="ref-flag">📎 참조</span>
+                  <div class="tag-group">
+                    <span v-if="item.refMsg" class="ref-flag">
+                      <LinkIcon class="ref-icon" />
+                      참조
+                    </span>
+                    <span
+                      v-if="item.isVisible"
+                      class="visibility-badge visible"
+                    >
+                      <EyeIcon class="visibility-icon" />
+                      노출
+                      {{ item.exposureRank ? `#${item.exposureRank}` : '' }}
+                    </span>
+                    <span
+                      v-else-if="item.isVisible === false"
+                      class="visibility-badge hidden"
+                    >
+                      <EyeOffIcon class="visibility-icon" />
+                      미노출
+                    </span>
+                  </div>
+                </div>
+                <div v-if="item.memo" class="memo-preview">
+                  <ChatIcon class="memo-icon" />
+                  <span class="memo-text">{{ item.memo }}</span>
                 </div>
               </div>
 
@@ -286,10 +367,19 @@ const displayList = computed(() => {
     </div>
 
     <!-- 상세보기 모달 -->
-    <n-modal v-model:show="showDetailModal" preset="card" style="width: 600px">
+    <n-modal 
+      v-model:show="showDetailModal" 
+      preset="card" 
+      :style="{ 
+        width: '600px', 
+        maxWidth: 'calc(100vw - 32px)',
+        maxHeight: 'calc(100vh - 64px)'
+      }"
+      class="published-detail-modal"
+    >
       <template #header>
         <div style="display: flex; align-items: center; gap: 8px">
-          <span class="published-badge">✓</span>
+          <CheckIcon class="modal-badge-icon" />
           {{ selectedItem?.title }}
         </div>
       </template>
@@ -307,35 +397,92 @@ const displayList = computed(() => {
 
         <div v-if="selectedItem.refMsg" class="modal-section">
           <div class="modal-item-header">
-            <strong>참조원고 미리보기 (3줄):</strong>
-            <n-space size="small">
-              <n-button size="tiny" type="primary" @click="handleCopyResult(selectedItem)">
-                3줄 복사
-              </n-button>
-              <n-button size="tiny" @click="handleCopyRef(selectedItem)">
-                전체 복사
-              </n-button>
-            </n-space>
+            <strong>참조원고:</strong>
+            <n-button size="tiny" @click="handleCopyRef(selectedItem)">
+              복사
+            </n-button>
           </div>
-          <div class="preview-box ref-preview-box">
-            {{ selectedItem.refMsg.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n') }}
+          <div class="preview-container">
+            {{ selectedItem.refMsg }}
           </div>
         </div>
 
-        <div class="modal-section" v-if="selectedItem.resultSample || selectedItem.botContent">
+        <div class="modal-section" v-if="selectedItem.botContent">
           <div class="modal-item-header">
-            <strong>결과원고 미리보기 (3줄):</strong>
-            <n-space size="small">
-              <n-button size="tiny" type="primary" @click="handleCopyResult(selectedItem)">
-                3줄 복사
+            <strong>결과원고:</strong>
+            <n-button size="tiny" @click="handleCopyFullResult(selectedItem)">
+              복사
+            </n-button>
+          </div>
+          <div class="preview-container">
+            {{ selectedItem.botContent }}
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-item-header">
+            <strong>메모:</strong>
+            <n-button
+              v-if="editingMemo !== selectedItem.id"
+              size="tiny"
+              @click="startEditMemo(selectedItem)"
+            >
+              편집
+            </n-button>
+            <n-space v-else size="small">
+              <n-button
+                size="tiny"
+                type="primary"
+                @click="saveMemo(selectedItem)"
+              >
+                저장
               </n-button>
-              <n-button size="tiny" @click="handleCopyFullResult(selectedItem)" v-if="selectedItem.botContent">
-                전체 복사
-              </n-button>
+              <n-button size="tiny" @click="cancelEditMemo"> 취소 </n-button>
             </n-space>
           </div>
-          <div class="preview-box result-preview-box">
-            {{ selectedItem.resultSample || selectedItem.botContent?.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n') }}
+          <div v-if="editingMemo === selectedItem.id" class="memo-edit">
+            <n-input
+              v-model:value="tempMemo"
+              type="textarea"
+              placeholder="수정 내역, 발행 일정 등을 기록해주세요 (Shift+Enter로 저장)"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+              @keydown="handleMemoKeydown($event, selectedItem)"
+            />
+          </div>
+          <div v-else class="memo-display">
+            {{ selectedItem.memo || '메모가 없습니다.' }}
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-item-header">
+            <strong>노출 설정:</strong>
+          </div>
+          <div class="exposure-controls">
+            <div class="exposure-row">
+              <span class="control-label">노출 여부:</span>
+              <n-switch
+                :value="selectedItem.isVisible || false"
+                @update:value="(val) => toggleVisibility(selectedItem)"
+                size="medium"
+              >
+                <template #checked>노출</template>
+                <template #unchecked>미노출</template>
+              </n-switch>
+            </div>
+            <div class="exposure-row" v-if="selectedItem.isVisible">
+              <span class="control-label">노출 순위:</span>
+              <n-input-number
+                :value="selectedItem.exposureRank"
+                @update:value="(val) => updateRank(selectedItem, val)"
+                :min="1"
+                :max="999"
+                placeholder="순위"
+                size="small"
+                style="width: 100px"
+              />
+              <span class="rank-hint">낮을수록 우선 노출</span>
+            </div>
           </div>
         </div>
 
@@ -352,7 +499,7 @@ const displayList = computed(() => {
           <n-space>
             <n-button @click="showDetailModal = false">닫기</n-button>
             <n-button type="primary" @click="handleUseTemplate(selectedItem!)">
-              템플릿 사용
+              원고 재출력
             </n-button>
           </n-space>
         </n-space>
@@ -362,192 +509,4 @@ const displayList = computed(() => {
 </template>
 
 <style scoped>
-.published-list-container {
-  min-height: 100vh;
-  padding: 16px;
-  /* Light theme: airy colorful halos */
-  background: radial-gradient(1200px 600px at 50% -20%, rgba(59,130,246,0.16), transparent),
-              radial-gradient(900px 500px at 80% 10%, rgba(16,185,129,0.14), transparent),
-              radial-gradient(900px 500px at 20% 10%, rgba(236,72,153,0.12), transparent);
-}
-
-/* Dark theme tuning: deeper base + neon glows */
-:global(.dark) .published-list-container {
-  background: #0b1220 radial-gradient(1200px 600px at 50% -20%, rgba(59,130,246,0.22), transparent),
-              radial-gradient(900px 500px at 80% 10%, rgba(16,185,129,0.20), transparent),
-              radial-gradient(900px 500px at 20% 10%, rgba(236,72,153,0.16), transparent);
-}
-
-.page-header {
-  margin-bottom: 12px;
-}
-
-.header-card {
-  padding: 12px 16px;
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-text {
-  flex: 1;
-}
-.page-title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #111111, #3b82f6, #10b981);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.page-subtitle {
-  margin: 2px 0 0;
-  color: #666;
-  font-size: 13px;
-}
-
-/* Toolbar */
-.toolbar {
-  margin-bottom: 12px;
-}
-.toolbar-card {
-  padding: 12px 16px;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.6);
-}
-:global(.dark) .toolbar-card {
-  background: rgba(17, 24, 39, 0.5);
-}
-.toolbar-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.toolbar-left {
-  flex: 1;
-}
-.toolbar-right {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.toolbar-select {
-  min-width: 140px;
-}
-.toolbar-switch {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.switch-label {
-  font-size: 13px;
-  color: #555;
-}
-:global(.dark) .switch-label {
-  color: #cbd5e1;
-}
-
-/* List */
-.list-container {
-  max-width: 960px;
-  margin: 0 auto;
-}
-.published-item-card {
-  cursor: pointer;
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-  border: 1px solid rgba(59, 130, 246, 0.14);
-}
-.published-item-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18), 0 6px 14px rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.28);
-}
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-.item-title-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-.published-badge {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #34d399, #10b981);
-  color: #fff;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18), 0 6px 18px rgba(16, 185, 129, 0.25);
-}
-.item-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-.item-content { margin-top: 4px; }
-.item-content.compact { padding: 0; }
-.keyword-line { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
-.label {
-  font-weight: 600;
-  font-size: 13px;
-  color: #333;
-}
-.keyword {
-  margin-left: 6px;
-  color: #111;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-}
-.ref-flag { font-size: 12px; color: #2563eb; background: rgba(37, 99, 235, .08); border: 1px solid rgba(37, 99, 235, .2); padding: 2px 6px; border-radius: 999px; }
-.item-footer {
-  margin-top: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  padding-top: 8px;
-}
-.created-date {
-  font-size: 12px;
-  color: #888;
-}
-
-/* Compact card spacing & actions */
-.published-item { padding: 12px; }
-.item-actions { display: flex; gap: 6px; align-items: center; }
-.action-btn { border-radius: 999px; }
-
-/* Modal polish */
-.ref-content,
-.result-content {
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 10px 12px;
-  border-radius: 8px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .toolbar-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .toolbar-right {
-    justify-content: space-between;
-  }
-}
 </style>
