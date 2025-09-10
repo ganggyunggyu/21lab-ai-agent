@@ -48,6 +48,10 @@ const handleClearChat = () => {
   showClearModal.value = true;
 };
 
+const handlePublishedList = () => {
+  router.push('/published');
+};
+
 const confirmClearChat = () => {
   clearChat();
   showClearModal.value = false;
@@ -89,6 +93,16 @@ onMounted(async () => {
             :consistent-menu-width="false"
           />
         </div>
+
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          @click="handlePublishedList"
+          title="발행원고 목록 보기"
+          style="color: #10b981; font-weight: 600;"
+        >
+          📝 발행원고
+        </ModernButton>
 
         <ModernButton
           variant="ghost"
