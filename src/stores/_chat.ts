@@ -85,10 +85,13 @@ export const useChatStore = defineStore(
 
         // 성공 시 처리
         const botResponse: string = res?.content || '(응답 없음)';
+        console.log('🐛 [DEBUG] Original botResponse:', botResponse);
+        console.log('🐛 [DEBUG] PART_SEPARATOR:', PART_SEPARATOR);
         const parts = botResponse
           .split(PART_SEPARATOR)
           .map((p) => p.trim())
           .filter(Boolean);
+        console.log('🐛 [DEBUG] Split parts:', parts);
 
         // 로딩 메시지 위치 찾기
         const currentLoadingIndex = messages.value.findIndex(
