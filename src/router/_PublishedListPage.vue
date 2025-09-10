@@ -42,7 +42,7 @@ const isOnlyWithRef = ref<boolean>(false);
 
 const loadPublishedList = () => {
   const allFavorites = getFavoriteSearches();
-  publishedList.value = allFavorites.filter(item => item.isPublished);
+  publishedList.value = allFavorites.filter((item) => item.isPublished);
 };
 
 const handleItemClick = (item: FavoriteSearch) => {
@@ -119,7 +119,8 @@ const displayList = computed(() => {
     filtered.sort((a, b) => a.title.localeCompare(b.title));
   } else {
     filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
   return filtered;
@@ -185,13 +186,13 @@ const displayList = computed(() => {
 
     <!-- 발행원고 리스트 -->
     <div class="list-container">
-      <n-empty 
+      <n-empty
         v-if="displayList.length === 0"
         description="아직 등록된 발행원고가 없습니다"
-        style="margin: 60px 0;"
+        style="margin: 60px 0"
       >
         <template #icon>
-          <component :is="DocumentIcon" style="font-size: 48px; color: #ccc;" />
+          <component :is="DocumentIcon" style="font-size: 48px; color: #ccc" />
         </template>
         <template #extra>
           <n-text depth="3">
@@ -202,8 +203,8 @@ const displayList = computed(() => {
 
       <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" class="published-grid">
         <n-grid-item v-for="item in displayList" :key="item.id">
-          <ModernCard 
-            variant="glass" 
+          <ModernCard
+            variant="glass"
             class="published-item-card"
             @click="handleItemClick(item)"
           >
@@ -216,14 +217,14 @@ const displayList = computed(() => {
                 <div class="item-actions">
                   <ModernButton
                     variant="ghost"
-                    size="xs"
+                    size="md"
                     :icon="CopyIcon"
                     @click.stop="handleCopyKeyword(item)"
                     title="키워드 복사"
                   />
                   <ModernButton
                     variant="ghost"
-                    size="xs"
+                    size="md"
                     :icon="StarIcon"
                     @click.stop="handleUseTemplate(item)"
                     title="템플릿 사용"
@@ -231,7 +232,7 @@ const displayList = computed(() => {
                   />
                   <ModernButton
                     variant="ghost"
-                    size="xs"
+                    size="md"
                     :icon="TrashIcon"
                     @click.stop="handleDelete(item)"
                     title="삭제"
@@ -245,7 +246,7 @@ const displayList = computed(() => {
                   <span class="label">키워드:</span>
                   <span class="keyword">{{ item.keyword }}</span>
                 </div>
-                
+
                 <div v-if="item.refMsg" class="ref-section">
                   <span class="label">참조원고:</span>
                   <p class="ref-preview">{{ item.refMsg.slice(0, 100) }}...</p>
@@ -253,7 +254,9 @@ const displayList = computed(() => {
               </div>
 
               <div class="item-footer">
-                <span class="created-date">{{ formatDate(item.createdAt) }}</span>
+                <span class="created-date">{{
+                  formatDate(item.createdAt)
+                }}</span>
               </div>
             </div>
           </ModernCard>
@@ -262,14 +265,14 @@ const displayList = computed(() => {
     </div>
 
     <!-- 상세보기 모달 -->
-    <n-modal v-model:show="showDetailModal" preset="card" style="width: 600px;">
+    <n-modal v-model:show="showDetailModal" preset="card" style="width: 600px">
       <template #header>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px">
           <span class="published-badge">✓</span>
           {{ selectedItem?.title }}
         </div>
       </template>
-      
+
       <div v-if="selectedItem" class="modal-content">
         <div class="modal-section">
           <div class="modal-item-header">
@@ -283,12 +286,21 @@ const displayList = computed(() => {
 
         <div v-if="selectedItem.refMsg" class="modal-section">
           <div class="modal-item-header">
-            <strong>참조원고:</strong>
+            <strong>참조원고 예시 (3줄):</strong>
             <n-button size="tiny" @click="handleCopyRef(selectedItem)">
               복사
             </n-button>
           </div>
-          <p class="modal-text ref-content">{{ selectedItem.refMsg }}</p>
+          <p class="modal-text ref-content">
+            {{ selectedItem.refMsg.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n') }}
+          </p>
+        </div>
+
+        <div class="modal-section" v-if="selectedItem.resultSample">
+          <div class="modal-item-header">
+            <strong>결과 원고 예시 (3줄):</strong>
+          </div>
+          <p class="modal-text result-content">{{ selectedItem.resultSample }}</p>
         </div>
 
         <div class="modal-section">
@@ -317,6 +329,9 @@ const displayList = computed(() => {
 .published-list-container {
   min-height: 100vh;
   padding: 16px;
+  background: radial-gradient(1200px 600px at 50% -20%, rgba(59,130,246,0.12), transparent),
+              radial-gradient(900px 500px at 80% 10%, rgba(16,185,129,0.12), transparent),
+              radial-gradient(900px 500px at 20% 10%, rgba(236,72,153,0.08), transparent);
 }
 
 .page-header {
@@ -333,41 +348,146 @@ const displayList = computed(() => {
   gap: 12px;
 }
 
-.header-text { flex: 1; }
-.page-title { margin: 0; font-size: 20px; font-weight: 700; }
-.page-subtitle { margin: 2px 0 0; color: #666; font-size: 13px; }
+.header-text {
+  flex: 1;
+}
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #111111, #3b82f6, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.page-subtitle {
+  margin: 2px 0 0;
+  color: #666;
+  font-size: 13px;
+}
 
 /* Toolbar */
-.toolbar { margin-bottom: 12px; }
-.toolbar-card { padding: 12px 16px; }
+.toolbar {
+  margin-bottom: 12px;
+}
+.toolbar-card {
+  padding: 12px 16px;
+  backdrop-filter: blur(10px);
+}
 .toolbar-row {
   display: flex;
   gap: 12px;
   align-items: center;
 }
-.toolbar-left { flex: 1; }
-.toolbar-right { display: flex; gap: 12px; align-items: center; }
-.toolbar-select { min-width: 140px; }
-.toolbar-switch { display: flex; gap: 8px; align-items: center; }
-.switch-label { font-size: 13px; color: #555; }
+.toolbar-left {
+  flex: 1;
+}
+.toolbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.toolbar-select {
+  min-width: 140px;
+}
+.toolbar-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.switch-label {
+  font-size: 13px;
+  color: #555;
+}
 
 /* List */
-.list-container { max-width: 960px; margin: 0 auto; }
-.published-item-card { cursor: pointer; }
-.item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-.item-title-section { display: flex; align-items: center; gap: 8px; flex: 1; }
-.published-badge { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; background: #10b981; color: #fff; border-radius: 50%; font-size: 11px; font-weight: 700; }
-.item-title { margin: 0; font-size: 16px; font-weight: 600; }
-.item-content { margin-top: 6px; }
-.label { font-weight: 600; font-size: 13px; color: #333; }
-.keyword { margin-left: 6px; color: #111; }
-.ref-preview { margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4; }
-.item-footer { margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 8px; }
-.created-date { font-size: 12px; color: #888; }
+.list-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.published-item-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.published-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18), 0 6px 14px rgba(16, 185, 129, 0.12);
+}
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.item-title-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.published-badge {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #10b981;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+.item-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.item-content {
+  margin-top: 6px;
+}
+.label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #333;
+}
+.keyword {
+  margin-left: 6px;
+  color: #111;
+}
+.ref-preview {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+}
+.item-footer {
+  margin-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: 8px;
+}
+.created-date {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Modal polish */
+.ref-content,
+.result-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 10px 12px;
+  border-radius: 8px;
+}
 
 /* Responsive */
 @media (max-width: 768px) {
-  .toolbar-row { flex-direction: column; align-items: stretch; }
-  .toolbar-right { justify-content: space-between; }
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .toolbar-right {
+    justify-content: space-between;
+  }
 }
 </style>

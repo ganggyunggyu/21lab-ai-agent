@@ -74,24 +74,50 @@ export interface FavoriteSearch {
   refMsg?: string;
   title: string;
   createdAt: Date;
+  isPublished?: boolean; // 발행원고 여부
+  resultSample?: string; // 결과 원고 3줄 샘플
 }
 
 export const getFavoriteSearches = (): FavoriteSearch[] =>
   getStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, []);
 
-export const addFavoriteSearch = (keyword: string, refMsg?: string, title?: string): void => {
+export const addFavoriteSearch = (keyword: string, refMsg?: string, title?: string, isPublished?: boolean): void => {
   const favorites = getFavoriteSearches();
   const newFavorite: FavoriteSearch = {
     id: Date.now().toString(),
     keyword,
     refMsg,
     title: title || keyword,
-    createdAt: new Date()
+    createdAt: new Date(),
+    isPublished: isPublished || false
   };
   
   favorites.unshift(newFavorite);
   
   // 최대 20개까지 유지
+  const top20 = favorites.slice(0, 20);
+  setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, top20);
+};
+
+// 발행원고로 등록하는 전용 함수
+export const addPublishedSearch = (
+  keyword: string,
+  refMsg?: string,
+  title?: string,
+  resultSample?: string
+): void => {
+  const favorites = getFavoriteSearches();
+  const newFavorite: FavoriteSearch = {
+    id: Date.now().toString(),
+    keyword,
+    refMsg,
+    title: title || keyword,
+    createdAt: new Date(),
+    isPublished: true,
+    resultSample,
+  };
+
+  favorites.unshift(newFavorite);
   const top20 = favorites.slice(0, 20);
   setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, top20);
 };

@@ -266,15 +266,29 @@ const handleCopyResultFromModal = () => {
   console.log('원고 결과물이 클립보드에 복사되었습니다.');
 };
 
+const convertToThreeLineSample = (text: string): string => {
+  const lineList = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  return lineList.slice(0, 3).join('\n');
+};
+
 const handleAddPublishedFromModal = () => {
   if (!selectedUserMessage.value) return;
   
   const title = prompt('발행원고 제목을 입력하세요:', `[발행] ${selectedUserMessage.value.keyword}`);
   if (title) {
+    // 결과 원고 샘플 추출(해당 유저 메시지 뒤의 봇 응답들을 합쳐 상위 3줄)
+    const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
+    const fullResult = botResponses.map((m) => m.content).join('\n');
+    const resultSample = convertToThreeLineSample(fullResult);
+
     addPublishedSearch(
       selectedUserMessage.value.keyword,
       selectedUserMessage.value.ref,
-      title
+      title,
+      resultSample
     );
     loadFavoriteSearches();
     showActionModal.value = false;
