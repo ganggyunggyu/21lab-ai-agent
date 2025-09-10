@@ -191,45 +191,25 @@ const displayList = computed(() => {
   <div class="published-list-container">
     <!-- 헤더 -->
     <div class="page-header">
-      <div class="header-background">
-        <div class="header-decoration"></div>
-      </div>
-      <ModernCard variant="glass" class="header-card">
-        <div class="header-content">
-          <div class="header-left">
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              :icon="BackIcon"
-              @click="goBack"
-              class="back-button"
-            />
+      <div class="header-wrapper">
+        <!-- 뒤로가기 버튼 -->
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          :icon="BackIcon"
+          @click="goBack"
+          class="back-button"
+        />
+        
+        <!-- 제목 영역 -->
+        <div class="title-section">
+          <div class="title-row">
+            <NewsIcon class="title-icon" />
+            <h1 class="page-title">발행원고</h1>
           </div>
-          <div class="header-center">
-            <div class="header-icon-wrapper">
-              <NewsIcon class="header-main-icon" />
-            </div>
-            <div class="header-text">
-              <h1 class="page-title">발행원고 리스트</h1>
-              <p class="page-subtitle">검증된 원고 템플릿 관리</p>
-            </div>
-          </div>
-          <div class="header-right">
-            <div class="header-stats">
-              <div class="stats-item">
-                <span class="stats-number">{{ publishedList.length }}</span>
-                <span class="stats-label">총 원고</span>
-              </div>
-              <div class="stats-item">
-                <span class="stats-number">{{
-                  publishedList.filter((item) => item.isVisible).length
-                }}</span>
-                <span class="stats-label">노출중</span>
-              </div>
-            </div>
-          </div>
+          <p class="page-subtitle">{{ publishedList.length }}개 원고 | {{ publishedList.filter(item => item.isVisible).length }}개 노출중</p>
         </div>
-      </ModernCard>
+      </div>
     </div>
 
     <!-- 툴바 -->
@@ -371,9 +351,9 @@ const displayList = computed(() => {
       v-model:show="showDetailModal" 
       preset="card" 
       :style="{ 
-        width: '600px', 
+        width: '560px', 
         maxWidth: 'calc(100vw - 32px)',
-        maxHeight: 'calc(100vh - 64px)'
+        maxHeight: 'calc(100vh - 100px)'
       }"
       class="published-detail-modal"
     >
@@ -551,34 +531,63 @@ const displayList = computed(() => {
 }
 
 .page-header {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.header-card {
-  padding: 12px 16px;
-}
-
-.header-content {
+.header-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  padding: 12px 0;
 }
 
-.header-text {
+.back-button {
+  flex-shrink: 0;
+}
+
+.title-section {
   flex: 1;
 }
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.title-icon {
+  width: 20px !important;
+  height: 20px !important;
+  color: #3b82f6;
+  flex-shrink: 0;
+  min-width: 20px;
+  min-height: 20px;
+  max-width: 20px;
+  max-height: 20px;
+}
+
 .page-title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #111111, #3b82f6, #10b981);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
 }
+
+:global(.dark) .page-title {
+  color: #fff;
+}
+
 .page-subtitle {
-  margin: 2px 0 0;
-  color: #666;
+  margin: 0;
   font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+:global(.dark) .page-subtitle {
+  color: #94a3b8;
 }
 
 /* Toolbar */
@@ -650,19 +659,23 @@ const displayList = computed(() => {
   gap: 8px;
   flex: 1;
 }
-.published-badge {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #34d399, #10b981);
-  color: #fff;
+.published-badge-icon {
+  width: 16px;
+  height: 16px;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
   border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 2px;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18),
     0 6px 18px rgba(16, 185, 129, 0.25);
+  flex-shrink: 0;
+}
+
+.modal-badge-icon {
+  width: 18px;
+  height: 18px;
+  color: #10b981;
+  flex-shrink: 0;
 }
 .item-title {
   margin: 0;
@@ -709,6 +722,9 @@ const displayList = computed(() => {
   border: 1px solid rgba(37, 99, 235, 0.2);
   padding: 2px 6px;
   border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .visibility-badge {
@@ -716,6 +732,9 @@ const displayList = computed(() => {
   padding: 2px 6px;
   border-radius: 999px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .visibility-badge.visible {
@@ -758,9 +777,9 @@ const displayList = computed(() => {
   word-break: break-word;
   background: rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 8px;
-  max-height: 120px;
+  max-height: 100px;
   overflow-y: auto;
   line-height: 1.4;
   font-size: 13px;
@@ -804,14 +823,14 @@ const displayList = computed(() => {
 }
 
 .modal-section {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .modal-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .modal-text {
@@ -829,11 +848,18 @@ const displayList = computed(() => {
   color: #666;
   margin-top: 4px;
   font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.memo-preview .memo-text {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
+  flex: 1;
 }
 
 :global(.dark) .memo-preview {
@@ -843,14 +869,52 @@ const displayList = computed(() => {
 .memo-display {
   margin: 4px 0;
   color: #555;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 10px 12px;
+  border-radius: 8px;
+  max-height: 100px;
+  overflow-y: auto;
+  
+  /* 스크롤바 스타일링 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.memo-display::-webkit-scrollbar {
+  width: 6px;
+}
+
+.memo-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.memo-display::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.memo-display::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
 }
 
 :global(.dark) .memo-display {
   color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+:global(.dark) .memo-display::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .memo-display::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .memo-edit {
@@ -858,11 +922,11 @@ const displayList = computed(() => {
 }
 
 .exposure-controls {
-  margin-top: 8px;
-  padding: 12px;
+  margin-top: 6px;
+  padding: 10px;
   background: rgba(0, 0, 0, 0.02);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 :global(.dark) .exposure-controls {
@@ -873,8 +937,8 @@ const displayList = computed(() => {
 .exposure-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .exposure-row:last-child {
@@ -902,14 +966,124 @@ const displayList = computed(() => {
   color: #94a3b8;
 }
 
+/* 아이콘 크기 강제 제한 */
+.ref-icon,
+.visibility-icon,
+.memo-icon {
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0;
+  min-width: 12px;
+  min-height: 12px;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+.title-icon {
+  width: 24px !important;
+  height: 24px !important;
+  color: #3b82f6;
+  flex-shrink: 0;
+  min-width: 24px;
+  min-height: 24px;
+  max-width: 24px;
+  max-height: 24px;
+}
+
+
+.published-badge-icon {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+}
+
+.modal-badge-icon {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  min-height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .published-list-container {
+    padding: 12px;
+  }
+
+  .page-header {
+    margin-bottom: 12px;
+  }
+
+  .header-wrapper {
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .title-icon {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px;
+    min-height: 18px;
+    max-width: 18px;
+    max-height: 18px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
   .toolbar-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
+  
   .toolbar-right {
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .published-list-container {
+    padding: 8px;
+  }
+
+  .header-wrapper {
+    gap: 10px;
+    padding: 6px 0;
+  }
+
+  .title-icon {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px;
+    min-height: 16px;
+    max-width: 16px;
+    max-height: 16px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+
+  .page-subtitle {
+    font-size: 11px;
+  }
+
+  .back-button {
+    min-width: 36px;
+    min-height: 36px;
   }
 }
 </style>
