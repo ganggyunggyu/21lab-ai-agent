@@ -58,7 +58,15 @@ const handleCopyKeyword = (item: FavoriteSearch) => {
 const handleCopyRef = (item: FavoriteSearch) => {
   if (item.refMsg) {
     navigator.clipboard.writeText(item.refMsg);
-    console.log('참조원고가 클립보드에 복사되었습니다.');
+    console.log('참조원고 전체가 클립보드에 복사되었습니다.');
+  }
+};
+
+const handleCopyRefPreview = (item: FavoriteSearch) => {
+  if (item.refMsg) {
+    const preview = item.refMsg.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n');
+    navigator.clipboard.writeText(preview);
+    console.log('참조원고 3줄 미리보기가 클립보드에 복사되었습니다.');
   }
 };
 
@@ -66,6 +74,13 @@ const handleCopyResult = (item: FavoriteSearch) => {
   if (item.resultSample) {
     navigator.clipboard.writeText(item.resultSample);
     console.log('결과 원고 예시가 클립보드에 복사되었습니다.');
+  }
+};
+
+const handleCopyFullResult = (item: FavoriteSearch) => {
+  if (item.botContent) {
+    navigator.clipboard.writeText(item.botContent);
+    console.log('전체 결과 원고가 클립보드에 복사되었습니다.');
   }
 };
 
@@ -224,39 +239,38 @@ const displayList = computed(() => {
                 <div class="item-actions">
                   <ModernButton
                     variant="ghost"
-                    size="md"
+                    size="sm"
+                    icon-only
                     :icon="CopyIcon"
                     @click.stop="handleCopyKeyword(item)"
                     title="키워드 복사"
+                    class="action-btn"
                   />
                   <ModernButton
                     variant="ghost"
-                    size="md"
+                    size="sm"
+                    icon-only
                     :icon="StarIcon"
                     @click.stop="handleUseTemplate(item)"
                     title="템플릿 사용"
-                    class="use-button"
+                    class="action-btn use-button"
                   />
                   <ModernButton
                     variant="ghost"
-                    size="md"
+                    size="sm"
+                    icon-only
                     :icon="TrashIcon"
                     @click.stop="handleDelete(item)"
                     title="삭제"
-                    class="delete-button"
+                    class="action-btn delete-button"
                   />
                 </div>
               </div>
 
-              <div class="item-content">
-                <div class="keyword-section">
-                  <span class="label">키워드:</span>
+              <div class="item-content compact">
+                <div class="keyword-line">
                   <span class="keyword">{{ item.keyword }}</span>
-                </div>
-
-                <div v-if="item.refMsg" class="ref-section">
-                  <span class="label">참조원고:</span>
-                  <p class="ref-preview">{{ item.refMsg.slice(0, 100) }}...</p>
+                  <span v-if="item.refMsg" class="ref-flag">📎 참조</span>
                 </div>
               </div>
 
@@ -293,22 +307,36 @@ const displayList = computed(() => {
 
         <div v-if="selectedItem.refMsg" class="modal-section">
           <div class="modal-item-header">
-            <strong>참조원고 예시 (3줄):</strong>
-            <n-button size="tiny" @click="handleCopyRef(selectedItem)">
-              복사
-            </n-button>
+            <strong>참조원고 미리보기 (3줄):</strong>
+            <n-space size="small">
+              <n-button size="tiny" type="primary" @click="handleCopyResult(selectedItem)">
+                3줄 복사
+              </n-button>
+              <n-button size="tiny" @click="handleCopyRef(selectedItem)">
+                전체 복사
+              </n-button>
+            </n-space>
           </div>
-          <p class="modal-text ref-content">
+          <div class="preview-box ref-preview-box">
             {{ selectedItem.refMsg.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n') }}
-          </p>
+          </div>
         </div>
 
-        <div class="modal-section" v-if="selectedItem.resultSample">
+        <div class="modal-section" v-if="selectedItem.resultSample || selectedItem.botContent">
           <div class="modal-item-header">
-            <strong>결과 원고 예시 (3줄):</strong>
-            <n-button size="tiny" @click="handleCopyResult(selectedItem)">복사</n-button>
+            <strong>결과원고 미리보기 (3줄):</strong>
+            <n-space size="small">
+              <n-button size="tiny" type="primary" @click="handleCopyResult(selectedItem)">
+                3줄 복사
+              </n-button>
+              <n-button size="tiny" @click="handleCopyFullResult(selectedItem)" v-if="selectedItem.botContent">
+                전체 복사
+              </n-button>
+            </n-space>
           </div>
-          <p class="modal-text result-content">{{ selectedItem.resultSample }}</p>
+          <div class="preview-box result-preview-box">
+            {{ selectedItem.resultSample || selectedItem.botContent?.split('\n').filter(l=>l.trim().length>0).slice(0,3).join('\n') }}
+          </div>
         </div>
 
         <div class="modal-section">
@@ -464,12 +492,12 @@ const displayList = computed(() => {
 }
 .item-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
 }
-.item-content {
-  margin-top: 6px;
-}
+.item-content { margin-top: 4px; }
+.item-content.compact { padding: 0; }
+.keyword-line { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 .label {
   font-weight: 600;
   font-size: 13px;
@@ -478,13 +506,14 @@ const displayList = computed(() => {
 .keyword {
   margin-left: 6px;
   color: #111;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
-.ref-preview {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #555;
-  line-height: 1.4;
-}
+.ref-flag { font-size: 12px; color: #2563eb; background: rgba(37, 99, 235, .08); border: 1px solid rgba(37, 99, 235, .2); padding: 2px 6px; border-radius: 999px; }
 .item-footer {
   margin-top: 8px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -494,6 +523,11 @@ const displayList = computed(() => {
   font-size: 12px;
   color: #888;
 }
+
+/* Compact card spacing & actions */
+.published-item { padding: 12px; }
+.item-actions { display: flex; gap: 6px; align-items: center; }
+.action-btn { border-radius: 999px; }
 
 /* Modal polish */
 .ref-content,
