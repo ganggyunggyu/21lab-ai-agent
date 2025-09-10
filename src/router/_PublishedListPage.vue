@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import {
   NCard,
   NButton,
@@ -11,6 +11,8 @@ import {
   NEmpty,
   NGrid,
   NGridItem,
+  NSelect,
+  NSwitch,
 } from 'naive-ui';
 import {
   DocumentText as DocumentIcon,
@@ -32,6 +34,11 @@ const chatStore = useChatStore();
 const publishedList = ref<FavoriteSearch[]>([]);
 const showDetailModal = ref(false);
 const selectedItem = ref<FavoriteSearch | null>(null);
+
+// Toolbar state
+const searchQuery = ref<string>('');
+const sortBy = ref<'recent' | 'title'>('recent');
+const isOnlyWithRef = ref<boolean>(false);
 
 const loadPublishedList = () => {
   const allFavorites = getFavoriteSearches();
@@ -92,6 +99,31 @@ const formatDate = (date: Date) => {
 onMounted(() => {
   loadPublishedList();
 });
+
+// Derived list with search / filter / sort
+const displayList = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  const baseList = publishedList.value.slice();
+
+  const filtered = baseList.filter((item) => {
+    const matchesQuery =
+      !query ||
+      item.title.toLowerCase().includes(query) ||
+      item.keyword.toLowerCase().includes(query) ||
+      (item.refMsg ? item.refMsg.toLowerCase().includes(query) : false);
+    const matchesRef = !isOnlyWithRef.value || !!item.refMsg;
+    return matchesQuery && matchesRef;
+  });
+
+  if (sortBy.value === 'title') {
+    filtered.sort((a, b) => a.title.localeCompare(b.title));
+  } else {
+    filtered.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+  return filtered;
+});
 </script>
 
 <template>
@@ -120,10 +152,41 @@ onMounted(() => {
       </ModernCard>
     </div>
 
+    <!-- 툴바 -->
+    <div class="toolbar">
+      <ModernCard variant="glass" class="toolbar-card">
+        <div class="toolbar-row">
+          <div class="toolbar-left">
+            <n-input
+              v-model:value="searchQuery"
+              placeholder="제목/키워드/참조에서 검색"
+              clearable
+              size="large"
+            />
+          </div>
+          <div class="toolbar-right">
+            <n-select
+              v-model:value="sortBy"
+              :options="[
+                { label: '최근 등록순', value: 'recent' },
+                { label: '제목순', value: 'title' },
+              ]"
+              size="large"
+              class="toolbar-select"
+            />
+            <div class="toolbar-switch">
+              <n-switch v-model:value="isOnlyWithRef" size="large" />
+              <span class="switch-label">참조원고 있는 항목만</span>
+            </div>
+          </div>
+        </div>
+      </ModernCard>
+    </div>
+
     <!-- 발행원고 리스트 -->
     <div class="list-container">
       <n-empty 
-        v-if="publishedList.length === 0"
+        v-if="displayList.length === 0"
         description="아직 등록된 발행원고가 없습니다"
         style="margin: 60px 0;"
       >
@@ -138,7 +201,7 @@ onMounted(() => {
       </n-empty>
 
       <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" class="published-grid">
-        <n-grid-item v-for="item in publishedList" :key="item.id">
+        <n-grid-item v-for="item in displayList" :key="item.id">
           <ModernCard 
             variant="glass" 
             class="published-item-card"
@@ -250,4 +313,61 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.published-list-container {
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.page-header {
+  margin-bottom: 12px;
+}
+
+.header-card {
+  padding: 12px 16px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-text { flex: 1; }
+.page-title { margin: 0; font-size: 20px; font-weight: 700; }
+.page-subtitle { margin: 2px 0 0; color: #666; font-size: 13px; }
+
+/* Toolbar */
+.toolbar { margin-bottom: 12px; }
+.toolbar-card { padding: 12px 16px; }
+.toolbar-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.toolbar-left { flex: 1; }
+.toolbar-right { display: flex; gap: 12px; align-items: center; }
+.toolbar-select { min-width: 140px; }
+.toolbar-switch { display: flex; gap: 8px; align-items: center; }
+.switch-label { font-size: 13px; color: #555; }
+
+/* List */
+.list-container { max-width: 960px; margin: 0 auto; }
+.published-item-card { cursor: pointer; }
+.item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.item-title-section { display: flex; align-items: center; gap: 8px; flex: 1; }
+.published-badge { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; background: #10b981; color: #fff; border-radius: 50%; font-size: 11px; font-weight: 700; }
+.item-title { margin: 0; font-size: 16px; font-weight: 600; }
+.item-content { margin-top: 6px; }
+.label { font-weight: 600; font-size: 13px; color: #333; }
+.keyword { margin-left: 6px; color: #111; }
+.ref-preview { margin: 4px 0 0; font-size: 13px; color: #555; line-height: 1.4; }
+.item-footer { margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 8px; }
+.created-date { font-size: 12px; color: #888; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toolbar-row { flex-direction: column; align-items: stretch; }
+  .toolbar-right { justify-content: space-between; }
+}
+</style>
