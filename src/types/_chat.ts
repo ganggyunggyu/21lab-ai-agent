@@ -11,6 +11,7 @@ export interface Message {
 export type ChatService =
   | 'gpt-4-v2'
   | 'gpt-5-v2'
+  | 'solar'
   | 'test'
   | 'chunk'
   | 'gpt-merge';
