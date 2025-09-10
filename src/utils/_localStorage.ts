@@ -77,6 +77,7 @@ export interface FavoriteSearch {
   isPublished?: boolean; // 발행원고 여부
   resultSample?: string; // 결과 원고 3줄 샘플
   memo?: string; // 메모 (수정 내역, 발행 일정 등)
+  blogId?: string; // 블로그 포스트 ID (네이버 블로그 등)
   
   // 노출 관리
   isVisible?: boolean; // 노출 여부 (기본값: false)
@@ -167,6 +168,17 @@ export const updatePublishedExposure = (id: string, isVisible: boolean, exposure
     if (exposureRank !== undefined) {
       favorites[targetIndex].exposureRank = exposureRank;
     }
+    setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, favorites);
+  }
+};
+
+// 발행원고 블로그 ID 업데이트 함수
+export const updatePublishedBlogId = (id: string, blogId: string): void => {
+  const favorites = getFavoriteSearches();
+  const targetIndex = favorites.findIndex(f => f.id === id);
+  
+  if (targetIndex !== -1) {
+    favorites[targetIndex].blogId = blogId;
     setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, favorites);
   }
 };

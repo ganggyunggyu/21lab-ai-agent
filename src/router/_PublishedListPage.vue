@@ -27,6 +27,8 @@ import {
   ChatboxEllipses as ChatIcon,
   CheckmarkCircle as CheckIcon,
   Newspaper as NewsIcon,
+  Code as MarkdownIcon,
+  Eye as PreviewIcon,
 } from '@vicons/ionicons5';
 import ModernCard from '@/components/ui/ModernCard.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
@@ -35,8 +37,10 @@ import {
   removeFavoriteSearch,
   updatePublishedMemo,
   updatePublishedExposure,
+  updatePublishedBlogId,
   type FavoriteSearch,
 } from '@/utils/_localStorage';
+import { renderMarkdown } from '@/utils/markdown/renderer';
 import { useChatStore } from '@/stores/_chat';
 
 const chatStore = useChatStore();
@@ -48,10 +52,19 @@ const selectedItem = ref<FavoriteSearch | null>(null);
 const editingMemo = ref<string | null>(null);
 const tempMemo = ref<string>('');
 
+// 블로그 ID 편집용 상태
+const editingBlogId = ref<string | null>(null);
+const tempBlogId = ref<string>('');
+
+// 마크다운 에디터 상태
+const showMarkdownEditor = ref(false);
+const markdownContent = ref<string>('');
+const showMarkdownPreview = ref(false);
+
 // Toolbar state
-const searchQuery = ref<string>('');
 const sortBy = ref<'recent' | 'title'>('recent');
 const isOnlyWithRef = ref<boolean>(false);
+const isOnlyWithBlogId = ref<boolean>(false);
 
 const loadPublishedList = () => {
   const allFavorites = getFavoriteSearches();
@@ -131,6 +144,31 @@ const handleMemoKeydown = (e: KeyboardEvent, item: FavoriteSearch) => {
   }
 };
 
+// 블로그 ID 편집 관련 함수
+const startEditBlogId = (item: FavoriteSearch) => {
+  editingBlogId.value = item.id;
+  tempBlogId.value = item.blogId || '';
+};
+
+const saveBlogId = (item: FavoriteSearch) => {
+  updatePublishedBlogId(item.id, tempBlogId.value);
+  item.blogId = tempBlogId.value; // 즉시 화면 업데이트
+  editingBlogId.value = null;
+  loadPublishedList(); // 전체 데이터 다시 로드
+};
+
+const cancelEditBlogId = () => {
+  editingBlogId.value = null;
+  tempBlogId.value = '';
+};
+
+const handleBlogIdKeydown = (e: KeyboardEvent, item: FavoriteSearch) => {
+  if (e.key === 'Enter' && e.shiftKey) {
+    e.preventDefault();
+    saveBlogId(item);
+  }
+};
+
 // 노출 설정 관련 함수들
 const toggleVisibility = (item: FavoriteSearch) => {
   const newVisibility = !item.isVisible;
@@ -144,6 +182,39 @@ const updateRank = (item: FavoriteSearch, rank: number | null) => {
   updatePublishedExposure(item.id, item.isVisible || false, newRank);
   item.exposureRank = newRank; // 즉시 화면 업데이트
   loadPublishedList(); // 전체 데이터 다시 로드
+};
+
+// 마크다운 에디터 관련 함수들
+const openMarkdownEditor = (item: FavoriteSearch) => {
+  markdownContent.value = item.memo || '';
+  showMarkdownEditor.value = true;
+  showMarkdownPreview.value = false;
+};
+
+const saveMarkdownMemo = () => {
+  if (selectedItem.value) {
+    updatePublishedMemo(selectedItem.value.id, markdownContent.value);
+    selectedItem.value.memo = markdownContent.value; // 즉시 화면 업데이트
+    showMarkdownEditor.value = false;
+    loadPublishedList(); // 전체 데이터 다시 로드
+  }
+};
+
+const closeMarkdownEditor = () => {
+  showMarkdownEditor.value = false;
+  markdownContent.value = '';
+  showMarkdownPreview.value = false;
+};
+
+const handleMarkdownKeydown = (e: KeyboardEvent) => {
+  if (e.shiftKey && e.key === 'Enter') {
+    e.preventDefault();
+    saveMarkdownMemo();
+  }
+};
+
+const toggleMarkdownPreview = () => {
+  showMarkdownPreview.value = !showMarkdownPreview.value;
 };
 
 const formatDate = (date: Date) => {
@@ -160,19 +231,14 @@ onMounted(() => {
   loadPublishedList();
 });
 
-// Derived list with search / filter / sort
+// Derived list with filter / sort
 const displayList = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase();
   const baseList = publishedList.value.slice();
 
   const filtered = baseList.filter((item) => {
-    const matchesQuery =
-      !query ||
-      item.title.toLowerCase().includes(query) ||
-      item.keyword.toLowerCase().includes(query) ||
-      (item.refMsg ? item.refMsg.toLowerCase().includes(query) : false);
     const matchesRef = !isOnlyWithRef.value || !!item.refMsg;
-    return matchesQuery && matchesRef;
+    const matchesBlogId = !isOnlyWithBlogId.value || !!item.blogId;
+    return matchesRef && matchesBlogId;
   });
 
   if (sortBy.value === 'title') {
@@ -200,43 +266,50 @@ const displayList = computed(() => {
           @click="goBack"
           class="back-button"
         />
-        
+
         <!-- 제목 영역 -->
         <div class="title-section">
           <div class="title-row">
             <NewsIcon class="title-icon" />
             <h1 class="page-title">발행원고</h1>
           </div>
-          <p class="page-subtitle">{{ publishedList.length }}개 원고 | {{ publishedList.filter(item => item.isVisible).length }}개 노출중</p>
+          <p class="page-subtitle">
+            {{ publishedList.length }}개 원고 |
+            {{ publishedList.filter((item) => item.isVisible).length }}개 노출중
+          </p>
         </div>
       </div>
     </div>
 
-    <!-- 툴바 -->
-    <div class="toolbar">
-      <ModernCard variant="glass" class="toolbar-card">
-        <div class="toolbar-row">
-          <div class="toolbar-left">
-            <n-input
-              v-model:value="searchQuery"
-              placeholder="제목/키워드/참조에서 검색"
-              clearable
-              size="large"
-            />
-          </div>
-          <div class="toolbar-right">
+    <!-- 컴팩트 툴바 -->
+    <div class="compact-toolbar">
+      <ModernCard variant="glass" class="compact-toolbar-card">
+        <div class="compact-toolbar-content">
+          <!-- 정렬 선택 -->
+          <div class="toolbar-section">
             <n-select
               v-model:value="sortBy"
               :options="[
-                { label: '최근 등록순', value: 'recent' },
+                { label: '최신순', value: 'recent' },
                 { label: '제목순', value: 'title' },
               ]"
-              size="large"
-              class="toolbar-select"
+              size="medium"
+              class="compact-select"
             />
-            <div class="toolbar-switch">
-              <n-switch v-model:value="isOnlyWithRef" size="large" />
-              <span class="switch-label">참조원고 있는 항목만</span>
+          </div>
+          
+          <!-- 필터 그룹 -->
+          <div class="toolbar-section filter-group">
+            <span class="filter-group-label">필터:</span>
+            <div class="switch-group">
+              <div class="compact-switch" title="참조원고 있는 항목만">
+                <n-switch v-model:value="isOnlyWithRef" size="medium" />
+                <span class="compact-switch-label">참조</span>
+              </div>
+              <div class="compact-switch" title="블로그 ID 있는 항목만">
+                <n-switch v-model:value="isOnlyWithBlogId" size="medium" />
+                <span class="compact-switch-label">ID</span>
+              </div>
             </div>
           </div>
         </div>
@@ -320,6 +393,10 @@ const displayList = computed(() => {
                       노출
                       {{ item.exposureRank ? `#${item.exposureRank}` : '' }}
                     </span>
+                    <span v-if="item.blogId" class="blog-id-badge">
+                      <LinkIcon class="ref-icon" />
+                      ID: {{ item.blogId.length > 10 ? item.blogId.substring(0, 10) + '...' : item.blogId }}
+                    </span>
                     <span
                       v-else-if="item.isVisible === false"
                       class="visibility-badge hidden"
@@ -347,13 +424,13 @@ const displayList = computed(() => {
     </div>
 
     <!-- 상세보기 모달 -->
-    <n-modal 
-      v-model:show="showDetailModal" 
-      preset="card" 
-      :style="{ 
-        width: '560px', 
+    <n-modal
+      v-model:show="showDetailModal"
+      preset="card"
+      :style="{
+        width: '560px',
         maxWidth: 'calc(100vw - 32px)',
-        maxHeight: 'calc(100vh - 100px)'
+        maxHeight: 'calc(100vh - 100px)',
       }"
       class="published-detail-modal"
     >
@@ -402,13 +479,22 @@ const displayList = computed(() => {
         <div class="modal-section">
           <div class="modal-item-header">
             <strong>메모:</strong>
-            <n-button
-              v-if="editingMemo !== selectedItem.id"
-              size="tiny"
-              @click="startEditMemo(selectedItem)"
-            >
-              편집
-            </n-button>
+            <n-space v-if="editingMemo !== selectedItem.id" size="small">
+              <n-button size="tiny" @click="startEditMemo(selectedItem)">
+                편집
+              </n-button>
+              <n-button
+                size="tiny"
+                @click="openMarkdownEditor(selectedItem)"
+                title="마크다운으로 수정하기"
+                style="color: #6366f1"
+              >
+                <MarkdownIcon
+                  style="width: 12px; height: 12px; margin-right: 2px"
+                />
+                MD
+              </n-button>
+            </n-space>
             <n-space v-else size="small">
               <n-button
                 size="tiny"
@@ -431,6 +517,37 @@ const displayList = computed(() => {
           </div>
           <div v-else class="memo-display">
             {{ selectedItem.memo || '메모가 없습니다.' }}
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-item-header">
+            <strong>블로그 ID:</strong>
+            <n-space v-if="editingBlogId !== selectedItem.id" size="small">
+              <n-button size="tiny" @click="startEditBlogId(selectedItem)">
+                편집
+              </n-button>
+            </n-space>
+            <n-space v-else size="small">
+              <n-button
+                size="tiny"
+                type="primary"
+                @click="saveBlogId(selectedItem)"
+              >
+                저장
+              </n-button>
+              <n-button size="tiny" @click="cancelEditBlogId"> 취소 </n-button>
+            </n-space>
+          </div>
+          <div v-if="editingBlogId === selectedItem.id" class="memo-edit">
+            <n-input
+              v-model:value="tempBlogId"
+              placeholder="네이버 블로그 포스트 ID 등을 입력하세요 (Shift+Enter로 저장)"
+              @keydown="handleBlogIdKeydown($event, selectedItem)"
+            />
+          </div>
+          <div v-else class="memo-display">
+            {{ selectedItem.blogId || '블로그 ID가 없습니다.' }}
           </div>
         </div>
 
@@ -485,6 +602,108 @@ const displayList = computed(() => {
         </n-space>
       </template>
     </n-modal>
+
+    <!-- 마크다운 에디터 모달 -->
+    <n-modal
+      v-model:show="showMarkdownEditor"
+      preset="card"
+      :style="{
+        width: '900px',
+        maxWidth: 'calc(100vw - 32px)',
+        maxHeight: 'calc(100vh - 80px)',
+      }"
+      class="markdown-editor-modal"
+    >
+      <template #header>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <MarkdownIcon style="width: 20px; height: 20px; color: #6366f1" />
+          마크다운 에디터
+        </div>
+      </template>
+
+      <div class="markdown-editor-container">
+        <!-- 에디터 헤더 -->
+        <div class="editor-header">
+          <n-space align="center" justify="space-between">
+            <span style="color: #6366f1; font-weight: 600; font-size: 14px">
+              실시간 마크다운 에디터
+            </span>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: end;
+                gap: 2px;
+              "
+            >
+              <n-text depth="3" style="font-size: 12px">
+                **굵게**, *기울임*, `코드`, # 제목, - 리스트, [링크](url)
+              </n-text>
+              <n-text
+                depth="3"
+                style="font-size: 11px; color: #10b981; font-weight: 500"
+              >
+                💾 Shift + Enter로 저장
+              </n-text>
+            </div>
+          </n-space>
+        </div>
+
+        <!-- 분할 에디터 -->
+        <div class="split-editor">
+          <!-- 왼쪽: 마크다운 입력 -->
+          <div class="editor-input-panel">
+            <div class="panel-header">
+              <MarkdownIcon
+                style="
+                  width: 14px;
+                  height: 14px;
+                  margin-right: 4px;
+                  color: #6366f1;
+                "
+              />
+              <span>마크다운 입력</span>
+            </div>
+            <n-input
+              v-model:value="markdownContent"
+              type="textarea"
+              placeholder="# 제목&#10;&#10;**굵은 글씨**, *기울임체*, `코드`&#10;&#10;- 리스트 항목&#10;- 또 다른 항목&#10;&#10;[링크](https://example.com)"
+              class="markdown-input"
+              show-count
+              @keydown="handleMarkdownKeydown"
+            />
+          </div>
+
+          <!-- 오른쪽: 실시간 미리보기 -->
+          <div class="editor-preview-panel">
+            <div class="panel-header">
+              <PreviewIcon
+                style="
+                  width: 14px;
+                  height: 14px;
+                  margin-right: 4px;
+                  color: #10b981;
+                "
+              />
+              <span>실시간 미리보기</span>
+            </div>
+            <div class="live-preview">
+              <div
+                class="markdown-content"
+                v-html="renderMarkdown(markdownContent)"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <n-space justify="end">
+          <n-button @click="closeMarkdownEditor">취소</n-button>
+          <n-button type="primary" @click="saveMarkdownMemo">저장</n-button>
+        </n-space>
+      </template>
+    </n-modal>
   </div>
 </template>
 
@@ -532,6 +751,9 @@ const displayList = computed(() => {
 
 .page-header {
   margin-bottom: 16px;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .header-wrapper {
@@ -591,44 +813,80 @@ const displayList = computed(() => {
 }
 
 /* Toolbar */
-.toolbar {
-  margin-bottom: 12px;
+/* 컴팩트 툴바 스타일 */
+.compact-toolbar {
+  margin-bottom: 16px;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.toolbar-card {
-  padding: 12px 16px;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.6);
+
+.compact-toolbar-card {
+  padding: 10px 16px;
+  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
-:global(.dark) .toolbar-card {
-  background: rgba(17, 24, 39, 0.5);
+
+:global(.dark) .compact-toolbar-card {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
 }
-.toolbar-row {
+
+.compact-toolbar-content {
   display: flex;
-  gap: 12px;
   align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
-.toolbar-left {
-  flex: 1;
-}
-.toolbar-right {
+
+.toolbar-section {
   display: flex;
-  gap: 12px;
   align-items: center;
-}
-.toolbar-select {
-  min-width: 140px;
-}
-.toolbar-switch {
-  display: flex;
   gap: 8px;
+}
+
+.compact-select {
+  min-width: 110px;
+  font-size: 13px;
+}
+
+.filter-group {
+  gap: 12px;
+}
+
+.filter-group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-right: 8px;
+}
+
+:global(.dark) .filter-group-label {
+  color: #9ca3af;
+}
+
+.switch-group {
+  display: flex;
+  gap: 16px;
   align-items: center;
 }
-.switch-label {
-  font-size: 13px;
-  color: #555;
+
+.compact-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-:global(.dark) .switch-label {
-  color: #cbd5e1;
+
+.compact-switch-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+:global(.dark) .compact-switch-label {
+  color: #9ca3af;
 }
 
 /* List */
@@ -747,6 +1005,19 @@ const displayList = computed(() => {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.blog-id-badge {
+  font-size: 11px;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 .item-footer {
   margin-top: 8px;
@@ -879,7 +1150,7 @@ const displayList = computed(() => {
   border-radius: 8px;
   max-height: 100px;
   overflow-y: auto;
-  
+
   /* 스크롤바 스타일링 */
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
@@ -990,7 +1261,6 @@ const displayList = computed(() => {
   max-height: 24px;
 }
 
-
 .published-badge-icon {
   width: 16px !important;
   height: 16px !important;
@@ -1041,15 +1311,24 @@ const displayList = computed(() => {
     font-size: 12px;
   }
 
-  .toolbar-row {
+  .compact-toolbar-content {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
-  
-  .toolbar-right {
-    justify-content: space-between;
-    flex-wrap: wrap;
+
+  .toolbar-section {
+    justify-content: center;
+  }
+
+  .switch-group {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: center;
     gap: 8px;
   }
 }
@@ -1084,6 +1363,255 @@ const displayList = computed(() => {
   .back-button {
     min-width: 36px;
     min-height: 36px;
+  }
+}
+
+/* 마크다운 에디터 스타일 */
+.markdown-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-header {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+}
+
+:global(.dark) .editor-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.split-editor {
+  display: flex;
+  gap: 16px;
+  height: 500px;
+  flex: 1;
+}
+
+.editor-input-panel,
+.editor-preview-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.markdown-input {
+  flex: 1;
+  height: 450px;
+}
+
+.markdown-input :deep(textarea) {
+  height: 450px !important;
+  resize: none;
+  overflow-y: auto;
+
+  /* 스크롤바 스타일링 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.markdown-input :deep(textarea)::-webkit-scrollbar {
+  width: 6px;
+}
+
+.markdown-input :deep(textarea)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.markdown-input :deep(textarea)::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.markdown-input :deep(textarea)::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark) .markdown-input :deep(textarea) {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+:global(.dark) .markdown-input :deep(textarea)::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .markdown-input :deep(textarea)::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  padding: 6px 0;
+}
+
+:global(.dark) .panel-header {
+  color: #d1d5db;
+}
+
+.editor-input-panel .n-input {
+  flex: 1;
+}
+
+.live-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  height: 450px;
+  max-height: 450px;
+
+  /* 스크롤바 스타일링 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.live-preview::-webkit-scrollbar {
+  width: 6px;
+}
+
+.live-preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.live-preview::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.live-preview::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+:global(.dark) .live-preview {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+:global(.dark) .live-preview::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .live-preview::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin: 16px 0 8px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.markdown-content h1 {
+  font-size: 24px;
+}
+.markdown-content h2 {
+  font-size: 20px;
+}
+.markdown-content h3 {
+  font-size: 16px;
+}
+
+:global(.dark) .markdown-content h1,
+:global(.dark) .markdown-content h2,
+:global(.dark) .markdown-content h3 {
+  color: #e2e8f0;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+:global(.dark) .markdown-content strong {
+  color: #f3f4f6;
+}
+
+.markdown-content em {
+  font-style: italic;
+  color: #4b5563;
+}
+
+:global(.dark) .markdown-content em {
+  color: #d1d5db;
+}
+
+.markdown-content code {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+}
+
+:global(.dark) .markdown-content code {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.markdown-content a {
+  color: #3b82f6;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.markdown-content a:hover {
+  border-bottom-color: #3b82f6;
+}
+
+.markdown-content li {
+  margin: 4px 0;
+  padding-left: 8px;
+  position: relative;
+}
+
+.markdown-content li::before {
+  content: '•';
+  position: absolute;
+  left: -8px;
+  color: #6b7280;
+}
+
+.editor-help {
+  flex: 1;
+}
+
+/* 마크다운 에디터 모바일 최적화 */
+@media (max-width: 768px) {
+  .markdown-editor-modal .n-card {
+    margin: 16px;
+  }
+
+  .split-editor {
+    flex-direction: column;
+    height: auto;
+    gap: 12px;
+  }
+
+  .editor-input-panel .n-input {
+    min-height: 200px;
+  }
+
+  .live-preview {
+    min-height: 200px;
+    max-height: 300px;
+  }
+
+  .panel-header {
+    font-size: 12px;
   }
 }
 </style>
