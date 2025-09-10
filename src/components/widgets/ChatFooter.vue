@@ -277,23 +277,41 @@ const convertToThreeLineSample = (text: string): string => {
 const handleAddPublishedFromModal = () => {
   if (!selectedUserMessage.value) return;
   
+  console.log('Debug - selectedUserMessage:', selectedUserMessage.value);
+  
   const title = prompt('발행원고 제목을 입력하세요:', `[발행] ${selectedUserMessage.value.keyword}`);
-  if (title) {
-    // 결과 원고 샘플 추출(해당 유저 메시지 뒤의 봇 응답들을 합쳐 상위 3줄)
-    const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
-    const fullResult = botResponses.map((m) => m.content).join('\n');
-    const resultSample = convertToThreeLineSample(fullResult);
+  if (!title) return;
+  
+  const memo = prompt('메모를 입력하세요 (수정 내역, 발행 일정 등):', '');
+  
+  // 결과 원고 샘플 추출(해당 유저 메시지 뒤의 봇 응답들을 합쳐 상위 3줄)
+  const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
+  console.log('Debug - botResponses:', botResponses);
+  
+  const fullResult = botResponses.map((m) => m.content).join('\n\n---\n\n');
+  const resultSample = convertToThreeLineSample(fullResult);
+  
+  console.log('Debug - fullResult:', fullResult);
+  console.log('Debug - resultSample:', resultSample);
+  
+  // 첫 번째 봇 응답 정보 가져오기
+  const firstBotResponse = botResponses[0];
 
-    addPublishedSearch(
-      selectedUserMessage.value.keyword,
-      selectedUserMessage.value.ref,
-      title,
-      resultSample
-    );
-    loadFavoriteSearches();
-    showActionModal.value = false;
-    console.log('발행원고로 등록되었습니다.');
-  }
+  addPublishedSearch(
+    selectedUserMessage.value.keyword,
+    selectedUserMessage.value.ref,
+    title,
+    resultSample,
+    selectedUserMessage.value.id, // userMessageId
+    firstBotResponse?.id, // botMessageId
+    fullResult, // botContent (전체 결과)
+    selectedUserMessage.value.service, // service
+    selectedUserMessage.value.timestamp, // originalTimestamp
+    memo // memo
+  );
+  loadFavoriteSearches();
+  showActionModal.value = false;
+  console.log('발행원고로 등록되었습니다.');
 };
 
 const handleGenerateWithKeyword = () => {

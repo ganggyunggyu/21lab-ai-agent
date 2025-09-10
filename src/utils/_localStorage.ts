@@ -76,6 +76,18 @@ export interface FavoriteSearch {
   createdAt: Date;
   isPublished?: boolean; // 발행원고 여부
   resultSample?: string; // 결과 원고 3줄 샘플
+  memo?: string; // 메모 (수정 내역, 발행 일정 등)
+  
+  // 노출 관리
+  isVisible?: boolean; // 노출 여부 (기본값: false)
+  exposureRank?: number; // 노출 순위 (낮을수록 우선 순위 높음)
+  
+  // 채팅 데이터 (발행원고용)
+  userMessageId?: string; // 사용자 메시지 ID
+  botMessageId?: string; // 봇 메시지 ID
+  botContent?: string; // 봇 응답 전체 내용
+  service?: string; // 사용된 AI 서비스
+  originalTimestamp?: number; // 원본 메시지 타임스탬프
 }
 
 export const getFavoriteSearches = (): FavoriteSearch[] =>
@@ -99,12 +111,18 @@ export const addFavoriteSearch = (keyword: string, refMsg?: string, title?: stri
   setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, top20);
 };
 
-// 발행원고로 등록하는 전용 함수
+// 발행원고로 등록하는 전용 함수 (채팅 데이터 포함)
 export const addPublishedSearch = (
   keyword: string,
   refMsg?: string,
   title?: string,
-  resultSample?: string
+  resultSample?: string,
+  userMessageId?: string,
+  botMessageId?: string,
+  botContent?: string,
+  service?: string,
+  originalTimestamp?: number,
+  memo?: string
 ): void => {
   const favorites = getFavoriteSearches();
   const newFavorite: FavoriteSearch = {
@@ -115,11 +133,42 @@ export const addPublishedSearch = (
     createdAt: new Date(),
     isPublished: true,
     resultSample,
+    userMessageId,
+    botMessageId,
+    botContent,
+    service,
+    originalTimestamp,
+    memo,
   };
 
   favorites.unshift(newFavorite);
   const top20 = favorites.slice(0, 20);
   setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, top20);
+};
+
+// 발행원고 메모 업데이트 전용 함수
+export const updatePublishedMemo = (id: string, memo: string): void => {
+  const favorites = getFavoriteSearches();
+  const targetIndex = favorites.findIndex(f => f.id === id);
+  
+  if (targetIndex !== -1) {
+    favorites[targetIndex].memo = memo;
+    setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, favorites);
+  }
+};
+
+// 발행원고 노출 설정 업데이트 함수
+export const updatePublishedExposure = (id: string, isVisible: boolean, exposureRank?: number): void => {
+  const favorites = getFavoriteSearches();
+  const targetIndex = favorites.findIndex(f => f.id === id);
+  
+  if (targetIndex !== -1) {
+    favorites[targetIndex].isVisible = isVisible;
+    if (exposureRank !== undefined) {
+      favorites[targetIndex].exposureRank = exposureRank;
+    }
+    setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, favorites);
+  }
 };
 
 export const removeFavoriteSearch = (id: string): void => {
