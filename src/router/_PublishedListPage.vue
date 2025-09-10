@@ -62,6 +62,13 @@ const handleCopyRef = (item: FavoriteSearch) => {
   }
 };
 
+const handleCopyResult = (item: FavoriteSearch) => {
+  if (item.resultSample) {
+    navigator.clipboard.writeText(item.resultSample);
+    console.log('결과 원고 예시가 클립보드에 복사되었습니다.');
+  }
+};
+
 const handleUseTemplate = (item: FavoriteSearch) => {
   chatStore.keyword = item.keyword;
   if (item.refMsg) {
@@ -299,6 +306,7 @@ const displayList = computed(() => {
         <div class="modal-section" v-if="selectedItem.resultSample">
           <div class="modal-item-header">
             <strong>결과 원고 예시 (3줄):</strong>
+            <n-button size="tiny" @click="handleCopyResult(selectedItem)">복사</n-button>
           </div>
           <p class="modal-text result-content">{{ selectedItem.resultSample }}</p>
         </div>
