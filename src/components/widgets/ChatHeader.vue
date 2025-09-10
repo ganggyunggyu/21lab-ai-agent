@@ -99,9 +99,9 @@ onMounted(async () => {
           size="sm"
           @click="handlePublishedList"
           title="발행원고 목록 보기"
-          style="color: #10b981; font-weight: 600;"
+          style="color: #10b981; font-weight: 600"
         >
-          📝 발행원고
+          발행원고
         </ModernButton>
 
         <ModernButton
@@ -160,7 +160,7 @@ onMounted(async () => {
   z-index: 100;
   width: 100vw;
   max-width: 90vw;
-  
+
   /* 작은 화면에서 100vw */
   @media (max-width: 768px) {
     width: 100vw;
