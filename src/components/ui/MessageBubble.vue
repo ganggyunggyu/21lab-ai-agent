@@ -79,7 +79,7 @@ const getServiceLabel = (service?: string) => {
             <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
           </div>
 
-          <div v-else>
+          <div v-else @dblclick="message.content !== 'loading' && $emit('copy', message.content)">
             <!-- 사용자 메시지일 때 추가 정보 표시 -->
             <div v-if="message.role === 'user'" class="user-message-info">
               <div class="generation-info">

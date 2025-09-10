@@ -31,7 +31,11 @@ const onDownload = () => emit('download', props.msg);
 
 <template>
   <div :class="['message', msg.role]">
-    <div class="bubble" :ref="(el) => setLastMessageRef(el, idx)">
+    <div
+      class="bubble"
+      :ref="(el) => setLastMessageRef(el, idx)"
+      @dblclick="onCopy"
+    >
       <div class="chat-content">
         <template v-if="msg.content === 'loading'">
           <LoadingDots />
