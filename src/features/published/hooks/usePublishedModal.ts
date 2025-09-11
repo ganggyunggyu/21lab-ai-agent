@@ -1,108 +1,84 @@
-import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import type { FavoriteSearch } from '@/entities/published';
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
 import { PublishedApi } from '@/entities/published';
 import { renderMarkdown } from '@/utils/markdown/renderer';
 
 export const usePublishedModal = () => {
-  const showDetailModal = ref(false);
-  const selectedItem = ref<FavoriteSearch | null>(null);
+  // 직접 store 사용
+  const publishedStore = usePublishedStore();
   
-  // 메모 편집용 상태
-  const editingMemo = ref<string | null>(null);
-  const tempMemo = ref<string>('');
-  
-  // 블로그 ID 편집용 상태
-  const editingBlogId = ref<string | null>(null);
-  const tempBlogId = ref<string>('');
-  
-  // 마크다운 에디터 상태
-  const showMarkdownEditor = ref(false);
-  const markdownContent = ref<string>('');
+  // store actions 구조분해할당
+  const {
+    openDetailModal,
+    openMarkdownModal,
+    closeMarkdownModal,
+    startEditMemo,
+    cancelEditMemo,
+    startEditBlogId,
+    cancelEditBlogId,
+  } = publishedStore;
 
-  // 모달 열기
-  const handleItemClick = (item: FavoriteSearch) => {
-    selectedItem.value = item;
-    showDetailModal.value = true;
+  const itemClick = (item: FavoriteSearch) => {
+    openDetailModal(item);
   };
 
-  // 메모 편집 관련 함수
-  const startEditMemo = (item: FavoriteSearch) => {
-    editingMemo.value = item.id;
-    tempMemo.value = item.memo || '';
-  };
-
-  const saveMemo = (item: FavoriteSearch, onSuccess?: () => void) => {
-    PublishedApi.updateMemo(item.id, tempMemo.value);
-    item.memo = tempMemo.value; // 즉시 화면 업데이트
-    editingMemo.value = null;
+  const saveMemo = (item: FavoriteSearch, tempMemo: string, onSuccess?: () => void) => {
+    PublishedApi.updateMemo(item.id, tempMemo);
+    item.memo = tempMemo;
+    cancelEditMemo();
     onSuccess?.();
   };
 
-  const cancelEditMemo = () => {
-    editingMemo.value = null;
-    tempMemo.value = '';
-  };
-
-  const handleMemoKeydown = (e: KeyboardEvent, item: FavoriteSearch, onSuccess?: () => void) => {
+  const memoKeydown = (
+    e: KeyboardEvent,
+    item: FavoriteSearch,
+    tempMemo: string,
+    onSuccess?: () => void
+  ) => {
     if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault();
-      saveMemo(item, onSuccess);
+      saveMemo(item, tempMemo, onSuccess);
     }
   };
 
-  // 블로그 ID 편집 관련 함수
-  const startEditBlogId = (item: FavoriteSearch) => {
-    editingBlogId.value = item.id;
-    tempBlogId.value = item.blogId || '';
-  };
-
-  const saveBlogId = (item: FavoriteSearch, onSuccess?: () => void) => {
-    PublishedApi.updateBlogId(item.id, tempBlogId.value);
-    item.blogId = tempBlogId.value; // 즉시 화면 업데이트
-    editingBlogId.value = null;
+  const saveBlogId = (item: FavoriteSearch, tempBlogId: string, onSuccess?: () => void) => {
+    PublishedApi.updateBlogId(item.id, tempBlogId);
+    item.blogId = tempBlogId;
+    cancelEditBlogId();
     onSuccess?.();
   };
 
-  const cancelEditBlogId = () => {
-    editingBlogId.value = null;
-    tempBlogId.value = '';
-  };
-
-  const handleBlogIdKeydown = (e: KeyboardEvent, item: FavoriteSearch, onSuccess?: () => void) => {
+  const blogIdKeydown = (
+    e: KeyboardEvent,
+    item: FavoriteSearch,
+    tempBlogId: string,
+    onSuccess?: () => void
+  ) => {
     if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault();
-      saveBlogId(item, onSuccess);
+      saveBlogId(item, tempBlogId, onSuccess);
     }
   };
 
-  // 마크다운 에디터 관련 함수들
   const openMarkdownEditor = (item: FavoriteSearch) => {
-    markdownContent.value = item.memo || '';
-    showMarkdownEditor.value = true;
+    openMarkdownModal(item.memo || '');
   };
 
-  const saveMarkdownMemo = (onSuccess?: () => void) => {
-    if (selectedItem.value) {
-      PublishedApi.updateMemo(selectedItem.value.id, markdownContent.value);
-      selectedItem.value.memo = markdownContent.value; // 즉시 화면 업데이트
-      showMarkdownEditor.value = false;
-      onSuccess?.();
-    }
+  const saveMarkdownMemo = (selectedItem: FavoriteSearch, content: string, onSuccess?: () => void) => {
+    PublishedApi.updateMemo(selectedItem.id, content);
+    selectedItem.memo = content;
+    closeMarkdownModal();
+    onSuccess?.();
   };
 
-  const closeMarkdownEditor = () => {
-    showMarkdownEditor.value = false;
-    markdownContent.value = '';
-  };
-
-  const handleMarkdownKeydown = (e: KeyboardEvent, onSuccess?: () => void) => {
+  const markdownKeydown = (e: KeyboardEvent, selectedItem: FavoriteSearch, content: string, onSuccess?: () => void) => {
     if (e.shiftKey && e.key === 'Enter') {
       e.preventDefault();
-      saveMarkdownMemo(onSuccess);
+      saveMarkdownMemo(selectedItem, content, onSuccess);
     }
   };
 
-  // 노출 설정 관련 함수들
   const toggleVisibility = (item: FavoriteSearch, onSuccess?: () => void) => {
     const newVisibility = !item.isVisible;
     PublishedApi.updateExposure(item.id, newVisibility, item.exposureRank);
@@ -110,41 +86,33 @@ export const usePublishedModal = () => {
     onSuccess?.();
   };
 
-  const updateExposureRank = (item: FavoriteSearch, rank: number, onSuccess?: () => void) => {
+  const updateExposureRank = (
+    item: FavoriteSearch,
+    rank: number,
+    onSuccess?: () => void
+  ) => {
     PublishedApi.updateExposure(item.id, item.isVisible || false, rank);
     item.exposureRank = rank;
     onSuccess?.();
   };
 
   return {
-    // State
-    showDetailModal,
-    selectedItem,
-    editingMemo,
-    tempMemo,
-    editingBlogId,
-    tempBlogId,
-    showMarkdownEditor,
-    markdownContent,
-
-    // Methods
-    handleItemClick,
+    // actions only
+    itemClick,
     startEditMemo,
     saveMemo,
     cancelEditMemo,
-    handleMemoKeydown,
+    memoKeydown,
     startEditBlogId,
     saveBlogId,
     cancelEditBlogId,
-    handleBlogIdKeydown,
+    blogIdKeydown,
     openMarkdownEditor,
     saveMarkdownMemo,
-    closeMarkdownEditor,
-    handleMarkdownKeydown,
+    closeMarkdownModal,
+    markdownKeydown,
     toggleVisibility,
     updateExposureRank,
-
-    // Utils
-    renderMarkdown
+    renderMarkdown,
   };
 };

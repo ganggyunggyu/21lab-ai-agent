@@ -1,89 +1,86 @@
-import { ref, computed, onMounted } from 'vue';
-import type { FavoriteSearch, SortBy, BlogIdGroupInfo } from '@/entities/published';
+import { onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities/published';
+import { useChatStore } from '@/stores/_chat';
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
 import { PublishedApi } from '@/entities/published';
 
 export const usePublishedList = () => {
-  const publishedList = ref<FavoriteSearch[]>([]);
-  const sortBy = ref<SortBy>('recent');
-  const isOnlyWithRef = ref<boolean>(false);
-  const isOnlyWithBlogId = ref<boolean>(false);
+  const chatStore = useChatStore();
+  const { keyword, refMsg, showRefInput } = storeToRefs(chatStore);
 
-  const loadPublishedList = () => {
-    publishedList.value = PublishedApi.getAll();
-  };
-
-  // Derived list with filter / sort
-  const displayList = computed(() => {
-    const baseList = publishedList.value.slice();
-
-    const filtered = baseList.filter((item) => {
-      const matchesRef = !isOnlyWithRef.value || !!item.refMsg;
-      const matchesBlogId = !isOnlyWithBlogId.value || !!item.blogId;
-      return matchesRef && matchesBlogId;
-    });
-
-    if (sortBy.value === 'title') {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-    } else {
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    }
-    return filtered;
-  });
-
-  // 블로그 ID별 그룹 정보 계산
-  const getBlogIdGroups = computed(() => {
-    const groups = new Map<string, FavoriteSearch[]>();
-    
-    displayList.value.forEach(item => {
-      if (item.blogId) {
-        if (!groups.has(item.blogId)) {
-          groups.set(item.blogId, []);
-        }
-        groups.get(item.blogId)!.push(item);
-      }
-    });
-    
-    return groups;
-  });
+  // 직접 store 사용
+  const publishedStore = usePublishedStore();
+  const {
+    articles,
+    sortBy,
+    isOnlyWithRef,
+    isOnlyWithBlogId,
+    displayList,
+    getBlogIdGroups,
+  } = storeToRefs(publishedStore);
 
   // 아이템이 그룹의 몇 번째인지 확인
   const getItemGroupInfo = (item: FavoriteSearch): BlogIdGroupInfo | null => {
     if (!item.blogId) return null;
-    
+
     const group = getBlogIdGroups.value.get(item.blogId);
     if (!group || group.length <= 1) return null;
-    
-    const sortedGroup = [...group].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+
+    const sortedGroup = [...group].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    
-    const index = sortedGroup.findIndex(g => g.id === item.id);
+
+    const index = sortedGroup.findIndex((g) => g.id === item.id);
     return {
       total: group.length,
       position: index + 1,
-      isLatest: index === 0
+      isLatest: index === 0,
     };
   };
 
+  // 키워드 복사
+  const handleCopyKeyword = (item: FavoriteSearch) => {
+    navigator.clipboard.writeText(item.keyword);
+    console.log('키워드가 클립보드에 복사되었습니다.');
+  };
+
+  // 템플릿 사용 (채팅으로 이동) - storeToRefs 반응성 보장
+  const handleUseTemplate = (item: FavoriteSearch) => {
+    keyword.value = item.keyword;
+    if (item.refMsg) {
+      refMsg.value = item.refMsg;
+      showRefInput.value = true;
+    }
+    // 채팅 페이지로 이동
+    window.location.href = '/';
+  };
+
+  // 발행원고 삭제
+  const handleDelete = (item: FavoriteSearch) => {
+    if (confirm('이 발행원고를 삭제하시겠습니까?')) {
+      PublishedApi.delete(item.id);
+      publishedStore.loadArticles();
+    }
+  };
+
   onMounted(() => {
-    loadPublishedList();
+    publishedStore.loadArticles();
   });
 
   return {
-    // State
-    publishedList,
+    // Store State (storeToRefs로 반응성 보장)
+    publishedList: articles,
     sortBy,
     isOnlyWithRef,
     isOnlyWithBlogId,
-    
-    // Computed
     displayList,
-    
-    // Methods
-    loadPublishedList,
-    getItemGroupInfo
+
+    loadPublishedList: publishedStore.loadArticles,
+    getItemGroupInfo,
+    handleCopyKeyword,
+    handleUseTemplate,
+    handleDelete,
   };
 };
