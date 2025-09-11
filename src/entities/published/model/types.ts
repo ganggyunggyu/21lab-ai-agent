@@ -9,6 +9,9 @@ export interface FavoriteSearch {
   memo?: string; // 메모 (수정 내역, 발행 일정 등)
   blogId?: string; // 블로그 포스트 ID (네이버 블로그 등)
   
+  // 활성화 관리
+  isActive?: boolean; // 활성화 여부 (기본값: true)
+  
   // 노출 관리
   isVisible?: boolean; // 노출 여부 (기본값: false)
   exposureRank?: number; // 노출 순위 (낮을수록 우선 순위 높음)

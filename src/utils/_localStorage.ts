@@ -183,6 +183,17 @@ export const updatePublishedBlogId = (id: string, blogId: string): void => {
   }
 };
 
+// 발행원고 활성화 상태 업데이트 함수
+export const updatePublishedActive = (id: string, isActive: boolean): void => {
+  const favorites = getFavoriteSearches();
+  const targetIndex = favorites.findIndex(f => f.id === id);
+  
+  if (targetIndex !== -1) {
+    favorites[targetIndex].isActive = isActive;
+    setStoredValue(STORAGE_KEYS.FAVORITE_SEARCHES, favorites);
+  }
+};
+
 export const removeFavoriteSearch = (id: string): void => {
   const favorites = getFavoriteSearches();
   const filtered = favorites.filter(f => f.id !== id);

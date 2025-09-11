@@ -3,6 +3,7 @@ import {
   updatePublishedMemo, 
   updatePublishedExposure, 
   updatePublishedBlogId,
+  updatePublishedActive,
   removeFavoriteSearch 
 } from '@/utils/_localStorage';
 import type { FavoriteSearch } from '../model/types';
@@ -23,6 +24,10 @@ export class PublishedApi {
 
   static updateBlogId(id: string, blogId: string): void {
     updatePublishedBlogId(id, blogId);
+  }
+
+  static updateActive(id: string, isActive: boolean): void {
+    updatePublishedActive(id, isActive);
   }
 
   static delete(id: string): void {
