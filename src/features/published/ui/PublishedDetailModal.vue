@@ -26,6 +26,7 @@ const {
   blogIdKeydown,
   openMarkdownEditor,
   toggleVisibility,
+  toggleActive,
   updateExposureRank,
 } = usePublishedModal();
 
@@ -68,14 +69,14 @@ const handleToggleVisibility = (item: any) => {
 const handleUpdateExposureRank = (item: any, rank: number) => {
   updateExposureRank(item, rank);
 };
+
+const handleToggleActive = (item: any) => {
+  toggleActive(item);
+};
 </script>
 
 <template>
-  <n-modal
-    v-model:show="detailModal.open"
-    preset="card"
-    class="published-detail-modal"
-  >
+  <n-modal v-model:show="detailModal.open" preset="card" class="modal-size">
     <template #header>
       <div class="modal-header">
         <CheckIcon class="modal-badge-icon" />
@@ -142,12 +143,11 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
             </n-button>
             <n-button
               size="tiny"
+              class="markdown-button"
               @click="handleOpenMarkdownEditor(detailModal.selectedItem!)"
+              title="마크다운으로 수정하기"
             >
-              <p>title="마크다운으로 수정하기" style="color: #6366f1"</p>
-              <MarkdownIcon
-                style="width: 12px; height: 12px; margin-right: 2px"
-              />
+              <MarkdownIcon class="markdown-icon" />
               MD
             </n-button>
           </n-space>
@@ -156,7 +156,8 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
               size="tiny"
               type="primary"
               @click="handleSaveMemo(detailModal.selectedItem!)"
-              >> > 저장
+            >
+              저장
             </n-button>
             <n-button size="tiny" @click="cancelEditMemo"> 취소 </n-button>
           </n-space>
@@ -198,7 +199,7 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
               type="primary"
               @click="handleSaveBlogId(detailModal.selectedItem!)"
             >
-              > 저장
+              저장
             </n-button>
             <n-button size="tiny" @click="cancelEditBlogId"> 취소 </n-button>
           </n-space>
@@ -220,26 +221,52 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
 
       <div class="modal-section">
         <div class="modal-item-header">
+          <strong>활성화 설정:</strong>
+          <n-button
+            size="tiny"
+            :type="
+              detailModal.selectedItem.isActive ?? true ? 'success' : 'error'
+            "
+            @click="handleToggleActive(detailModal.selectedItem!)"
+          >
+            {{
+              detailModal.selectedItem.isActive ?? true ? '활성화' : '비활성화'
+            }}
+          </n-button>
+        </div>
+        <div class="setting-description">
+          {{
+            detailModal.selectedItem.isActive ?? true
+              ? '현재 발행원고가 활성화되어 있습니다.'
+              : '현재 발행원고가 비활성화되어 있습니다.'
+          }}
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-item-header">
           <strong>노출 설정:</strong>
           <n-space size="small">
             <n-button
               size="tiny"
               :type="detailModal.selectedItem.isVisible ? 'success' : 'default'"
               @click="handleToggleVisibility(detailModal.selectedItem!)"
-              >> >
+            >
               {{ detailModal.selectedItem.isVisible ? '노출중' : '미노출' }}
             </n-button>
             <n-button
               size="tiny"
+              type="error"
               @click="handleDelete(detailModal.selectedItem!)"
             >
-              type="error" > 삭제
+              삭제
             </n-button>
             <n-button
               size="tiny"
+              type="primary"
               @click="handleUseTemplate(detailModal.selectedItem!)"
             >
-              type="primary" > 원고 발행
+              원고 발행
             </n-button>
           </n-space>
         </div>
@@ -252,7 +279,7 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
             "
             placeholder="순위"
             size="small"
-            style="width: 100px; margin-left: 8px"
+            class="rank-input"
           />
         </div>
       </div>
@@ -261,6 +288,11 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
 </template>
 
 <style scoped>
+.modal-size {
+  max-width: 70vw;
+  max-height: 90vh;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -276,6 +308,8 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
 
 .modal-content {
   padding: 8px 0;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .modal-section {
@@ -324,10 +358,12 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
   background: rgba(0, 0, 0, 0.02);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
-  padding: 8px;
+  padding: 12px;
   min-height: 32px;
+  max-height: 200px;
+  overflow-y: auto;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   white-space: pre-wrap;
 }
 
@@ -336,10 +372,36 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+.markdown-button {
+  color: #6366f1;
+}
+
+.markdown-icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 2px;
+}
+
 .rank-setting {
   display: flex;
   align-items: center;
   margin-top: 8px;
   font-size: 14px;
+}
+
+.setting-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+:global(.dark) .setting-description {
+  color: #9ca3af;
+}
+
+.rank-input {
+  width: 100px;
+  margin-left: 8px;
 }
 </style>
