@@ -91,7 +91,6 @@ onMounted(async () => {
   </main>
 </template>
 <style scoped>
-/* ===== MAIN ===== */
 .chat-main {
   flex: 1;
   padding: calc(var(--header-h, 80px) + var(--main-top-pad, 16px))

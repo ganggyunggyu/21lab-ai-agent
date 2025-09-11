@@ -151,7 +151,6 @@ onMounted(async () => {
   </header>
 </template>
 <style lang="css" scoped>
-/* ===== HEADER ===== */
 .floating-header {
   position: fixed;
   top: 16px;

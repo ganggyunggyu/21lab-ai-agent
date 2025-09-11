@@ -225,7 +225,6 @@ const handleCopyKeywordFromModal = () => {
   console.log('키워드가 클립보드에 복사되었습니다.');
 };
 
-// 사용자 메시지에 대응하는 봇 응답들 찾기
 const getBotResponsesForUserMessage = (userMsg: any) => {
   const userIndex = chatStore.messages.findIndex(msg => msg.id === userMsg.id);
   if (userIndex === -1) return [];
@@ -238,7 +237,6 @@ const getBotResponsesForUserMessage = (userMsg: any) => {
     // 다른 사용자 메시지를 만나면 중단
     if (message.role === 'user') break;
     
-    // 같은 keyword와 timestamp 범위 내의 봇 응답만 수집
     if (message.role === 'bot' && 
         message.keyword === userMsg.keyword &&
         message.content !== 'loading') {
@@ -284,7 +282,6 @@ const handleAddPublishedFromModal = () => {
   
   const memo = prompt('메모를 입력하세요 (수정 내역, 발행 일정 등):', '');
   
-  // 결과 원고 샘플 추출(해당 유저 메시지 뒤의 봇 응답들을 합쳐 상위 3줄)
   const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
   console.log('Debug - botResponses:', botResponses);
   
@@ -294,7 +291,6 @@ const handleAddPublishedFromModal = () => {
   console.log('Debug - fullResult:', fullResult);
   console.log('Debug - resultSample:', resultSample);
   
-  // 첫 번째 봇 응답 정보 가져오기
   const firstBotResponse = botResponses[0];
 
   addPublishedSearch(
@@ -1183,7 +1179,6 @@ watch(refMsg, (newVal) => {
   position: relative;
 }
 
-/* ===== KEYFRAMES ===== */
 @keyframes liquidGradient {
   0% {
     background-position: -200% 0;
