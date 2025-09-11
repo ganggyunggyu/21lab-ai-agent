@@ -8,7 +8,7 @@ const { appRef } = useLayoutManager();
 </script>
 
 <template>
-  <div class="app-container" ref="appRef">
+  <div class="app-container" ref="appRef" role="application" aria-label="AI 채팅 애플리케이션">
     <ChatHeader />
 
     <ChatMain />

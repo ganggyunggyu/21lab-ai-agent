@@ -29,18 +29,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="published-list-container">
+  <main class="published-list-container" role="main" aria-label="발행원고 목록 페이지">
     <PublishedHeader :onGoBack="goBack" />
 
     <PublishedToolbar />
-    <div class="list-container">
+    <section class="list-container" aria-label="발행원고 목록">
       <n-empty
         v-if="displayList?.length === 0"
         description="아직 등록된 발행원고가 없습니다"
         style="margin: 60px 0"
+        role="status"
+        aria-label="빈 목록"
       >
         <template #icon>
-          <component :is="DocumentIcon" style="font-size: 48px; color: #ccc" />
+          <component :is="DocumentIcon" style="font-size: 48px; color: #ccc" aria-hidden="true" />
         </template>
         <template #extra>
           <n-text depth="3">
@@ -49,16 +51,16 @@ onMounted(() => {
         </template>
       </n-empty>
 
-      <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" class="published-grid">
-        <n-grid-item v-for="item in displayList" :key="item.id">
+      <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" class="published-grid" role="list" aria-label="발행원고 그리드">
+        <n-grid-item v-for="item in displayList" :key="item.id" role="listitem">
           <PublishedCard :item="item" :groupInfo="getItemGroupInfo(item)" />
         </n-grid-item>
       </n-grid>
-    </div>
+    </section>
 
     <PublishedDetailModal />
     <PublishedMarkdownModal />
-  </div>
+  </main>
 </template>
 
 <style scoped>
