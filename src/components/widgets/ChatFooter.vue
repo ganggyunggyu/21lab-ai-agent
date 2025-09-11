@@ -42,10 +42,8 @@ const { keyword, refMsg, isLoading, showRefInput } = storeToRefs(chatStore);
 
 const { handleGenerate } = chatStore;
 
-// IME(한글 조합) 중 Enter 제출 방지용 플래그
 const isComposing = ref(false);
 
-// Enter 키 처리 함수 (IME 조합 중에는 무시)
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
     return;
@@ -91,8 +89,6 @@ const keywordPlaceholder: Record<string, string> = {
   'gpt-4': '키워드를 입력해주세요.',
   chunk: '키워드를 입력해주세요.',
 };
-
-// chunk도 키워드 입력을 받으므로 모든 서비스에서 동일한 input type('text') 사용
 
 const defaultPlaceholder = '참고 문서나 컨텍스트를 입력해주세요 (선택사항)';
 const keywordDefaultPlaceholder = '키워드를 입력해주세요.';
@@ -226,41 +222,43 @@ const handleCopyKeywordFromModal = () => {
 };
 
 const getBotResponsesForUserMessage = (userMsg: any) => {
-  const userIndex = chatStore.messages.findIndex(msg => msg.id === userMsg.id);
+  const userIndex = chatStore.messages.findIndex(
+    (msg) => msg.id === userMsg.id
+  );
   if (userIndex === -1) return [];
-  
+
   const botResponses = [];
-  // 사용자 메시지 다음부터 확인
+
   for (let i = userIndex + 1; i < chatStore.messages.length; i++) {
     const message = chatStore.messages[i];
-    
-    // 다른 사용자 메시지를 만나면 중단
+
     if (message.role === 'user') break;
-    
-    if (message.role === 'bot' && 
-        message.keyword === userMsg.keyword &&
-        message.content !== 'loading') {
+
+    if (
+      message.role === 'bot' &&
+      message.keyword === userMsg.keyword &&
+      message.content !== 'loading'
+    ) {
       botResponses.push(message);
     }
   }
-  
+
   return botResponses;
 };
 
 const handleCopyResultFromModal = () => {
   if (!selectedUserMessage.value) return;
-  
+
   const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
   if (botResponses.length === 0) {
     console.log('해당 메시지에 대한 응답을 찾을 수 없습니다.');
     return;
   }
-  
-  // 모든 봇 응답을 합쳐서 복사
-  const fullResult = botResponses.map(msg => msg.content).join('\n\n---\n\n');
+
+  const fullResult = botResponses.map((msg) => msg.content).join('\n\n---\n\n');
   navigator.clipboard.writeText(fullResult);
   showActionModal.value = false;
-  
+
   console.log('원고 결과물이 클립보드에 복사되었습니다.');
 };
 
@@ -274,23 +272,26 @@ const convertToThreeLineSample = (text: string): string => {
 
 const handleAddPublishedFromModal = () => {
   if (!selectedUserMessage.value) return;
-  
+
   console.log('Debug - selectedUserMessage:', selectedUserMessage.value);
-  
-  const title = prompt('발행원고 제목을 입력하세요:', `[발행] ${selectedUserMessage.value.keyword}`);
+
+  const title = prompt(
+    '발행원고 제목을 입력하세요:',
+    `[발행] ${selectedUserMessage.value.keyword}`
+  );
   if (!title) return;
-  
+
   const memo = prompt('메모를 입력하세요 (수정 내역, 발행 일정 등):', '');
-  
+
   const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
   console.log('Debug - botResponses:', botResponses);
-  
+
   const fullResult = botResponses.map((m) => m.content).join('\n\n---\n\n');
   const resultSample = convertToThreeLineSample(fullResult);
-  
+
   console.log('Debug - fullResult:', fullResult);
   console.log('Debug - resultSample:', resultSample);
-  
+
   const firstBotResponse = botResponses[0];
 
   addPublishedSearch(
@@ -298,12 +299,12 @@ const handleAddPublishedFromModal = () => {
     selectedUserMessage.value.ref,
     title,
     resultSample,
-    selectedUserMessage.value.id, // userMessageId
-    firstBotResponse?.id, // botMessageId
-    fullResult, // botContent (전체 결과)
-    selectedUserMessage.value.service, // service
-    selectedUserMessage.value.timestamp, // originalTimestamp
-    memo // memo
+    selectedUserMessage.value.id,
+    firstBotResponse?.id,
+    fullResult,
+    selectedUserMessage.value.service,
+    selectedUserMessage.value.timestamp,
+    memo
   );
   loadFavoriteSearches();
   showActionModal.value = false;
@@ -326,8 +327,6 @@ onMounted(() => {
   loadSearchHistory();
 });
 
-// keyword에는 cleanText 적용 안 함 (사용자 입력값 보존)
-
 watch(refMsg, (newVal) => {
   if (!newVal) return;
   const cleaned = cleanText(newVal);
@@ -337,12 +336,21 @@ watch(refMsg, (newVal) => {
 });
 </script>
 <template>
-  <footer class="floating-input" ref="footerRef">
-    <div class="input-container">
-      <ModernCard variant="glass" class="input-card">
+  <footer
+    class="floating-input"
+    ref="footerRef"
+    role="contentinfo"
+    aria-label="채팅 입력 영역"
+  >
+    <section class="input-container" aria-label="메시지 입력 컨테이너">
+      <div variant="glass" class="input-card">
         <transition name="ref-slide">
-          <div v-show="showRefInput" class="ref-input-section">
-            <div class="input-surface">
+          <section
+            v-show="showRefInput"
+            class="ref-input-section"
+            aria-label="참조 원고 입력 영역"
+          >
+            <div class="input-surface" role="group" aria-label="참조 원고 입력">
               <n-input
                 v-model:value="refMsg"
                 :type="'textarea'"
@@ -352,13 +360,18 @@ watch(refMsg, (newVal) => {
                 class="main-input"
                 @focus="showRefInput = true"
                 @blur="showRefInput = false"
+                aria-label="참조 원고 텍스트 영역"
               />
             </div>
-          </div>
+          </section>
         </transition>
 
-        <div class="main-input-row">
-          <div class="input-wrapper">
+        <section class="main-input-row" aria-label="메인 입력 영역">
+          <div
+            class="input-wrapper"
+            role="group"
+            aria-label="키워드 입력 및 액션"
+          >
             <n-input
               v-model:value="keyword"
               :type="'text'"
@@ -371,9 +384,10 @@ watch(refMsg, (newVal) => {
               @compositionend="isComposing = false"
               @focus="showRefInput = true"
               @blur="showRefInput = false"
+              aria-label="키워드 입력"
             />
 
-            <div class="input-actions">
+            <nav class="input-actions" aria-label="입력 관련 액션">
               <ModernButton
                 variant="ghost"
                 size="sm"
@@ -403,75 +417,97 @@ watch(refMsg, (newVal) => {
                 <n-card
                   style="max-width: 300px; max-height: 400px; overflow-y: auto"
                   size="small"
+                  role="dialog"
+                  aria-label="즐겨찾기 관리"
                 >
                   <template #header>
-                    <div
-                      style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 8px;
-                      "
-                    >
-                      <span>즐겨찾기 검색</span>
-                      <n-space size="small">
-                        <n-button
-                          size="small"
-                          type="success"
-                          @click="() => { showFavorites = false; $router.push('/published'); }"
-                          style="font-size: 11px;"
-                        >
-                          📝 발행원고 목록
-                        </n-button>
-                        <n-button
-                          v-if="keyword.trim()"
-                          size="small"
-                          type="primary"
-                          @click="handleAddFavorite"
-                        >
-                          추가
-                        </n-button>
-                      </n-space>
-                    </div>
+                    <header class="favorites-header">
+                      <h3>즐겨찾기 검색</h3>
+                      <nav aria-label="즐겨찾기 액션">
+                        <n-space size="small">
+                          <n-button
+                            size="small"
+                            type="success"
+                            @click="
+                              () => {
+                                showFavorites = false;
+                                $router.push('/published');
+                              }
+                            "
+                            style="font-size: 11px"
+                            aria-label="발행원고 목록으로 이동"
+                          >
+                            📝 발행원고 목록
+                          </n-button>
+                          <n-button
+                            v-if="keyword.trim()"
+                            size="small"
+                            type="primary"
+                            @click="handleAddFavorite"
+                            aria-label="현재 검색을 즐겨찾기에 추가"
+                          >
+                            추가
+                          </n-button>
+                        </n-space>
+                      </nav>
+                    </header>
                   </template>
 
-                  <div
+                  <section
                     v-if="favoriteSearches.length === 0"
-                    style="text-align: center; color: #999; padding: 20px"
+                    class="empty-favorites"
+                    aria-label="즐겨찾기 없음"
                   >
-                    저장된 즐겨찾기가 없습니다
-                  </div>
+                    <p style="text-align: center; color: #999; padding: 20px">
+                      저장된 즐겨찾기가 없습니다
+                    </p>
+                  </section>
 
-                  <n-space v-else vertical size="small">
-                    <div
-                      v-for="favorite in favoriteSearches"
-                      :key="favorite.id"
-                      class="favorite-item"
-                      :class="{ 'published-item': favorite.isPublished }"
-                      @click="handleFavoriteClick(favorite)"
-                    >
-                      <div class="favorite-content">
-                        <div class="favorite-title">
-                          <span v-if="favorite.isPublished" class="published-badge">✓</span>
-                          {{ favorite.title }}
-                        </div>
-                        <div class="favorite-keyword">
-                          {{ favorite.keyword }}
-                        </div>
-                        <div v-if="favorite.refMsg" class="favorite-ref">
-                          참조: {{ favorite.refMsg.slice(0, 50) }}...
-                        </div>
-                      </div>
-                      <n-button
-                        size="tiny"
-                        type="error"
-                        @click="handleRemoveFavorite(favorite.id, $event)"
-                        style="margin-left: auto"
+                  <section
+                    v-else
+                    class="favorites-list"
+                    aria-label="즐겨찾기 목록"
+                  >
+                    <n-space vertical size="small" role="list">
+                      <article
+                        v-for="favorite in favoriteSearches"
+                        :key="favorite.id"
+                        class="favorite-item"
+                        :class="{ 'published-item': favorite.isPublished }"
+                        @click="handleFavoriteClick(favorite)"
+                        role="listitem"
+                        tabindex="0"
+                        :aria-label="`즐겨찾기: ${favorite.title}`"
                       >
-                        삭제
-                      </n-button>
-                    </div>
-                  </n-space>
+                        <div class="favorite-content">
+                          <h4 class="favorite-title">
+                            <span
+                              v-if="favorite.isPublished"
+                              class="published-badge"
+                              aria-label="발행됨"
+                              >✓</span
+                            >
+                            {{ favorite.title }}
+                          </h4>
+                          <p class="favorite-keyword">
+                            {{ favorite.keyword }}
+                          </p>
+                          <p v-if="favorite.refMsg" class="favorite-ref">
+                            참조: {{ favorite.refMsg.slice(0, 50) }}...
+                          </p>
+                        </div>
+                        <n-button
+                          size="tiny"
+                          type="error"
+                          @click="handleRemoveFavorite(favorite.id, $event)"
+                          style="margin-left: auto"
+                          :aria-label="`${favorite.title} 삭제`"
+                        >
+                          삭제
+                        </n-button>
+                      </article>
+                    </n-space>
+                  </section>
                 </n-card>
               </n-popover>
 
@@ -485,14 +521,22 @@ watch(refMsg, (newVal) => {
                 @click="handleGenerateWithKeyword"
                 aria-label="메시지 전송"
               />
-            </div>
+            </nav>
           </div>
-        </div>
+        </section>
 
-        <div class="bottom-actions">
-          <div class="smart-suggestions">
-            <div v-if="userMessages.length > 0" class="suggestion-section">
-              <div class="chips-scroll-container">
+        <section class="bottom-actions" aria-label="하단 액션 및 제안">
+          <div class="smart-suggestions" role="region" aria-label="스마트 제안">
+            <section
+              v-if="userMessages.length > 0"
+              class="suggestion-section"
+              aria-label="최근 메시지"
+            >
+              <div
+                class="chips-scroll-container"
+                role="group"
+                aria-label="메시지 스크롤 영역"
+              >
                 <!-- 왼쪽 스크롤 버튼 -->
                 <button
                   class="scroll-button scroll-button-left"
@@ -503,29 +547,49 @@ watch(refMsg, (newVal) => {
                 </button>
 
                 <!-- 칩 컨테이너 -->
-                <div ref="chipsScrollRef" class="suggestion-chips">
-                  <n-tag
+                <ul
+                  ref="chipsScrollRef"
+                  class="suggestion-chips"
+                  role="list"
+                  aria-label="최근 메시지 목록"
+                >
+                  <li
                     v-for="userMsg in userMessages"
                     :key="userMsg.id"
-                    size="large"
-                    :bordered="false"
-                    @click="handleUserMessageClick(userMsg)"
-                    class="smart-chip user-message-chip"
-                    type="primary"
+                    role="listitem"
                   >
-                    <div class="chip-content">
-                      <div class="chip-main">
-                        <span class="chip-keyword">{{ userMsg.keyword }}</span>
-                        <div class="chip-badges">
-                          <span class="service-badge">{{
-                            getServiceLabel(userMsg.service)
+                    <n-tag
+                      size="large"
+                      :bordered="false"
+                      @click="handleUserMessageClick(userMsg)"
+                      class="smart-chip user-message-chip"
+                      type="primary"
+                      tabindex="0"
+                      :aria-label="`${userMsg.keyword} - ${getServiceLabel(
+                        userMsg.service
+                      )} 서비스`"
+                    >
+                      <div class="chip-content">
+                        <div class="chip-main">
+                          <span class="chip-keyword">{{
+                            userMsg.keyword
                           }}</span>
-                          <span v-if="userMsg.ref" class="ref-badge">📎</span>
+                          <div class="chip-badges">
+                            <span class="service-badge">{{
+                              getServiceLabel(userMsg.service)
+                            }}</span>
+                            <span
+                              v-if="userMsg.ref"
+                              class="ref-badge"
+                              aria-label="참조 포함"
+                              >📎</span
+                            >
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </n-tag>
-                </div>
+                    </n-tag>
+                  </li>
+                </ul>
 
                 <!-- 오른쪽 스크롤 버튼 -->
                 <button
@@ -536,18 +600,21 @@ watch(refMsg, (newVal) => {
                   <component :is="ChevronForwardIcon" />
                 </button>
               </div>
-            </div>
-            <!-- 즐겨찾기 칩 섹션 제거됨 - 발행원고 페이지로 이동 -->
+            </section>
           </div>
 
-          <div class="footer-info">
-            <div class="char-count" v-if="keyword.length > 0">
+          <footer class="footer-info" aria-label="입력 정보">
+            <div
+              class="char-count"
+              v-if="keyword.length > 0"
+              aria-label="문자 수"
+            >
               <n-text depth="3">{{ keyword.length }}/1000</n-text>
             </div>
-          </div>
-        </div>
-      </ModernCard>
-    </div>
+          </footer>
+        </section>
+      </div>
+    </section>
 
     <!-- 액션 선택 모달 -->
     <n-modal v-model:show="showActionModal">
@@ -558,21 +625,23 @@ watch(refMsg, (newVal) => {
         size="huge"
         role="dialog"
         aria-modal="true"
+        aria-label="메시지 액션 선택"
       >
         <template #header-extra> </template>
-        <div style="margin-bottom: 16px">
-          <div class="modal-item">
-            <div class="modal-item-header">
+        <main style="margin-bottom: 16px" aria-label="선택된 메시지 정보">
+          <section class="modal-item" aria-label="키워드 정보">
+            <header class="modal-item-header">
               <strong>키워드:</strong>
               <n-button
                 size="tiny"
                 type="default"
                 @click="handleCopyKeywordFromModal"
                 style="margin-left: 8px"
+                aria-label="키워드 복사"
               >
                 복사
               </n-button>
-            </div>
+            </header>
             <p class="modal-text">
               {{
                 selectedUserMessage?.keyword &&
@@ -581,82 +650,106 @@ watch(refMsg, (newVal) => {
                   : selectedUserMessage?.keyword
               }}
             </p>
-          </div>
+          </section>
 
-          <div
+          <section
             v-if="selectedUserMessage?.ref"
             class="modal-item"
             style="margin-top: 12px"
+            aria-label="참조원고 정보"
           >
-            <div class="modal-item-header">
+            <header class="modal-item-header">
               <strong>참조원고:</strong>
               <n-button
                 size="tiny"
                 type="default"
                 @click="handleCopyRefFromModal"
                 style="margin-left: 8px"
+                aria-label="참조원고 복사"
               >
                 복사
               </n-button>
-            </div>
+            </header>
             <p class="modal-text">
               {{ selectedUserMessage.ref.slice(0, 100) }}...
             </p>
-          </div>
+          </section>
 
-          <div class="modal-item" style="margin-top: 12px">
+          <section
+            class="modal-item"
+            style="margin-top: 12px"
+            aria-label="서비스 정보"
+          >
             <strong>서비스:</strong>
             {{ getServiceLabel(selectedUserMessage?.service || '') }}
-          </div>
+          </section>
 
           <!-- 원고 결과물 미리보기 -->
-          <div 
+          <section
             v-if="getBotResponsesForUserMessage(selectedUserMessage).length > 0"
-            class="modal-item" 
+            class="modal-item"
             style="margin-top: 12px"
+            aria-label="원고 결과물"
           >
-            <div class="modal-item-header">
+            <header class="modal-item-header">
               <strong>원고 결과물:</strong>
               <n-button
                 size="tiny"
                 type="default"
                 @click="handleCopyResultFromModal"
                 style="margin-left: 8px"
+                aria-label="원고 결과물 복사"
               >
                 복사
               </n-button>
-            </div>
+            </header>
             <p class="modal-text result-preview">
-              {{ 
+              {{
                 getBotResponsesForUserMessage(selectedUserMessage)
-                  .map(msg => msg.content)
+                  .map((msg) => msg.content)
                   .join('\n\n')
                   .split('\n')
                   .slice(0, 3)
                   .join('\n')
               }}...
             </p>
-          </div>
-        </div>
+          </section>
+        </main>
         <p style="color: #666; font-size: 14px">
           어떤 작업을 수행하시겠습니까?
         </p>
         <template #footer>
-          <n-space justify="space-between">
-            <n-button 
-              type="warning" 
-              @click="handleAddPublishedFromModal"
-              style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white;"
-            >
-              📝 발행원고 등록
-            </n-button>
-            <n-space>
-              <n-button @click="showActionModal = false"> 취소 </n-button>
-              <n-button type="primary" @click="handleGenerateFromModal">
-                원고 작성
+          <nav aria-label="모달 액션">
+            <n-space justify="space-between">
+              <n-button
+                type="warning"
+                @click="handleAddPublishedFromModal"
+                style="
+                  background: linear-gradient(135deg, #f59e0b, #d97706);
+                  border: none;
+                  color: white;
+                "
+                aria-label="발행원고로 등록"
+              >
+                📝 발행원고 등록
               </n-button>
+              <n-space>
+                <n-button
+                  @click="showActionModal = false"
+                  aria-label="모달 취소"
+                >
+                  취소
+                </n-button>
+                <n-button
+                  type="primary"
+                  @click="handleGenerateFromModal"
+                  aria-label="원고 작성 실행"
+                >
+                  원고 작성
+                </n-button>
+              </n-space>
             </n-space>
-          </n-space>
+          </nav>
         </template>
       </n-card>
     </n-modal>
@@ -1076,6 +1169,21 @@ watch(refMsg, (newVal) => {
   opacity: 0.7;
 }
 
+/* Semantic header styles */
+.favorites-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.favorites-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
 /* 즐겨찾기 스타일 */
 .favorite-item {
   display: flex;
@@ -1097,16 +1205,17 @@ watch(refMsg, (newVal) => {
   font-weight: 600;
   font-size: 14px;
   color: #000;
-  margin-bottom: 4px;
+  margin: 0 0 4px 0;
 }
 .favorite-keyword {
   font-size: 12px;
   color: #666;
-  margin-bottom: 2px;
+  margin: 0 0 2px 0;
 }
 .favorite-ref {
   font-size: 11px;
   color: #999;
+  margin: 0;
 }
 
 /* 발행원고 스타일 */
@@ -1126,23 +1235,39 @@ watch(refMsg, (newVal) => {
 }
 
 .published-item {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.04));
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.08),
+    rgba(16, 185, 129, 0.04)
+  );
   border-color: rgba(16, 185, 129, 0.3);
 }
 
 .published-item:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.06));
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.12),
+    rgba(16, 185, 129, 0.06)
+  );
   border-color: rgba(16, 185, 129, 0.4);
 }
 
 .published-chip {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.1)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.15),
+    rgba(16, 185, 129, 0.1)
+  ) !important;
   border: 1px solid rgba(16, 185, 129, 0.35) !important;
   color: rgba(0, 0, 0, 0.9) !important;
 }
 
 .published-chip:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(16, 185, 129, 0.15)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.22),
+    rgba(16, 185, 129, 0.15)
+  ) !important;
   border-color: rgba(16, 185, 129, 0.45) !important;
 }
 
