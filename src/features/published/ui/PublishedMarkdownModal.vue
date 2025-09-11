@@ -47,38 +47,41 @@ const handleCloseMarkdownModal = () => {
     v-model:show="markdownModal.open"
     preset="card"
     class="markdown-editor-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="마크다운 에디터"
   >
     <template #header>
-      <div class="modal-header-content">
+      <header class="modal-header-content">
         <MarkdownIcon class="modal-header-icon" />
-        마크다운 에디터
-      </div>
+        <h2>마크다운 에디터</h2>
+      </header>
     </template>
 
-    <div class="markdown-editor-container">
+    <main class="markdown-editor-container" role="main" aria-label="마크다운 에디터 메인 영역">
       <!-- 에디터 헤더 -->
-      <div class="editor-header">
+      <header class="editor-header">
         <n-space align="center" justify="space-between">
-          <span class="editor-title"> 실시간 마크다운 에디터 </span>
-          <div class="editor-hint-container">
+          <h3 class="editor-title">실시간 마크다운 에디터</h3>
+          <aside class="editor-hint-container" aria-label="사용법 안내">
             <n-text depth="3" class="editor-syntax-hint">
               **굵게**, *기울임*, `코드`, # 제목, - 리스트, [링크](url)
             </n-text>
             <n-text depth="3" class="editor-save-hint">
               💾 Shift + Enter로 저장
             </n-text>
-          </div>
+          </aside>
         </n-space>
-      </div>
+      </header>
 
       <!-- 분할 에디터 -->
-      <div class="split-editor">
+      <section class="split-editor" aria-label="분할 에디터 영역">
         <!-- 왼쪽: 마크다운 입력 -->
-        <div class="editor-input-panel">
-          <div class="panel-header">
+        <section class="editor-input-panel" aria-label="마크다운 입력 패널">
+          <header class="panel-header">
             <MarkdownIcon class="panel-header-icon" />
-            마크다운 작성
-          </div>
+            <h4>마크다운 작성</h4>
+          </header>
           <div class="markdown-input-wrapper">
             <textarea
               v-model="markdownModal.content"
@@ -92,32 +95,37 @@ const handleCloseMarkdownModal = () => {
 [링크](https://example.com)"
               class="markdown-textarea"
               @keydown="handleMarkdownKeydown($event)"
+              aria-label="마크다운 텍스트 입력 영역"
             ></textarea>
-            <div class="character-count">
+            <aside class="character-count" aria-label="문자 수 표시">
               {{ markdownModal.content.length }}자
-            </div>
+            </aside>
           </div>
-        </div>
+        </section>
 
         <!-- 오른쪽: 미리보기 -->
-        <div class="editor-preview-panel">
-          <div class="panel-header">
+        <section class="editor-preview-panel" aria-label="미리보기 패널">
+          <header class="panel-header">
             <PreviewIcon class="panel-header-icon" />
-            미리보기
-          </div>
-          <div
+            <h4>미리보기</h4>
+          </header>
+          <article
             class="live-preview"
             v-html="renderMarkdown(markdownModal.content)"
-          ></div>
-        </div>
-      </div>
-    </div>
+            role="document"
+            aria-label="마크다운 미리보기 결과"
+          ></article>
+        </section>
+      </section>
+    </main>
 
     <template #footer>
-      <n-space justify="end">
-        <n-button @click="handleCloseMarkdownModal">취소</n-button>
-        <n-button type="primary" @click="handleSaveMarkdownMemo">저장</n-button>
-      </n-space>
+      <nav aria-label="에디터 액션">
+        <n-space justify="end">
+          <n-button @click="handleCloseMarkdownModal" aria-label="에디터 닫기">취소</n-button>
+          <n-button type="primary" @click="handleSaveMarkdownMemo" aria-label="마크다운 저장">저장</n-button>
+        </n-space>
+      </nav>
     </template>
   </n-modal>
 </template>
@@ -131,6 +139,13 @@ const handleCloseMarkdownModal = () => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.modal-header-content h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .modal-header-icon {
@@ -155,6 +170,7 @@ const handleCloseMarkdownModal = () => {
   color: #6366f1;
   font-weight: 600;
   font-size: 14px;
+  margin: 0;
 }
 
 .editor-hint-container {
@@ -284,6 +300,13 @@ const handleCloseMarkdownModal = () => {
   color: #374151;
   margin-bottom: 8px;
   padding: 6px 0;
+}
+
+.panel-header h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .panel-header-icon {

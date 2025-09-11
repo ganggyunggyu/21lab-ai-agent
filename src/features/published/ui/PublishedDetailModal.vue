@@ -78,90 +78,100 @@ const handleToggleActive = (item: any) => {
 <template>
   <n-modal v-model:show="detailModal.open" preset="card" class="modal-size">
     <template #header>
-      <div class="modal-header">
+      <header class="modal-header">
         <CheckIcon class="modal-badge-icon" />
-        {{ detailModal.selectedItem?.title }}
-      </div>
+        <h2>{{ detailModal.selectedItem?.title }}</h2>
+      </header>
     </template>
 
-    <div v-if="detailModal.selectedItem" class="modal-content">
-      <div class="modal-section">
-        <div class="modal-item-header">
-          <strong>키워드:</strong>
+    <main v-if="detailModal.selectedItem" class="modal-content" role="main" aria-label="발행원고 세부 정보">
+      <section class="modal-section" aria-label="키워드 정보">
+        <header class="modal-item-header">
+          <h3>키워드:</h3>
           <n-button
             size="tiny"
             @click="handleCopyKeyword(detailModal.selectedItem!)"
+            aria-label="키워드 복사"
           >
             복사
           </n-button>
-        </div>
+        </header>
         <p class="modal-text">{{ detailModal.selectedItem.keyword }}</p>
-      </div>
+      </section>
 
-      <div v-if="detailModal.selectedItem.refMsg" class="modal-section">
-        <div class="modal-item-header">
-          <strong>참조원고:</strong>
+      <section v-if="detailModal.selectedItem.refMsg" class="modal-section" aria-label="참조원고">
+        <header class="modal-item-header">
+          <h3>참조원고:</h3>
           <n-button
             size="tiny"
             @click="copyText(detailModal?.selectedItem?.refMsg)"
+            aria-label="참조원고 복사"
           >
             복사
           </n-button>
-        </div>
-        <div class="preview-container">
+        </header>
+        <article class="preview-container">
           {{ detailModal.selectedItem.refMsg }}
-        </div>
-      </div>
+        </article>
+      </section>
 
-      <div class="modal-section" v-if="detailModal.selectedItem.botContent">
-        <div class="modal-item-header">
-          <strong>결과원고:</strong>
+      <section class="modal-section" v-if="detailModal.selectedItem.botContent" aria-label="결과원고">
+        <header class="modal-item-header">
+          <h3>결과원고:</h3>
           <n-button
             size="tiny"
             @click="copyText(detailModal?.selectedItem?.botContent)"
+            aria-label="결과원고 복사"
           >
             복사
           </n-button>
-        </div>
-        <div class="preview-container">
+        </header>
+        <article class="preview-container">
           {{ detailModal.selectedItem.botContent }}
-        </div>
-      </div>
+        </article>
+      </section>
 
-      <div class="modal-section">
-        <div class="modal-item-header">
-          <strong>메모:</strong>
-          <n-space
+      <section class="modal-section" aria-label="메모 관리">
+        <header class="modal-item-header">
+          <h3>메모:</h3>
+          <nav
             v-if="editing.memo !== detailModal.selectedItem.id"
-            size="small"
+            aria-label="메모 편집 액션"
           >
-            <n-button
-              size="tiny"
-              @click="handleStartEditMemo(detailModal.selectedItem!)"
-            >
-              편집
-            </n-button>
-            <n-button
-              size="tiny"
-              class="markdown-button"
-              @click="handleOpenMarkdownEditor(detailModal.selectedItem!)"
-              title="마크다운으로 수정하기"
-            >
-              <MarkdownIcon class="markdown-icon" />
-              MD
-            </n-button>
-          </n-space>
-          <n-space v-else size="small">
-            <n-button
-              size="tiny"
-              type="primary"
-              @click="handleSaveMemo(detailModal.selectedItem!)"
-            >
-              저장
-            </n-button>
-            <n-button size="tiny" @click="cancelEditMemo"> 취소 </n-button>
-          </n-space>
-        </div>
+            <n-space size="small">
+              <n-button
+                size="tiny"
+                @click="handleStartEditMemo(detailModal.selectedItem!)"
+                aria-label="메모 편집"
+              >
+                편집
+              </n-button>
+              <n-button
+                size="tiny"
+                class="markdown-button"
+                @click="handleOpenMarkdownEditor(detailModal.selectedItem!)"
+                title="마크다운으로 수정하기"
+                aria-label="마크다운 에디터로 편집"
+              >
+                <MarkdownIcon class="markdown-icon" />
+                MD
+              </n-button>
+            </n-space>
+          </nav>
+          <nav v-else aria-label="메모 저장 액션">
+            <n-space size="small">
+              <n-button
+                size="tiny"
+                type="primary"
+                @click="handleSaveMemo(detailModal.selectedItem!)"
+                aria-label="메모 저장"
+              >
+                저장
+              </n-button>
+              <n-button size="tiny" @click="cancelEditMemo" aria-label="편집 취소"> 취소 </n-button>
+            </n-space>
+          </nav>
+        </header>
         <div
           v-if="editing.memo === detailModal.selectedItem.id"
           class="memo-edit"
@@ -172,38 +182,45 @@ const handleToggleActive = (item: any) => {
             placeholder="수정 내역, 발행 일정 등을 기록해주세요 (Shift+Enter로 저장)"
             :autosize="{ minRows: 2, maxRows: 4 }"
             @keydown="handleMemoKeydown($event, detailModal.selectedItem!)"
+            aria-label="메모 편집 텍스트 영역"
           />
         </div>
-        <div v-else class="memo-display">
+        <p v-else class="memo-display">
           {{ detailModal.selectedItem.memo || '메모가 없습니다.' }}
-        </div>
-      </div>
+        </p>
+      </section>
 
-      <div class="modal-section">
-        <div class="modal-item-header">
-          <strong>블로그 ID:</strong>
-          <n-space
+      <section class="modal-section" aria-label="블로그 ID 관리">
+        <header class="modal-item-header">
+          <h3>블로그 ID:</h3>
+          <nav
             v-if="editing.blogId !== detailModal.selectedItem.id"
-            size="small"
+            aria-label="블로그 ID 편집 액션"
           >
-            <n-button
-              size="tiny"
-              @click="handleStartEditBlogId(detailModal.selectedItem!)"
-            >
-              편집
-            </n-button>
-          </n-space>
-          <n-space v-else size="small">
-            <n-button
-              size="tiny"
-              type="primary"
-              @click="handleSaveBlogId(detailModal.selectedItem!)"
-            >
-              저장
-            </n-button>
-            <n-button size="tiny" @click="cancelEditBlogId"> 취소 </n-button>
-          </n-space>
-        </div>
+            <n-space size="small">
+              <n-button
+                size="tiny"
+                @click="handleStartEditBlogId(detailModal.selectedItem!)"
+                aria-label="블로그 ID 편집"
+              >
+                편집
+              </n-button>
+            </n-space>
+          </nav>
+          <nav v-else aria-label="블로그 ID 저장 액션">
+            <n-space size="small">
+              <n-button
+                size="tiny"
+                type="primary"
+                @click="handleSaveBlogId(detailModal.selectedItem!)"
+                aria-label="블로그 ID 저장"
+              >
+                저장
+              </n-button>
+              <n-button size="tiny" @click="cancelEditBlogId" aria-label="편집 취소"> 취소 </n-button>
+            </n-space>
+          </nav>
+        </header>
         <div
           v-if="editing.blogId === detailModal.selectedItem.id"
           class="memo-edit"
@@ -212,67 +229,75 @@ const handleToggleActive = (item: any) => {
             v-model:value="editing.tempBlogId"
             placeholder="블로그 ID를 입력하세요 (Shift+Enter로 저장)"
             @keydown="handleBlogIdKeydown($event, detailModal.selectedItem!)"
+            aria-label="블로그 ID 입력"
           />
         </div>
-        <div v-else class="memo-display">
+        <p v-else class="memo-display">
           {{ detailModal.selectedItem.blogId || 'ID가 없습니다.' }}
-        </div>
-      </div>
+        </p>
+      </section>
 
-      <div class="modal-section">
-        <div class="modal-item-header">
-          <strong>활성화 설정:</strong>
+      <section class="modal-section" aria-label="활성화 설정">
+        <header class="modal-item-header">
+          <h3>활성화 설정:</h3>
           <n-button
             size="tiny"
             :type="
               detailModal.selectedItem.isActive ?? true ? 'success' : 'error'
             "
             @click="handleToggleActive(detailModal.selectedItem!)"
+            :aria-label="detailModal.selectedItem.isActive ?? true ? '활성화 상태 - 클릭하여 비활성화' : '비활성화 상태 - 클릭하여 활성화'"
           >
             {{
               detailModal.selectedItem.isActive ?? true ? '활성화' : '비활성화'
             }}
           </n-button>
-        </div>
-        <div class="setting-description">
+        </header>
+        <p class="setting-description">
           {{
             detailModal.selectedItem.isActive ?? true
               ? '현재 발행원고가 활성화되어 있습니다.'
               : '현재 발행원고가 비활성화되어 있습니다.'
           }}
-        </div>
-      </div>
+        </p>
+      </section>
 
-      <div class="modal-section">
-        <div class="modal-item-header">
-          <strong>노출 설정:</strong>
-          <n-space size="small">
-            <n-button
-              size="tiny"
-              :type="detailModal.selectedItem.isVisible ? 'success' : 'default'"
-              @click="handleToggleVisibility(detailModal.selectedItem!)"
-            >
-              {{ detailModal.selectedItem.isVisible ? '노출중' : '미노출' }}
-            </n-button>
-            <n-button
-              size="tiny"
-              type="error"
-              @click="handleDelete(detailModal.selectedItem!)"
-            >
-              삭제
-            </n-button>
-            <n-button
-              size="tiny"
-              type="primary"
-              @click="handleUseTemplate(detailModal.selectedItem!)"
-            >
-              원고 발행
-            </n-button>
-          </n-space>
-        </div>
-        <div v-if="detailModal.selectedItem.isVisible" class="rank-setting">
-          <label>노출 순위:</label>
+      <section class="modal-section" aria-label="노출 및 관리 설정">
+        <header class="modal-item-header">
+          <h3>노출 설정:</h3>
+          <nav aria-label="발행원고 관리 액션">
+            <n-space size="small">
+              <n-button
+                size="tiny"
+                :type="detailModal.selectedItem.isVisible ? 'success' : 'default'"
+                @click="handleToggleVisibility(detailModal.selectedItem!)"
+                :aria-label="detailModal.selectedItem.isVisible ? '노출중 - 클릭하여 숨김' : '미노출 - 클릭하여 노출'"
+              >
+                {{ detailModal.selectedItem.isVisible ? '노출중' : '미노출' }}
+              </n-button>
+              <n-button
+                size="tiny"
+                type="error"
+                @click="handleDelete(detailModal.selectedItem!)"
+                aria-label="발행원고 삭제"
+              >
+                삭제
+              </n-button>
+              <n-button
+                size="tiny"
+                type="primary"
+                @click="handleUseTemplate(detailModal.selectedItem!)"
+                aria-label="이 발행원고로 새 원고 작성"
+              >
+                원고 발행
+              </n-button>
+            </n-space>
+          </nav>
+        </header>
+        <div v-if="detailModal.selectedItem.isVisible" class="rank-setting" role="group" aria-label="노출 순위 설정">
+          <label for="exposure-rank">노출 순위:</label>
           <n-input-number
+            id="exposure-rank"
             :value="detailModal.selectedItem.exposureRank"
             @update:value="
               handleUpdateExposureRank(detailModal.selectedItem!, $event)
@@ -280,10 +305,11 @@ const handleToggleActive = (item: any) => {
             placeholder="순위"
             size="small"
             class="rank-input"
+            aria-label="노출 순위 숫자 입력"
           />
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   </n-modal>
 </template>
 
@@ -297,6 +323,13 @@ const handleToggleActive = (item: any) => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .modal-badge-icon {
@@ -321,6 +354,13 @@ const handleToggleActive = (item: any) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+
+.modal-item-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .modal-text {
@@ -365,6 +405,7 @@ const handleToggleActive = (item: any) => {
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
+  margin: 0;
 }
 
 :global(.dark) .memo-display {
@@ -392,7 +433,7 @@ const handleToggleActive = (item: any) => {
 .setting-description {
   font-size: 13px;
   color: #6b7280;
-  margin-top: 4px;
+  margin: 4px 0 0 0;
   font-style: italic;
 }
 
