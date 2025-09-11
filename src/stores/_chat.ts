@@ -45,7 +45,6 @@ export const useChatStore = defineStore(
         .toString(36)
         .slice(2, 11)}`;
 
-      // User 메시지 추가
       messages.value.push({
         id: `user-${messageId}`,
         role: 'user',
@@ -56,7 +55,6 @@ export const useChatStore = defineStore(
         timestamp: Date.now(),
       });
 
-      // 로딩 메시지 추가
       const loadingMessageId = `bot-${messageId}`;
       messages.value.push({
         id: loadingMessageId,
@@ -83,7 +81,6 @@ export const useChatStore = defineStore(
           ref: refSnapshot,
         });
 
-        // 성공 시 처리
         const botResponse: string = res?.content || '(응답 없음)';
         console.log('🐛 [DEBUG] Original botResponse:', botResponse);
         console.log('🐛 [DEBUG] PART_SEPARATOR:', PART_SEPARATOR);
@@ -93,7 +90,6 @@ export const useChatStore = defineStore(
           .filter(Boolean);
         console.log('🐛 [DEBUG] Split parts:', parts);
 
-        // 로딩 메시지 위치 찾기
         const currentLoadingIndex = messages.value.findIndex(
           (msg) => msg.id === loadingMessageId
         );
@@ -127,7 +123,6 @@ export const useChatStore = defineStore(
               });
             }
           } else {
-            // 응답이 없는 경우 로딩 메시지를 오류 메시지로 교체
             messages.value[currentLoadingIndex] = {
               id: loadingMessageId,
               role: 'bot',
@@ -140,7 +135,6 @@ export const useChatStore = defineStore(
           }
         }
       } catch (error) {
-        // 에러 시 처리 (취소된 요청은 제외)
         if (abortController.signal.aborted) return;
 
         const currentLoadingIndex = messages.value.findIndex(
@@ -162,7 +156,6 @@ export const useChatStore = defineStore(
         }
         console.error(error);
       } finally {
-        // 정리 작업
         pendingMessages.delete(loadingMessageId);
         activeRequests.delete(loadingMessageId);
         refMsg.value = '';
@@ -179,7 +172,6 @@ export const useChatStore = defineStore(
     const handleRegenerate = (msg: Message) => {
       if (msg.keyword) {
         keyword.value = msg.keyword;
-        // 저장된 ref와 service 정보 복원
         if (msg.ref) refMsg.value = msg.ref;
         if (msg.service) service.value = msg.service as ChatService;
         handleGenerate();
@@ -203,7 +195,6 @@ export const useChatStore = defineStore(
     };
 
     const clearChat = () => {
-      // 진행 중인 모든 요청 취소 및 정리
       activeRequests.forEach((abortController: AbortController) => {
         abortController.abort();
       });
