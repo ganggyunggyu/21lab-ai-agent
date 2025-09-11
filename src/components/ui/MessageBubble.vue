@@ -55,33 +55,35 @@ const getServiceLabel = (service?: string) => {
 </script>
 
 <template>
-  <div :class="['message-bubble', `message-bubble--${message.role}`]">
+  <article 
+    :class="['message-bubble', `message-bubble--${message.role}`]"
+    role="article"
+    :aria-label="message.role === 'user' ? '사용자 메시지' : 'AI 어시스턴트 메시지'"
+  >
     <div class="message-content">
-      <div class="message-avatar"></div>
-
       <div class="message-body">
-        <div class="message-header">
+        <header class="message-header">
           <span class="message-sender">
             {{ message.role === 'user' ? 'You' : 'AI Assistant' }}
           </span>
-          <span class="message-time">
+          <time class="message-time" :datetime="new Date(message.timestamp || 0).toISOString()">
             {{ formatTime(message.timestamp) }}
-          </span>
-        </div>
+          </time>
+        </header>
 
-        <div class="message-text">
-          <div v-if="message.content === 'loading'" class="loading-message">
-            <div class="typing-indicator">
+        <main class="message-text">
+          <section v-if="message.content === 'loading'" class="loading-message" aria-live="polite" aria-label="AI 응답 생성 중">
+            <div class="typing-indicator" aria-hidden="true">
               <span></span>
               <span></span>
               <span></span>
             </div>
             <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
-          </div>
+          </section>
 
-          <div v-else @dblclick="message.content !== 'loading' && $emit('copy', message.content)">
+          <section v-else @dblclick="message.content !== 'loading' && $emit('copy', message.content)" role="document">
             <!-- 사용자 메시지일 때 추가 정보 표시 -->
-            <div v-if="message.role === 'user'" class="user-message-info">
+            <aside v-if="message.role === 'user'" class="user-message-info" aria-label="메시지 생성 정보">
               <div class="generation-info">
                 <span class="keyword-label">키워드:</span>
                 {{ message.keyword }}
@@ -91,24 +93,27 @@ const getServiceLabel = (service?: string) => {
                   {{ message.ref ? '참조원고 있음' : '참조원고 없음' }}
                 </span>
               </div>
-            </div>
+            </aside>
 
             <div
               v-show="message.role === 'bot'"
               class="message-content-text"
               v-html="renderedContent"
+              role="document"
+              aria-label="AI 응답 내용"
             ></div>
-          </div>
-        </div>
+          </section>
+        </main>
 
-        <div class="message-actions">
-          <div v-if="message.content !== 'loading'" class="bot-actions">
+        <footer class="message-actions" role="toolbar" aria-label="메시지 액션">
+          <nav v-if="message.content !== 'loading'" class="bot-actions" aria-label="메시지 액션 버튼">
             <ModernButton
               variant="ghost"
               size="sm"
               :icon="CopyIcon"
               @click="$emit('copy', message.content)"
               class="action-btn"
+              aria-label="메시지 내용 복사"
             >
               복사
             </ModernButton>
@@ -119,6 +124,7 @@ const getServiceLabel = (service?: string) => {
               :icon="DownloadIcon"
               @click="$emit('download', message)"
               class="action-btn"
+              aria-label="메시지 파일로 저장"
             >
               저장
             </ModernButton>
@@ -129,10 +135,11 @@ const getServiceLabel = (service?: string) => {
               :icon="RefreshIcon"
               @click="$emit('regenerate', message)"
               class="action-btn"
+              aria-label="AI 응답 재생성"
             >
               재생성
             </ModernButton>
-          </div>
+          </nav>
 
           <ModernButton
             v-if="index > 0"
@@ -142,13 +149,14 @@ const getServiceLabel = (service?: string) => {
             @click="$emit('delete', index)"
             class="action-btn delete-btn"
             title="메시지 삭제"
+            aria-label="이 메시지 삭제"
           >
             삭제
           </ModernButton>
-        </div>
+        </footer>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <style scoped>
