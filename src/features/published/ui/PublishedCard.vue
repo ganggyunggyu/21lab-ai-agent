@@ -9,21 +9,24 @@ import {
   ChatboxEllipses as ChatIcon,
   CheckmarkCircle as CheckIcon,
   Time as TimeIcon,
+  Document as DocumentIcon,
+  ClipboardOutline as ClipboardIcon,
 } from '@vicons/ionicons5';
 import ModernCard from '@/components/ui/ModernCard.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
+import { usePublishedList } from '@/features/published/hooks/usePublishedList';
+import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
 import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities/published';
 
 interface Props {
   item: FavoriteSearch;
   groupInfo?: BlogIdGroupInfo | null;
-  onItemClick?: (item: FavoriteSearch) => void;
-  onCopyKeyword?: (item: FavoriteSearch) => void;
-  onUseTemplate?: (item: FavoriteSearch) => void;
-  onDelete?: (item: FavoriteSearch) => void;
 }
 
 const props = defineProps<Props>();
+
+const { handleCopyKeyword, handleUseTemplate, handleDelete } = usePublishedList();
+const { itemClick } = usePublishedModal();
 
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString('ko-KR', {
@@ -36,22 +39,40 @@ const formatDate = (date: Date) => {
 };
 
 const handleClick = () => {
-  props.onItemClick?.(props.item);
+  itemClick(props.item);
 };
 
-const handleCopyKeyword = (e: Event) => {
+const handleCopyKeywordClick = (e: Event) => {
   e.stopPropagation();
-  props.onCopyKeyword?.(props.item);
+  handleCopyKeyword(props.item);
 };
 
-const handleUseTemplate = (e: Event) => {
+const handleUseTemplateClick = (e: Event) => {
   e.stopPropagation();
-  props.onUseTemplate?.(props.item);
+  handleUseTemplate(props.item);
 };
 
-const handleDelete = (e: Event) => {
+const handleDeleteClick = (e: Event) => {
   e.stopPropagation();
-  props.onDelete?.(props.item);
+  handleDelete(props.item);
+};
+
+// 참조원고 복사 핸들러
+const handleCopyRef = (e: Event) => {
+  e.stopPropagation();
+  if (props.item.refMsg) {
+    navigator.clipboard.writeText(props.item.refMsg);
+    console.log('참조원고 전체가 클립보드에 복사되었습니다.');
+  }
+};
+
+// 전체 결과 복사 핸들러
+const handleCopyFullResult = (e: Event) => {
+  e.stopPropagation();
+  if (props.item.botContent) {
+    navigator.clipboard.writeText(props.item.botContent);
+    console.log('전체 결과 원고가 클립보드에 복사되었습니다.');
+  }
 };
 </script>
 
@@ -78,8 +99,28 @@ const handleDelete = (e: Event) => {
             size="sm"
             icon-only
             :icon="CopyIcon"
-            @click="handleCopyKeyword"
+            @click="handleCopyKeywordClick"
             title="키워드 복사"
+            class="action-btn"
+          />
+          <ModernButton
+            v-if="item.refMsg"
+            variant="ghost"
+            size="sm"
+            icon-only
+            :icon="DocumentIcon"
+            @click="handleCopyRef"
+            title="참조원고 복사"
+            class="action-btn"
+          />
+          <ModernButton
+            v-if="item.botContent"
+            variant="ghost"
+            size="sm"
+            icon-only
+            :icon="ClipboardIcon"
+            @click="handleCopyFullResult"
+            title="전체 결과 복사"
             class="action-btn"
           />
           <ModernButton
@@ -87,8 +128,8 @@ const handleDelete = (e: Event) => {
             size="sm"
             icon-only
             :icon="StarIcon"
-            @click="handleUseTemplate"
-            title="원고 발행"
+            @click="handleUseTemplateClick"
+            title="템플릿 사용"
             class="action-btn use-button"
           />
           <ModernButton
@@ -96,7 +137,7 @@ const handleDelete = (e: Event) => {
             size="sm"
             icon-only
             :icon="TrashIcon"
-            @click="handleDelete"
+            @click="handleDeleteClick"
             title="삭제"
             class="action-btn delete-button"
           />

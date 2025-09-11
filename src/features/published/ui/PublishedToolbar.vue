@@ -1,22 +1,12 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { NSelect, NSwitch } from 'naive-ui';
 import ModernCard from '@/components/ui/ModernCard.vue';
-import type { SortBy } from '@/entities/published';
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
 
-interface Props {
-  sortBy: SortBy;
-  isOnlyWithRef: boolean;
-  isOnlyWithBlogId: boolean;
-}
-
-interface Emits {
-  (e: 'update:sortBy', value: SortBy): void;
-  (e: 'update:isOnlyWithRef', value: boolean): void;
-  (e: 'update:isOnlyWithBlogId', value: boolean): void;
-}
-
-defineProps<Props>();
-defineEmits<Emits>();
+// storeToRefs로 반응성 유지
+const publishedStore = usePublishedStore();
+const { sortBy, isOnlyWithRef, isOnlyWithBlogId } = storeToRefs(publishedStore);
 
 const sortOptions = [
   { label: '최신순', value: 'recent' as const },
@@ -31,31 +21,28 @@ const sortOptions = [
         <!-- 정렬 선택 -->
         <div class="toolbar-section">
           <n-select
-            :value="sortBy"
-            @update:value="$emit('update:sortBy', $event)"
+            v-model:value="sortBy"
             :options="sortOptions"
             size="medium"
             class="compact-select"
           />
         </div>
-        
+
         <!-- 필터 그룹 -->
         <div class="toolbar-section filter-group">
           <span class="filter-group-label">필터:</span>
           <div class="switch-group">
             <div class="compact-switch" title="참조원고 있는 항목만">
-              <n-switch 
-                :value="isOnlyWithRef"
-                @update:value="$emit('update:isOnlyWithRef', $event)"
-                size="medium" 
+              <n-switch
+                v-model:value="isOnlyWithRef"
+                size="medium"
               />
               <span class="compact-switch-label">참조</span>
             </div>
             <div class="compact-switch" title="블로그 ID 있는 항목만">
-              <n-switch 
-                :value="isOnlyWithBlogId"
-                @update:value="$emit('update:isOnlyWithBlogId', $event)"
-                size="medium" 
+              <n-switch
+                v-model:value="isOnlyWithBlogId"
+                size="medium"
               />
               <span class="compact-switch-label">ID</span>
             </div>

@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { ArrowBack as BackIcon, Newspaper as NewsIcon } from '@vicons/ionicons5';
+import { computed, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import {
+  ArrowBack as BackIcon,
+  Newspaper as NewsIcon,
+} from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
-import type { FavoriteSearch } from '@/entities/published';
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
 
 interface Props {
-  publishedList: FavoriteSearch[];
   onGoBack?: () => void;
 }
 
 const props = defineProps<Props>();
 
-const totalCount = computed(() => props.publishedList.length);
-const visibleCount = computed(() => 
-  props.publishedList.filter(item => item.isVisible).length
+// 직접 store 사용
+const publishedStore = usePublishedStore();
+const { displayList } = storeToRefs(publishedStore);
+
+const totalCount = computed(() => displayList.value?.length || 0);
+const visibleCount = computed(
+  () => displayList.value?.filter((item: any) => item.isVisible).length || 0
 );
 
 const handleGoBack = () => {
@@ -23,6 +30,11 @@ const handleGoBack = () => {
     window.history.back();
   }
 };
+
+// 컴포넌트 마운트 시 데이터 로드
+onMounted(() => {
+  publishedStore.loadArticles();
+});
 </script>
 
 <template>
@@ -44,8 +56,7 @@ const handleGoBack = () => {
           <h1 class="page-title">발행원고</h1>
         </div>
         <p class="page-subtitle">
-          {{ totalCount }}개 원고 |
-          {{ visibleCount }}개 노출중
+          {{ totalCount }}개 원고 | {{ visibleCount }}개 노출중
         </p>
       </div>
     </div>
