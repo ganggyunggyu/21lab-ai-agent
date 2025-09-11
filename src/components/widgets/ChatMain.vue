@@ -51,31 +51,37 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <main class="chat-main">
-    <div class="chat-container">
-      <div class="messages-container">
+  <main class="chat-main" role="main" aria-label="채팅 대화">
+    <section class="chat-container">
+      <section class="messages-container" aria-label="메시지 목록">
         <n-scrollbar
           ref="scrollbarRef"
           class="messages-scroll"
           @scroll="checkScrollPosition"
+          role="log"
+          aria-live="polite"
+          aria-label="채팅 메시지들"
         >
-          <div class="messages-list">
-            <MessageBubble
+          <ul class="messages-list" role="list">
+            <li 
               v-for="(msg, idx) in displayMessages"
               :key="`${idx}-${msg.timestamp}`"
-              :message="msg"
-              :index="idx"
-              :render-md="idx === 0"
-              @copy="copyMsg"
-              @download="handleDownloadClick"
-              @regenerate="handleRegenerate"
-              @delete="deleteMessage"
-            />
-            <div class="bottom-spacer" />
-          </div>
+              role="listitem"
+            >
+              <MessageBubble
+                :message="msg"
+                :index="idx"
+                :render-md="idx === 0"
+                @copy="copyMsg"
+                @download="handleDownloadClick"
+                @regenerate="handleRegenerate"
+                @delete="deleteMessage"
+              />
+            </li>
+          </ul>
         </n-scrollbar>
 
-        <div v-show="showScrollToBottom" class="scroll-to-bottom">
+        <aside v-show="showScrollToBottom" class="scroll-to-bottom" aria-label="스크롤 컨트롤">
           <ModernButton
             variant="secondary"
             size="lg"
@@ -84,10 +90,11 @@ onMounted(async () => {
             @click="handleScrollToBottom"
             class="scroll-btn"
             title="맨 아래로 스크롤"
+            aria-label="채팅 맨 아래로 이동"
           />
-        </div>
-      </div>
-    </div>
+        </aside>
+      </section>
+    </section>
   </main>
 </template>
 <style scoped>
@@ -95,7 +102,7 @@ onMounted(async () => {
   flex: 1;
   padding: calc(var(--header-h, 80px) + var(--main-top-pad, 16px))
     var(--page-pad-x, 16px)
-    calc(var(--footer-h, 180px) + var(--main-bot-pad, 16px));
+    calc(var(--footer-h, 120px) + var(--main-bot-pad, 8px));
   overflow: hidden;
 }
 .chat-container {
@@ -123,9 +130,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-.bottom-spacer {
-  height: 24px;
 }
 
 /* ===== SCROLL TO BOTTOM BUTTON ===== */
