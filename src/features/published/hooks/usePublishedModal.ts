@@ -96,6 +96,13 @@ export const usePublishedModal = () => {
     onSuccess?.();
   };
 
+  const toggleActive = (item: FavoriteSearch, onSuccess?: () => void) => {
+    const newActiveState = !(item.isActive ?? true); // 기본값 true
+    PublishedApi.updateActive(item.id, newActiveState);
+    item.isActive = newActiveState;
+    onSuccess?.();
+  };
+
   return {
     // actions only
     itemClick,
@@ -112,6 +119,7 @@ export const usePublishedModal = () => {
     closeMarkdownModal,
     markdownKeydown,
     toggleVisibility,
+    toggleActive,
     updateExposureRank,
     renderMarkdown,
   };
