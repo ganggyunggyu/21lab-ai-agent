@@ -312,5 +312,95 @@ if (import.meta.env.DEV) {
 
 ---
 
+## 🏗️ FSD 아키텍처 상태관리 컨벤션
+
+### Published 기능 리팩토링 완료 사례
+
+#### 기본 원칙
+1. **State는 Store에서만**: Vue 컴포넌트에서 `usePublishedStore` + `storeToRefs` 직접 사용
+2. **Actions는 Hooks에서만**: 비즈니스 로직은 hooks에서 처리, Vue는 UI 로직만
+3. **중간 레이어 제거**: `usePublishedState` 같은 불필요한 wrapper hook 제거
+4. **Handle 함수는 Vue에서만**: hooks는 깔끔한 함수명, Vue는 `handle~` wrapper
+
+#### 올바른 패턴
+
+```typescript
+// ✅ Vue 컴포넌트에서
+import { storeToRefs } from 'pinia';
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
+import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
+
+// 직접 store에서 reactive data 가져오기
+const publishedStore = usePublishedStore();
+const { detailModal, editing } = storeToRefs(publishedStore);
+
+// hook에서는 actions만 가져오기
+const { saveMemo, startEditMemo, cancelEditMemo } = usePublishedModal();
+
+// Vue handle~ wrapper 함수들
+const handleSaveMemo = (item: any) => {
+  saveMemo(item, editing.value.tempMemo);
+};
+```
+
+```typescript
+// ✅ Hooks에서
+export const usePublishedModal = () => {
+  const publishedStore = usePublishedStore();
+  
+  // store actions 구조분해할당
+  const { startEditMemo, cancelEditMemo } = publishedStore;
+
+  // 비즈니스 로직만 처리, state는 파라미터로 받기
+  const saveMemo = (item: FavoriteSearch, tempMemo: string, onSuccess?: () => void) => {
+    PublishedApi.updateMemo(item.id, tempMemo);
+    item.memo = tempMemo;
+    cancelEditMemo();
+    onSuccess?.();
+  };
+
+  return {
+    // actions only - reactive data 재export 금지
+    saveMemo,
+    startEditMemo,
+    cancelEditMemo,
+  };
+};
+```
+
+#### 금지 패턴
+
+```typescript
+// ❌ hooks에서 state 직접 접근
+const saveMemo = (item: FavoriteSearch) => {
+  PublishedApi.updateMemo(item.id, publishedStore.editing.tempMemo); // 금지!
+};
+
+// ❌ hooks에서 reactive data 재export
+return {
+  detailModal,  // 금지! Vue에서 store로 직접 가져와야 함
+  editing,      // 금지!
+  saveMemo,
+};
+
+// ❌ 불필요한 중간 hook
+export const usePublishedState = () => {
+  const publishedStore = usePublishedStore();
+  return storeToRefs(publishedStore); // 불필요한 레이어!
+};
+```
+
+#### 스타일링 컨벤션
+- **인라인 스타일 금지**: 모든 스타일은 CSS 클래스로 분리
+- **BEM 네이밍**: `.modal-header`, `.modal-badge-icon` 형태 사용
+- **스코프 스타일**: Vue 컴포넌트별 `<style scoped>` 활용
+
+#### 함수 파라미터 컨벤션
+- hooks 함수는 필요한 state를 파라미터로 받기
+- Vue 컴포넌트에서 state 값을 전달하여 호출
+- onSuccess 콜백을 마지막 파라미터로 통일
+
+---
+
 **Created for Claude Code by 케인인님 🤖**  
 *"나는! 나는..! 완벽한 개발 가이드를 만들었다!!"*
