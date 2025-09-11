@@ -1,360 +1,41 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import {
-  NCard,
-  NButton,
-  NSpace,
-  NTag,
-  NModal,
-  NInput,
-  NInputNumber,
-  NText,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NSelect,
-  NSwitch,
-} from 'naive-ui';
-import {
-  DocumentText as DocumentIcon,
-  Copy as CopyIcon,
-  Trash as TrashIcon,
-  Star as StarIcon,
-  ArrowBack as BackIcon,
-  Eye as EyeIcon,
-  EyeOff as EyeOffIcon,
-  Link as LinkIcon,
-  ChatboxEllipses as ChatIcon,
-  CheckmarkCircle as CheckIcon,
-  Newspaper as NewsIcon,
-  Code as MarkdownIcon,
-  Eye as PreviewIcon,
-} from '@vicons/ionicons5';
-import ModernCard from '@/components/ui/ModernCard.vue';
-import ModernButton from '@/components/ui/ModernButton.vue';
-import {
-  getFavoriteSearches,
-  removeFavoriteSearch,
-  updatePublishedMemo,
-  updatePublishedExposure,
-  updatePublishedBlogId,
-  type FavoriteSearch,
-} from '@/utils/_localStorage';
-import { renderMarkdown } from '@/utils/markdown/renderer';
-import { useChatStore } from '@/stores/_chat';
+import { onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import { NEmpty, NGrid, NGridItem } from 'naive-ui';
+import { DocumentText as DocumentIcon } from '@vicons/ionicons5';
 
-const chatStore = useChatStore();
-const publishedList = ref<FavoriteSearch[]>([]);
-const showDetailModal = ref(false);
-const selectedItem = ref<FavoriteSearch | null>(null);
+import PublishedHeader from '@/features/published/ui/PublishedHeader.vue';
+import PublishedToolbar from '@/features/published/ui/PublishedToolbar.vue';
+import PublishedCard from '@/features/published/ui/PublishedCard.vue';
+import PublishedDetailModal from '@/features/published/ui/PublishedDetailModal.vue';
+import PublishedMarkdownModal from '@/features/published/ui/PublishedMarkdownModal.vue';
 
-// 메모 편집용 상태
-const editingMemo = ref<string | null>(null);
-const tempMemo = ref<string>('');
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
+import { usePublishedList } from '@/features/published/hooks/usePublishedList';
 
-// 블로그 ID 편집용 상태
-const editingBlogId = ref<string | null>(null);
-const tempBlogId = ref<string>('');
+// 직접 store 사용
+const publishedStore = usePublishedStore();
+const { displayList } = storeToRefs(publishedStore);
 
-// 마크다운 에디터 상태
-const showMarkdownEditor = ref(false);
-const markdownContent = ref<string>('');
-const showMarkdownPreview = ref(false);
-
-// Toolbar state
-const sortBy = ref<'recent' | 'title'>('recent');
-const isOnlyWithRef = ref<boolean>(false);
-const isOnlyWithBlogId = ref<boolean>(false);
-
-const loadPublishedList = () => {
-  const allFavorites = getFavoriteSearches();
-  publishedList.value = allFavorites.filter((item) => item.isPublished);
-};
-
-const handleItemClick = (item: FavoriteSearch) => {
-  selectedItem.value = item;
-  showDetailModal.value = true;
-};
-
-const handleCopyKeyword = (item: FavoriteSearch) => {
-  navigator.clipboard.writeText(item.keyword);
-  console.log('키워드가 클립보드에 복사되었습니다.');
-};
-
-const handleCopyRef = (item: FavoriteSearch) => {
-  if (item.refMsg) {
-    navigator.clipboard.writeText(item.refMsg);
-    console.log('참조원고 전체가 클립보드에 복사되었습니다.');
-  }
-};
-
-const handleCopyFullResult = (item: FavoriteSearch) => {
-  if (item.botContent) {
-    navigator.clipboard.writeText(item.botContent);
-    console.log('전체 결과 원고가 클립보드에 복사되었습니다.');
-  }
-};
-
-const handleUseTemplate = (item: FavoriteSearch) => {
-  chatStore.keyword = item.keyword;
-  if (item.refMsg) {
-    chatStore.refMsg = item.refMsg;
-    chatStore.showRefInput = true;
-  }
-  // 채팅 페이지로 이동
-  window.location.href = '/';
-};
-
-const handleDelete = (item: FavoriteSearch) => {
-  if (confirm('이 발행원고를 삭제하시겠습니까?')) {
-    removeFavoriteSearch(item.id);
-    loadPublishedList();
-    if (selectedItem.value?.id === item.id) {
-      showDetailModal.value = false;
-    }
-  }
-};
+const { getItemGroupInfo } = usePublishedList();
 
 const goBack = () => {
   window.history.back();
 };
 
-// 메모 편집 관련 함수
-const startEditMemo = (item: FavoriteSearch) => {
-  editingMemo.value = item.id;
-  tempMemo.value = item.memo || '';
-};
-
-const saveMemo = (item: FavoriteSearch) => {
-  updatePublishedMemo(item.id, tempMemo.value);
-  item.memo = tempMemo.value; // 즉시 화면 업데이트
-  editingMemo.value = null;
-  loadPublishedList(); // 전체 데이터 다시 로드
-};
-
-const cancelEditMemo = () => {
-  editingMemo.value = null;
-  tempMemo.value = '';
-};
-
-const handleMemoKeydown = (e: KeyboardEvent, item: FavoriteSearch) => {
-  if (e.key === 'Enter' && e.shiftKey) {
-    e.preventDefault();
-    saveMemo(item);
-  }
-};
-
-// 블로그 ID 편집 관련 함수
-const startEditBlogId = (item: FavoriteSearch) => {
-  editingBlogId.value = item.id;
-  tempBlogId.value = item.blogId || '';
-};
-
-const saveBlogId = (item: FavoriteSearch) => {
-  updatePublishedBlogId(item.id, tempBlogId.value);
-  item.blogId = tempBlogId.value; // 즉시 화면 업데이트
-  editingBlogId.value = null;
-  loadPublishedList(); // 전체 데이터 다시 로드
-};
-
-const cancelEditBlogId = () => {
-  editingBlogId.value = null;
-  tempBlogId.value = '';
-};
-
-const handleBlogIdKeydown = (e: KeyboardEvent, item: FavoriteSearch) => {
-  if (e.key === 'Enter' && e.shiftKey) {
-    e.preventDefault();
-    saveBlogId(item);
-  }
-};
-
-// 노출 설정 관련 함수들
-const toggleVisibility = (item: FavoriteSearch) => {
-  const newVisibility = !item.isVisible;
-  updatePublishedExposure(item.id, newVisibility, item.exposureRank);
-  item.isVisible = newVisibility; // 즉시 화면 업데이트
-  loadPublishedList(); // 전체 데이터 다시 로드
-};
-
-const updateRank = (item: FavoriteSearch, rank: number | null) => {
-  const newRank = rank || undefined;
-  updatePublishedExposure(item.id, item.isVisible || false, newRank);
-  item.exposureRank = newRank; // 즉시 화면 업데이트
-  loadPublishedList(); // 전체 데이터 다시 로드
-};
-
-// 마크다운 에디터 관련 함수들
-const openMarkdownEditor = (item: FavoriteSearch) => {
-  markdownContent.value = item.memo || '';
-  showMarkdownEditor.value = true;
-  showMarkdownPreview.value = false;
-};
-
-const saveMarkdownMemo = () => {
-  if (selectedItem.value) {
-    updatePublishedMemo(selectedItem.value.id, markdownContent.value);
-    selectedItem.value.memo = markdownContent.value; // 즉시 화면 업데이트
-    showMarkdownEditor.value = false;
-    loadPublishedList(); // 전체 데이터 다시 로드
-  }
-};
-
-const closeMarkdownEditor = () => {
-  showMarkdownEditor.value = false;
-  markdownContent.value = '';
-  showMarkdownPreview.value = false;
-};
-
-const handleMarkdownKeydown = (e: KeyboardEvent) => {
-  if (e.shiftKey && e.key === 'Enter') {
-    e.preventDefault();
-    saveMarkdownMemo();
-  }
-};
-
-const toggleMarkdownPreview = () => {
-  showMarkdownPreview.value = !showMarkdownPreview.value;
-};
-
-const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
 onMounted(() => {
-  loadPublishedList();
+  publishedStore.loadArticles();
 });
-
-// Derived list with filter / sort
-const displayList = computed(() => {
-  const baseList = publishedList.value.slice();
-
-  const filtered = baseList.filter((item) => {
-    const matchesRef = !isOnlyWithRef.value || !!item.refMsg;
-    const matchesBlogId = !isOnlyWithBlogId.value || !!item.blogId;
-    return matchesRef && matchesBlogId;
-  });
-
-  if (sortBy.value === 'title') {
-    filtered.sort((a, b) => a.title.localeCompare(b.title));
-  } else {
-    filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  }
-  return filtered;
-});
-
-// 블로그 ID별 그룹 정보 계산
-const getBlogIdGroups = computed(() => {
-  const groups = new Map<string, FavoriteSearch[]>();
-  
-  displayList.value.forEach(item => {
-    if (item.blogId) {
-      if (!groups.has(item.blogId)) {
-        groups.set(item.blogId, []);
-      }
-      groups.get(item.blogId)!.push(item);
-    }
-  });
-  
-  return groups;
-});
-
-// 아이템이 그룹의 몇 번째인지 확인
-const getItemGroupInfo = (item: FavoriteSearch) => {
-  if (!item.blogId) return null;
-  
-  const group = getBlogIdGroups.value.get(item.blogId);
-  if (!group || group.length <= 1) return null;
-  
-  const sortedGroup = [...group].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-  
-  const index = sortedGroup.findIndex(g => g.id === item.id);
-  return {
-    total: group.length,
-    position: index + 1,
-    isLatest: index === 0
-  };
-};
 </script>
 
 <template>
   <div class="published-list-container">
-    <!-- 헤더 -->
-    <div class="page-header">
-      <div class="header-wrapper">
-        <!-- 뒤로가기 버튼 -->
-        <ModernButton
-          variant="ghost"
-          size="sm"
-          :icon="BackIcon"
-          @click="goBack"
-          class="back-button"
-        />
+    <PublishedHeader :onGoBack="goBack" />
 
-        <!-- 제목 영역 -->
-        <div class="title-section">
-          <div class="title-row">
-            <NewsIcon class="title-icon" />
-            <h1 class="page-title">발행원고</h1>
-          </div>
-          <p class="page-subtitle">
-            {{ publishedList.length }}개 원고 |
-            {{ publishedList.filter((item) => item.isVisible).length }}개 노출중
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 컴팩트 툴바 -->
-    <div class="compact-toolbar">
-      <ModernCard variant="glass" class="compact-toolbar-card">
-        <div class="compact-toolbar-content">
-          <!-- 정렬 선택 -->
-          <div class="toolbar-section">
-            <n-select
-              v-model:value="sortBy"
-              :options="[
-                { label: '최신순', value: 'recent' },
-                { label: '제목순', value: 'title' },
-              ]"
-              size="medium"
-              class="compact-select"
-            />
-          </div>
-          
-          <!-- 필터 그룹 -->
-          <div class="toolbar-section filter-group">
-            <span class="filter-group-label">필터:</span>
-            <div class="switch-group">
-              <div class="compact-switch" title="참조원고 있는 항목만">
-                <n-switch v-model:value="isOnlyWithRef" size="medium" />
-                <span class="compact-switch-label">참조</span>
-              </div>
-              <div class="compact-switch" title="블로그 ID 있는 항목만">
-                <n-switch v-model:value="isOnlyWithBlogId" size="medium" />
-                <span class="compact-switch-label">ID</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ModernCard>
-    </div>
-
-    <!-- 발행원고 리스트 -->
+    <PublishedToolbar />
     <div class="list-container">
       <n-empty
-        v-if="displayList.length === 0"
+        v-if="displayList?.length === 0"
         description="아직 등록된 발행원고가 없습니다"
         style="margin: 60px 0"
       >
@@ -370,380 +51,13 @@ const getItemGroupInfo = (item: FavoriteSearch) => {
 
       <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" class="published-grid">
         <n-grid-item v-for="item in displayList" :key="item.id">
-          <ModernCard
-            variant="glass"
-            class="published-item-card"
-            @click="handleItemClick(item)"
-          >
-            <div class="published-item">
-              <div class="item-header">
-                <div class="item-title-section">
-                  <CheckIcon class="published-badge-icon" />
-                  <h3 class="item-title">{{ item.title }}</h3>
-                  <!-- 그룹 뱃지 -->
-                  <span v-if="getItemGroupInfo(item)" class="group-version-badge">
-                    {{ getItemGroupInfo(item)?.isLatest ? '최신' : `v${getItemGroupInfo(item)?.position}` }} 
-                    / {{ getItemGroupInfo(item)?.total }}
-                  </span>
-                </div>
-                <div class="item-actions">
-                  <ModernButton
-                    variant="ghost"
-                    size="sm"
-                    icon-only
-                    :icon="CopyIcon"
-                    @click.stop="handleCopyKeyword(item)"
-                    title="키워드 복사"
-                    class="action-btn"
-                  />
-                  <ModernButton
-                    variant="ghost"
-                    size="sm"
-                    icon-only
-                    :icon="StarIcon"
-                    @click.stop="handleUseTemplate(item)"
-                    title="원고 발행"
-                    class="action-btn use-button"
-                  />
-                  <ModernButton
-                    variant="ghost"
-                    size="sm"
-                    icon-only
-                    :icon="TrashIcon"
-                    @click.stop="handleDelete(item)"
-                    title="삭제"
-                    class="action-btn delete-button"
-                  />
-                </div>
-              </div>
-
-              <div class="item-content compact">
-                <div class="keyword-line">
-                  <span class="keyword">{{ item.keyword }}</span>
-                  <div class="tag-group">
-                    <span v-if="item.refMsg" class="ref-flag">
-                      <LinkIcon class="ref-icon" />
-                      참조
-                    </span>
-                    <span
-                      v-if="item.isVisible"
-                      class="visibility-badge visible"
-                    >
-                      <EyeIcon class="visibility-icon" />
-                      노출
-                      {{ item.exposureRank ? `#${item.exposureRank}` : '' }}
-                    </span>
-                    <span v-if="item.blogId" class="blog-id-badge">
-                      <LinkIcon class="ref-icon" />
-                      ID: {{ item.blogId.length > 10 ? item.blogId.substring(0, 10) + '...' : item.blogId }}
-                    </span>
-                    <span
-                      v-else-if="item.isVisible === false"
-                      class="visibility-badge hidden"
-                    >
-                      <EyeOffIcon class="visibility-icon" />
-                      미노출
-                    </span>
-                  </div>
-                </div>
-                <div v-if="item.memo" class="memo-preview">
-                  <ChatIcon class="memo-icon" />
-                  <span class="memo-text">{{ item.memo }}</span>
-                </div>
-              </div>
-
-              <div class="item-footer">
-                <span class="created-date">{{
-                  formatDate(item.createdAt)
-                }}</span>
-              </div>
-            </div>
-          </ModernCard>
+          <PublishedCard :item="item" :groupInfo="getItemGroupInfo(item)" />
         </n-grid-item>
       </n-grid>
     </div>
 
-    <!-- 상세보기 모달 -->
-    <n-modal
-      v-model:show="showDetailModal"
-      preset="card"
-      :style="{
-        width: '560px',
-        maxWidth: 'calc(100vw - 32px)',
-        maxHeight: 'calc(100vh - 100px)',
-      }"
-      class="published-detail-modal"
-    >
-      <template #header>
-        <div style="display: flex; align-items: center; gap: 8px">
-          <CheckIcon class="modal-badge-icon" />
-          {{ selectedItem?.title }}
-        </div>
-      </template>
-
-      <div v-if="selectedItem" class="modal-content">
-        <div class="modal-section">
-          <div class="modal-item-header">
-            <strong>키워드:</strong>
-            <n-button size="tiny" @click="handleCopyKeyword(selectedItem)">
-              복사
-            </n-button>
-          </div>
-          <p class="modal-text">{{ selectedItem.keyword }}</p>
-        </div>
-
-        <div v-if="selectedItem.refMsg" class="modal-section">
-          <div class="modal-item-header">
-            <strong>참조원고:</strong>
-            <n-button size="tiny" @click="handleCopyRef(selectedItem)">
-              복사
-            </n-button>
-          </div>
-          <div class="preview-container">
-            {{ selectedItem.refMsg }}
-          </div>
-        </div>
-
-        <div class="modal-section" v-if="selectedItem.botContent">
-          <div class="modal-item-header">
-            <strong>결과원고:</strong>
-            <n-button size="tiny" @click="handleCopyFullResult(selectedItem)">
-              복사
-            </n-button>
-          </div>
-          <div class="preview-container">
-            {{ selectedItem.botContent }}
-          </div>
-        </div>
-
-        <div class="modal-section">
-          <div class="modal-item-header">
-            <strong>메모:</strong>
-            <n-space v-if="editingMemo !== selectedItem.id" size="small">
-              <n-button size="tiny" @click="startEditMemo(selectedItem)">
-                편집
-              </n-button>
-              <n-button
-                size="tiny"
-                @click="openMarkdownEditor(selectedItem)"
-                title="마크다운으로 수정하기"
-                style="color: #6366f1"
-              >
-                <MarkdownIcon
-                  style="width: 12px; height: 12px; margin-right: 2px"
-                />
-                MD
-              </n-button>
-            </n-space>
-            <n-space v-else size="small">
-              <n-button
-                size="tiny"
-                type="primary"
-                @click="saveMemo(selectedItem)"
-              >
-                저장
-              </n-button>
-              <n-button size="tiny" @click="cancelEditMemo"> 취소 </n-button>
-            </n-space>
-          </div>
-          <div v-if="editingMemo === selectedItem.id" class="memo-edit">
-            <n-input
-              v-model:value="tempMemo"
-              type="textarea"
-              placeholder="수정 내역, 발행 일정 등을 기록해주세요 (Shift+Enter로 저장)"
-              :autosize="{ minRows: 2, maxRows: 4 }"
-              @keydown="handleMemoKeydown($event, selectedItem)"
-            />
-          </div>
-          <div v-else class="memo-display">
-            {{ selectedItem.memo || '메모가 없습니다.' }}
-          </div>
-        </div>
-
-        <div class="modal-section">
-          <div class="modal-item-header">
-            <strong>블로그 ID:</strong>
-            <n-space v-if="editingBlogId !== selectedItem.id" size="small">
-              <n-button size="tiny" @click="startEditBlogId(selectedItem)">
-                편집
-              </n-button>
-            </n-space>
-            <n-space v-else size="small">
-              <n-button
-                size="tiny"
-                type="primary"
-                @click="saveBlogId(selectedItem)"
-              >
-                저장
-              </n-button>
-              <n-button size="tiny" @click="cancelEditBlogId"> 취소 </n-button>
-            </n-space>
-          </div>
-          <div v-if="editingBlogId === selectedItem.id" class="memo-edit">
-            <n-input
-              v-model:value="tempBlogId"
-              placeholder="네이버 블로그 포스트 ID 등을 입력하세요 (Shift+Enter로 저장)"
-              @keydown="handleBlogIdKeydown($event, selectedItem)"
-            />
-          </div>
-          <div v-else class="memo-display">
-            {{ selectedItem.blogId || '블로그 ID가 없습니다.' }}
-          </div>
-        </div>
-
-        <div class="modal-section">
-          <div class="modal-item-header">
-            <strong>노출 설정:</strong>
-          </div>
-          <div class="exposure-controls">
-            <div class="exposure-row">
-              <span class="control-label">노출 여부:</span>
-              <n-switch
-                :value="selectedItem.isVisible || false"
-                @update:value="(val) => toggleVisibility(selectedItem)"
-                size="medium"
-              >
-                <template #checked>노출</template>
-                <template #unchecked>미노출</template>
-              </n-switch>
-            </div>
-            <div class="exposure-row" v-if="selectedItem.isVisible">
-              <span class="control-label">노출 순위:</span>
-              <n-input-number
-                :value="selectedItem.exposureRank"
-                @update:value="(val) => updateRank(selectedItem, val)"
-                :min="1"
-                :max="999"
-                placeholder="순위"
-                size="small"
-                style="width: 100px"
-              />
-              <span class="rank-hint">낮을수록 우선 노출</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-section">
-          <strong>등록일:</strong> {{ formatDate(selectedItem.createdAt) }}
-        </div>
-      </div>
-
-      <template #footer>
-        <n-space justify="space-between">
-          <n-button type="error" @click="handleDelete(selectedItem!)">
-            삭제
-          </n-button>
-          <n-space>
-            <n-button @click="showDetailModal = false">닫기</n-button>
-            <n-button type="primary" @click="handleUseTemplate(selectedItem!)">
-              원고 재출력
-            </n-button>
-          </n-space>
-        </n-space>
-      </template>
-    </n-modal>
-
-    <!-- 마크다운 에디터 모달 -->
-    <n-modal
-      v-model:show="showMarkdownEditor"
-      preset="card"
-      :style="{
-        width: '900px',
-        maxWidth: 'calc(100vw - 32px)',
-        maxHeight: 'calc(100vh - 80px)',
-      }"
-      class="markdown-editor-modal"
-    >
-      <template #header>
-        <div style="display: flex; align-items: center; gap: 8px">
-          <MarkdownIcon style="width: 20px; height: 20px; color: #6366f1" />
-          마크다운 에디터
-        </div>
-      </template>
-
-      <div class="markdown-editor-container">
-        <!-- 에디터 헤더 -->
-        <div class="editor-header">
-          <n-space align="center" justify="space-between">
-            <span style="color: #6366f1; font-weight: 600; font-size: 14px">
-              실시간 마크다운 에디터
-            </span>
-            <div
-              style="
-                display: flex;
-                flex-direction: column;
-                align-items: end;
-                gap: 2px;
-              "
-            >
-              <n-text depth="3" style="font-size: 12px">
-                **굵게**, *기울임*, `코드`, # 제목, - 리스트, [링크](url)
-              </n-text>
-              <n-text
-                depth="3"
-                style="font-size: 11px; color: #10b981; font-weight: 500"
-              >
-                💾 Shift + Enter로 저장
-              </n-text>
-            </div>
-          </n-space>
-        </div>
-
-        <!-- 분할 에디터 -->
-        <div class="split-editor">
-          <!-- 왼쪽: 마크다운 입력 -->
-          <div class="editor-input-panel">
-            <div class="panel-header">
-              <MarkdownIcon
-                style="
-                  width: 14px;
-                  height: 14px;
-                  margin-right: 4px;
-                  color: #6366f1;
-                "
-              />
-              <span>마크다운 입력</span>
-            </div>
-            <n-input
-              v-model:value="markdownContent"
-              type="textarea"
-              placeholder="# 제목&#10;&#10;**굵은 글씨**, *기울임체*, `코드`&#10;&#10;- 리스트 항목&#10;- 또 다른 항목&#10;&#10;[링크](https://example.com)"
-              class="markdown-input"
-              show-count
-              @keydown="handleMarkdownKeydown"
-            />
-          </div>
-
-          <!-- 오른쪽: 실시간 미리보기 -->
-          <div class="editor-preview-panel">
-            <div class="panel-header">
-              <PreviewIcon
-                style="
-                  width: 14px;
-                  height: 14px;
-                  margin-right: 4px;
-                  color: #10b981;
-                "
-              />
-              <span>실시간 미리보기</span>
-            </div>
-            <div class="live-preview">
-              <div
-                class="markdown-content"
-                v-html="renderMarkdown(markdownContent)"
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <template #footer>
-        <n-space justify="end">
-          <n-button @click="closeMarkdownEditor">취소</n-button>
-          <n-button type="primary" @click="saveMarkdownMemo">저장</n-button>
-        </n-space>
-      </template>
-    </n-modal>
+    <PublishedDetailModal />
+    <PublishedMarkdownModal />
   </div>
 </template>
 
@@ -1011,6 +325,7 @@ const getItemGroupInfo = (item: FavoriteSearch) => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 .ref-flag {
@@ -1180,6 +495,7 @@ const getItemGroupInfo = (item: FavoriteSearch) => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   flex: 1;
 }
@@ -1448,48 +764,87 @@ const getItemGroupInfo = (item: FavoriteSearch) => {
   flex-direction: column;
 }
 
-.markdown-input {
+.markdown-input-wrapper {
   flex: 1;
   height: 450px;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.markdown-input :deep(textarea) {
-  height: 450px !important;
+:global(.dark) .markdown-input-wrapper {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.markdown-textarea {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #374151;
+  font-size: 14px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.6;
   resize: none;
   overflow-y: auto;
+  box-sizing: border-box;
 
   /* 스크롤바 스타일링 */
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-.markdown-input :deep(textarea)::-webkit-scrollbar {
+.markdown-textarea::-webkit-scrollbar {
   width: 6px;
 }
 
-.markdown-input :deep(textarea)::-webkit-scrollbar-track {
+.markdown-textarea::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.markdown-input :deep(textarea)::-webkit-scrollbar-thumb {
+.markdown-textarea::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
   border-radius: 3px;
 }
 
-.markdown-input :deep(textarea)::-webkit-scrollbar-thumb:hover {
+.markdown-textarea::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
 }
 
-:global(.dark) .markdown-input :deep(textarea) {
+:global(.dark) .markdown-textarea {
+  color: #d1d5db;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
-:global(.dark) .markdown-input :deep(textarea)::-webkit-scrollbar-thumb {
+:global(.dark) .markdown-textarea::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
 }
 
-:global(.dark) .markdown-input :deep(textarea)::-webkit-scrollbar-thumb:hover {
+:global(.dark) .markdown-textarea::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.character-count {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 12px;
+  color: #9ca3af;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+:global(.dark) .character-count {
+  color: #6b7280;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .panel-header {
@@ -1505,10 +860,6 @@ const getItemGroupInfo = (item: FavoriteSearch) => {
 
 :global(.dark) .panel-header {
   color: #d1d5db;
-}
-
-.editor-input-panel .n-input {
-  flex: 1;
 }
 
 .live-preview {
@@ -1641,28 +992,75 @@ const getItemGroupInfo = (item: FavoriteSearch) => {
 }
 
 /* 마크다운 에디터 모바일 최적화 */
+/* 모달 스타일 - 뷰포트 기반 반응형 */
+.published-detail-modal :deep(.n-card) {
+  width: 80vw !important;
+  max-width: 560px !important;
+  min-width: 320px !important;
+  max-height: 85vh !important;
+  overflow-y: auto;
+}
+
+.markdown-editor-modal :deep(.n-card) {
+  width: 90vw !important;
+  max-width: 900px !important;
+  min-width: 320px !important;
+  max-height: 90vh !important;
+  overflow: hidden;
+}
+
+.markdown-editor-modal :deep(.n-card-body) {
+  padding: 2vh 2vw;
+  overflow: hidden;
+  height: calc(90vh - 8vh);
+}
+
+.published-detail-modal :deep(.n-card-body) {
+  padding: 2vh 3vw;
+  overflow-y: auto;
+  max-height: calc(85vh - 10vh);
+}
+
 @media (max-width: 768px) {
-  .markdown-editor-modal .n-card {
-    margin: 16px;
+  .published-detail-modal :deep(.n-card) {
+    width: 95vw !important;
+    max-width: none !important;
+    max-height: 90vh !important;
+  }
+
+  .markdown-editor-modal :deep(.n-card) {
+    width: 95vw !important;
+    max-width: none !important;
+    max-height: 95vh !important;
+  }
+
+  .markdown-editor-modal :deep(.n-card-body) {
+    padding: 1vh 2vw;
+    height: calc(95vh - 6vh);
+  }
+
+  .published-detail-modal :deep(.n-card-body) {
+    padding: 1vh 2vw;
+    max-height: calc(90vh - 6vh);
   }
 
   .split-editor {
     flex-direction: column;
     height: auto;
-    gap: 12px;
+    gap: 2vh;
   }
 
-  .editor-input-panel .n-input {
-    min-height: 200px;
+  .markdown-input-wrapper {
+    height: 35vh;
   }
 
   .live-preview {
-    min-height: 200px;
-    max-height: 300px;
+    height: 35vh;
+    max-height: 35vh;
   }
 
   .panel-header {
-    font-size: 12px;
+    font-size: clamp(12px, 3vw, 16px);
   }
 }
 </style>
