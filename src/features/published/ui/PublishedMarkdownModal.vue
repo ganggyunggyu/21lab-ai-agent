@@ -1,14 +1,6 @@
 <script setup lang="ts">
-import {
-  NModal,
-  NButton,
-  NSpace,
-  NText,
-} from 'naive-ui';
-import {
-  Code as MarkdownIcon,
-  Eye as PreviewIcon,
-} from '@vicons/ionicons5';
+import { NModal, NButton, NSpace, NText } from 'naive-ui';
+import { Code as MarkdownIcon, Eye as PreviewIcon } from '@vicons/ionicons5';
 import { storeToRefs } from 'pinia';
 import { usePublishedStore } from '@/features/published/stores/publishedStore';
 import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
@@ -22,19 +14,26 @@ const {
   saveMarkdownMemo,
   closeMarkdownModal,
   markdownKeydown,
-  renderMarkdown
+  renderMarkdown,
 } = usePublishedModal();
 
 // Vue handle~ wrapper 함수들
 const handleSaveMarkdownMemo = () => {
   if (detailModal.value.selectedItem && markdownModal.value.content) {
-    saveMarkdownMemo(detailModal.value.selectedItem, markdownModal.value.content);
+    saveMarkdownMemo(
+      detailModal.value.selectedItem,
+      markdownModal.value.content
+    );
   }
 };
 
 const handleMarkdownKeydown = (e: KeyboardEvent) => {
   if (detailModal.value.selectedItem && markdownModal.value.content) {
-    markdownKeydown(e, detailModal.value.selectedItem, markdownModal.value.content);
+    markdownKeydown(
+      e,
+      detailModal.value.selectedItem,
+      markdownModal.value.content
+    );
   }
 };
 
@@ -50,8 +49,8 @@ const handleCloseMarkdownModal = () => {
     class="markdown-editor-modal"
   >
     <template #header>
-      <div style="display: flex; align-items: center; gap: 8px">
-        <MarkdownIcon style="width: 20px; height: 20px; color: #6366f1" />
+      <div class="modal-header-content">
+        <MarkdownIcon class="modal-header-icon" />
         마크다운 에디터
       </div>
     </template>
@@ -60,24 +59,12 @@ const handleCloseMarkdownModal = () => {
       <!-- 에디터 헤더 -->
       <div class="editor-header">
         <n-space align="center" justify="space-between">
-          <span style="color: #6366f1; font-weight: 600; font-size: 14px">
-            실시간 마크다운 에디터
-          </span>
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: end;
-              gap: 2px;
-            "
-          >
-            <n-text depth="3" style="font-size: 12px">
+          <span class="editor-title"> 실시간 마크다운 에디터 </span>
+          <div class="editor-hint-container">
+            <n-text depth="3" class="editor-syntax-hint">
               **굵게**, *기울임*, `코드`, # 제목, - 리스트, [링크](url)
             </n-text>
-            <n-text
-              depth="3"
-              style="font-size: 11px; color: #10b981; font-weight: 500"
-            >
+            <n-text depth="3" class="editor-save-hint">
               💾 Shift + Enter로 저장
             </n-text>
           </div>
@@ -89,7 +76,7 @@ const handleCloseMarkdownModal = () => {
         <!-- 왼쪽: 마크다운 입력 -->
         <div class="editor-input-panel">
           <div class="panel-header">
-            <MarkdownIcon style="width: 14px; height: 14px; margin-right: 4px" />
+            <MarkdownIcon class="panel-header-icon" />
             마크다운 작성
           </div>
           <div class="markdown-input-wrapper">
@@ -115,7 +102,7 @@ const handleCloseMarkdownModal = () => {
         <!-- 오른쪽: 미리보기 -->
         <div class="editor-preview-panel">
           <div class="panel-header">
-            <PreviewIcon style="width: 14px; height: 14px; margin-right: 4px" />
+            <PreviewIcon class="panel-header-icon" />
             미리보기
           </div>
           <div
@@ -137,6 +124,21 @@ const handleCloseMarkdownModal = () => {
 
 <style scoped>
 /* 마크다운 에디터 스타일 */
+.markdown-editor-modal {
+  min-height: 80vh;
+}
+.modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-header-icon {
+  width: 20px;
+  height: 20px;
+  color: #6366f1;
+}
+
 .markdown-editor-container {
   display: flex;
   flex-direction: column;
@@ -149,6 +151,29 @@ const handleCloseMarkdownModal = () => {
   margin-bottom: 16px;
 }
 
+.editor-title {
+  color: #6366f1;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.editor-hint-container {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: 2px;
+}
+
+.editor-syntax-hint {
+  font-size: 12px;
+}
+
+.editor-save-hint {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: 500;
+}
+
 :global(.dark) .editor-header {
   border-bottom-color: rgba(255, 255, 255, 0.1);
 }
@@ -156,7 +181,7 @@ const handleCloseMarkdownModal = () => {
 .split-editor {
   display: flex;
   gap: 16px;
-  height: 500px;
+  height: 700px;
   flex: 1;
 }
 
@@ -169,7 +194,7 @@ const handleCloseMarkdownModal = () => {
 
 .markdown-input-wrapper {
   flex: 1;
-  height: 450px;
+  min-height: 48vh;
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
@@ -261,6 +286,12 @@ const handleCloseMarkdownModal = () => {
   padding: 6px 0;
 }
 
+.panel-header-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+}
+
 :global(.dark) .panel-header {
   color: #d1d5db;
 }
@@ -272,8 +303,8 @@ const handleCloseMarkdownModal = () => {
   background: rgba(0, 0, 0, 0.02);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  height: 450px;
-  max-height: 450px;
+  height: 650px;
+  max-height: 650px;
 
   /* 스크롤바 스타일링 */
   scrollbar-width: thin;
@@ -386,12 +417,12 @@ const handleCloseMarkdownModal = () => {
   }
 
   .markdown-input-wrapper {
-    height: 35vh;
+    height: 40vh;
   }
 
   .live-preview {
-    height: 35vh;
-    max-height: 35vh;
+    height: 40vh;
+    max-height: 40vh;
   }
 
   .panel-header {
