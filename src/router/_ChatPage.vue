@@ -161,15 +161,6 @@ watch(
 );
 
 onMounted(() => {
-  //   document.addEventListener("keydown", (e) => {
-  //   if (e.key === "Tab") {
-  //     e.preventDefault(); // 기본 탭 이동 막음
-  //     const keywordInput = document.getElementById("keyword-input")
-  //     if(keywordInput){
-  //       keywordInput.focus();
-  //     }
-  //   }
-  // });
 });
 </script>
 

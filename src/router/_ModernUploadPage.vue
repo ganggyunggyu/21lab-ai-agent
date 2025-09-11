@@ -1,6 +1,5 @@
 <template>
   <div class="upload-app">
-    <!-- Floating Header -->
     <header class="floating-header">
       <div class="header-content">
         <div class="logo-section">
@@ -24,7 +23,6 @@
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="upload-main">
       <div class="upload-container">
         <!-- Upload Zone -->
@@ -327,7 +325,6 @@ import ModernCard from '../components/ui/ModernCard.vue';
 
 const { message } = createDiscreteApi(['message']);
 
-// State
 const isUploading = ref(false);
 const result = ref<UploadTextsRes | null>(null);
 const fileList = ref<File[]>([]);
@@ -336,7 +333,6 @@ const showFullText = ref(false);
 const selectedItem = ref<UploadTextItem | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
-// Computed
 const successCount = computed(
   () => result.value?.results.filter((r) => r.ok).length || 0
 );
@@ -352,7 +348,6 @@ const totalCharacters = computed(
       .reduce((sum, r) => sum + (r.length || 0), 0) || 0
 );
 
-// Methods
 const formatFileSize = (bytes: number): string => {
   return `${(bytes / 1024).toFixed(1)} KB`;
 };

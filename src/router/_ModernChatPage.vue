@@ -18,7 +18,6 @@ const { appRef } = useLayoutManager();
 </template>
 
 <style scoped>
-/* ===== LAYOUT ===== */
 .app-container {
   min-height: 100dvh;
   background: radial-gradient(
