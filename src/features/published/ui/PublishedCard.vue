@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import {
-  Copy as CopyIcon,
   Trash as TrashIcon,
-  Star as StarIcon,
   Eye as EyeIcon,
   EyeOff as EyeOffIcon,
   Link as LinkIcon,
   ChatboxEllipses as ChatIcon,
   CheckmarkCircle as CheckIcon,
   Time as TimeIcon,
-  Document as DocumentIcon,
-  ClipboardOutline as ClipboardIcon,
+  RadioButtonOn as ActiveIcon,
+  RadioButtonOff as InactiveIcon,
 } from '@vicons/ionicons5';
 import ModernCard from '@/components/ui/ModernCard.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
@@ -25,8 +23,8 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { handleCopyKeyword, handleUseTemplate, handleDelete } = usePublishedList();
-const { itemClick } = usePublishedModal();
+const { handleDelete } = usePublishedList();
+const { itemClick, toggleActive } = usePublishedModal();
 
 const formatDate = (date: Date) => {
   return new Date(date).toLocaleDateString('ko-KR', {
@@ -42,44 +40,24 @@ const handleClick = () => {
   itemClick(props.item);
 };
 
-const handleCopyKeywordClick = (e: Event) => {
-  e.stopPropagation();
-  handleCopyKeyword(props.item);
-};
-
-const handleUseTemplateClick = (e: Event) => {
-  e.stopPropagation();
-  handleUseTemplate(props.item);
-};
-
 const handleDeleteClick = (e: Event) => {
   e.stopPropagation();
   handleDelete(props.item);
 };
 
-// 참조원고 복사 핸들러
-const handleCopyRef = (e: Event) => {
+const handleToggleActive = (e: Event) => {
   e.stopPropagation();
-  if (props.item.refMsg) {
-    navigator.clipboard.writeText(props.item.refMsg);
-    console.log('참조원고 전체가 클립보드에 복사되었습니다.');
-  }
-};
-
-// 전체 결과 복사 핸들러
-const handleCopyFullResult = (e: Event) => {
-  e.stopPropagation();
-  if (props.item.botContent) {
-    navigator.clipboard.writeText(props.item.botContent);
-    console.log('전체 결과 원고가 클립보드에 복사되었습니다.');
-  }
+  toggleActive(props.item);
 };
 </script>
 
 <template>
   <ModernCard
     variant="glass"
-    class="published-item-card"
+    :class="[
+      'published-item-card',
+      { 'inactive-card': item.isActive === false },
+    ]"
     @click="handleClick"
   >
     <div class="published-item">
@@ -89,7 +67,7 @@ const handleCopyFullResult = (e: Event) => {
           <h3 class="item-title">{{ item.title }}</h3>
           <!-- 그룹 뱃지 -->
           <span v-if="groupInfo" class="group-version-badge">
-            {{ groupInfo.isLatest ? '최신' : `v${groupInfo.position}` }} 
+            {{ groupInfo.isLatest ? '최신' : `v${groupInfo.position}` }}
             / {{ groupInfo.total }}
           </span>
         </div>
@@ -98,39 +76,14 @@ const handleCopyFullResult = (e: Event) => {
             variant="ghost"
             size="sm"
             icon-only
-            :icon="CopyIcon"
-            @click="handleCopyKeywordClick"
-            title="키워드 복사"
-            class="action-btn"
-          />
-          <ModernButton
-            v-if="item.refMsg"
-            variant="ghost"
-            size="sm"
-            icon-only
-            :icon="DocumentIcon"
-            @click="handleCopyRef"
-            title="참조원고 복사"
-            class="action-btn"
-          />
-          <ModernButton
-            v-if="item.botContent"
-            variant="ghost"
-            size="sm"
-            icon-only
-            :icon="ClipboardIcon"
-            @click="handleCopyFullResult"
-            title="전체 결과 복사"
-            class="action-btn"
-          />
-          <ModernButton
-            variant="ghost"
-            size="sm"
-            icon-only
-            :icon="StarIcon"
-            @click="handleUseTemplateClick"
-            title="템플릿 사용"
-            class="action-btn use-button"
+            :icon="item.isActive !== false ? ActiveIcon : InactiveIcon"
+            @click="handleToggleActive"
+            :title="item.isActive !== false ? '비활성화' : '활성화'"
+            :class="[
+              'action-btn',
+              'toggle-button',
+              item.isActive !== false ? 'active-button' : 'inactive-button',
+            ]"
           />
           <ModernButton
             variant="ghost"
@@ -154,12 +107,14 @@ const handleCopyFullResult = (e: Event) => {
             </span>
             <span v-if="item.blogId" class="blog-id-badge">
               <LinkIcon class="ref-icon" />
-              ID: {{ item.blogId.length > 10 ? item.blogId.substring(0, 10) + '...' : item.blogId }}
+              ID:
+              {{
+                item.blogId.length > 10
+                  ? item.blogId.substring(0, 10) + '...'
+                  : item.blogId
+              }}
             </span>
-            <span
-              v-if="item.isVisible"
-              class="visibility-badge visible"
-            >
+            <span v-if="item.isVisible" class="visibility-badge visible">
               <EyeIcon class="visibility-icon" />
               노출
               {{ item.exposureRank ? `#${item.exposureRank}` : '' }}
@@ -201,6 +156,20 @@ const handleCopyFullResult = (e: Event) => {
   box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18),
     0 6px 14px rgba(16, 185, 129, 0.12);
   border-color: rgba(16, 185, 129, 0.28);
+}
+
+/* 비활성화된 카드 스타일 */
+.inactive-card {
+  opacity: 0.5;
+  filter: grayscale(0.3);
+  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.2s ease;
+}
+
+.inactive-card:hover {
+  opacity: 0.7;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.1),
+    0 3px 7px rgba(16, 185, 129, 0.06);
 }
 
 .published-item {
@@ -284,6 +253,21 @@ const handleCopyFullResult = (e: Event) => {
 .delete-button:hover {
   background: rgba(239, 68, 68, 0.1) !important;
   color: #ef4444 !important;
+}
+
+.toggle-button.active-button:hover {
+  background: rgba(34, 197, 94, 0.1) !important;
+  color: #22c55e !important;
+}
+
+.toggle-button.inactive-button {
+  opacity: 0.6;
+}
+
+.toggle-button.inactive-button:hover {
+  background: rgba(107, 114, 128, 0.1) !important;
+  color: #6b7280 !important;
+  opacity: 0.8;
 }
 
 .item-content {
