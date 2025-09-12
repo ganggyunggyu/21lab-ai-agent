@@ -280,7 +280,6 @@ onMounted(async () => {
   position: relative;
   overflow: hidden;
 }
-
 .header-navigation {
   display: flex;
   align-items: center;
