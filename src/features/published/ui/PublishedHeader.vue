@@ -4,6 +4,9 @@ import { storeToRefs } from 'pinia';
 import {
   ArrowBack as BackIcon,
   Newspaper as NewsIcon,
+  RadioButtonOn as ActiveIcon,
+  RadioButtonOff as InactiveIcon,
+  Apps as AllIcon,
 } from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import { usePublishedStore } from '@/features/published/stores/publishedStore';
@@ -16,7 +19,7 @@ const props = defineProps<Props>();
 
 // 직접 store 사용
 const publishedStore = usePublishedStore();
-const { displayList } = storeToRefs(publishedStore);
+const { displayList, activeFilter } = storeToRefs(publishedStore);
 
 const totalCount = computed(() => displayList.value?.length || 0);
 const visibleCount = computed(
@@ -29,6 +32,11 @@ const handleGoBack = () => {
   } else {
     window.history.back();
   }
+};
+
+// 필터 변경 핸들러
+const handleFilterChange = (filter: 'active' | 'inactive' | 'all') => {
+  publishedStore.activeFilter = filter;
 };
 
 // 컴포넌트 마운트 시 데이터 로드
@@ -59,6 +67,37 @@ onMounted(() => {
           {{ totalCount }}개 원고 | {{ visibleCount }}개 노출중
         </p>
       </div>
+
+      <!-- 필터 버튼들 -->
+      <div class="filter-section">
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          :icon="ActiveIcon"
+          @click="handleFilterChange('active')"
+          :class="['filter-button', { active: activeFilter === 'active' }]"
+        >
+          활성화
+        </ModernButton>
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          :icon="InactiveIcon"
+          @click="handleFilterChange('inactive')"
+          :class="['filter-button', { active: activeFilter === 'inactive' }]"
+        >
+          비활성화
+        </ModernButton>
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          :icon="AllIcon"
+          @click="handleFilterChange('all')"
+          :class="['filter-button', { active: activeFilter === 'all' }]"
+        >
+          모두보기
+        </ModernButton>
+      </div>
     </div>
   </div>
 </template>
@@ -84,6 +123,27 @@ onMounted(() => {
 
 .title-section {
   flex: 1;
+}
+
+.filter-section {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.filter-button {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.filter-button.active {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.filter-button:not(.active):hover {
+  background: rgba(107, 114, 128, 0.1) !important;
 }
 
 .title-row {
