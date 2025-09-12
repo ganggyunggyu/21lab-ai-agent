@@ -43,7 +43,8 @@ export const usePublishedList = () => {
   // 키워드 복사
   const handleCopyKeyword = (item: FavoriteSearch) => {
     navigator.clipboard.writeText(item.keyword);
-    console.log('키워드가 클립보드에 복사되었습니다.');
+    // TODO: 토스트 메시지로 변경 필요
+    console.log(`"${item.keyword}" 키워드가 클립보드에 복사되었습니다.`);
   };
 
   // 템플릿 사용 (채팅으로 이동) - storeToRefs 반응성 보장
