@@ -12,10 +12,16 @@ import type { Message } from '../types/_chat';
 export const useChatActions = () => {
   const { message } = createDiscreteApi(['message']);
 
-  const copyMsg = async (text: string) => {
+  const copyMsg = async (text: string, msgObj?: any) => {
     try {
       await copyToClipboard(text);
-      message.success(MSG_COPY_SUCCESS);
+      
+      // 키워드 정보가 있으면 포함해서 토스트 메시지 표시
+      if (msgObj?.keyword) {
+        message.success(`"${msgObj.keyword}" ${msgObj.role === 'user' ? '키워드' : '응답'}이 복사되었습니다`);
+      } else {
+        message.success(MSG_COPY_SUCCESS);
+      }
     } catch {
       message.error(MSG_COPY_FAIL);
     }

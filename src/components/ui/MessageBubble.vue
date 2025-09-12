@@ -17,7 +17,7 @@ interface Props {
 }
 
 interface Emits {
-  copy: [text: string];
+  copy: [text: string, message: any];
   download: [message: Message];
   regenerate: [message: Message];
   delete: [index: number];
@@ -81,7 +81,7 @@ const getServiceLabel = (service?: string) => {
             <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
           </section>
 
-          <section v-else @dblclick="message.content !== 'loading' && $emit('copy', message.content)" role="document">
+          <section v-else @dblclick="message.content !== 'loading' && $emit('copy', message.content, message)" role="document">
             <!-- 사용자 메시지일 때 추가 정보 표시 -->
             <aside v-if="message.role === 'user'" class="user-message-info" aria-label="메시지 생성 정보">
               <div class="generation-info">
@@ -111,7 +111,7 @@ const getServiceLabel = (service?: string) => {
               variant="ghost"
               size="sm"
               :icon="CopyIcon"
-              @click="$emit('copy', message.content)"
+              @click="$emit('copy', message.content, message)"
               class="action-btn"
               aria-label="메시지 내용 복사"
             >

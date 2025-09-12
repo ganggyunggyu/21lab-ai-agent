@@ -72,7 +72,7 @@ onMounted(async () => {
                 :message="msg"
                 :index="idx"
                 :render-md="idx === 0"
-                @copy="copyMsg"
+                @copy="(text, message) => copyMsg(text, message)"
                 @download="handleDownloadClick"
                 @regenerate="handleRegenerate"
                 @delete="deleteMessage"
