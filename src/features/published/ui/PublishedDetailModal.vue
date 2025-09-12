@@ -8,7 +8,6 @@ import {
 import { usePublishedStore } from '@/features/published/stores/publishedStore';
 import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
 import { usePublishedList } from '@/features/published/hooks/usePublishedList';
-import { copyText } from '@/utils';
 
 // 직접 store에서 reactive data 가져오기
 const publishedStore = usePublishedStore();
@@ -30,12 +29,11 @@ const {
   updateExposureRank,
 } = usePublishedModal();
 
-const { handleCopyKeyword, handleUseTemplate, handleDelete } =
-  usePublishedList();
+const { handleUseTemplate, handleDelete } = usePublishedList();
 
 // Vue 파일에서 handle~ 이름으로 wrapper 함수들
 const handleStartEditMemo = (item: any) => {
-  startEditMemo(item);
+  startEditMemo(item.id, item.memo || '');
 };
 
 const handleSaveMemo = (item: any) => {
@@ -47,7 +45,7 @@ const handleMemoKeydown = (e: KeyboardEvent, item: any) => {
 };
 
 const handleStartEditBlogId = (item: any) => {
-  startEditBlogId(item);
+  startEditBlogId(item.id, item.blogId || '');
 };
 
 const handleSaveBlogId = (item: any) => {
@@ -73,6 +71,29 @@ const handleUpdateExposureRank = (item: any, rank: number) => {
 const handleToggleActive = (item: any) => {
   toggleActive(item);
 };
+
+// 개선된 복사 핸들러들
+const handleCopyKeywordWithMessage = (item: any) => {
+  navigator.clipboard.writeText(item.keyword);
+  // TODO: 토스트 메시지로 변경 필요
+  console.log(`"${item.keyword}" 키워드가 클립보드에 복사되었습니다.`);
+};
+
+const handleCopyRefWithMessage = (item: any) => {
+  if (item.refMsg) {
+    navigator.clipboard.writeText(item.refMsg);
+    // TODO: 토스트 메시지로 변경 필요
+    console.log(`"${item.keyword}"의 참조원고가 클립보드에 복사되었습니다.`);
+  }
+};
+
+const handleCopyResultWithMessage = (item: any) => {
+  if (item.botContent) {
+    navigator.clipboard.writeText(item.botContent);
+    // TODO: 토스트 메시지로 변경 필요
+    console.log(`"${item.keyword}"의 결과원고가 클립보드에 복사되었습니다.`);
+  }
+};
 </script>
 
 <template>
@@ -90,7 +111,7 @@ const handleToggleActive = (item: any) => {
           <h3>키워드:</h3>
           <n-button
             size="tiny"
-            @click="handleCopyKeyword(detailModal.selectedItem!)"
+            @click="handleCopyKeywordWithMessage(detailModal.selectedItem!)"
             aria-label="키워드 복사"
           >
             복사
@@ -104,7 +125,7 @@ const handleToggleActive = (item: any) => {
           <h3>참조원고:</h3>
           <n-button
             size="tiny"
-            @click="copyText(detailModal?.selectedItem?.refMsg)"
+            @click="handleCopyRefWithMessage(detailModal.selectedItem!)"
             aria-label="참조원고 복사"
           >
             복사
@@ -120,7 +141,7 @@ const handleToggleActive = (item: any) => {
           <h3>결과원고:</h3>
           <n-button
             size="tiny"
-            @click="copyText(detailModal?.selectedItem?.botContent)"
+            @click="handleCopyResultWithMessage(detailModal.selectedItem!)"
             aria-label="결과원고 복사"
           >
             복사
