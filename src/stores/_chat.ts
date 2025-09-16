@@ -70,7 +70,6 @@ export const useChatStore = defineStore(
       showRefInput.value = false;
       pendingMessages.add(loadingMessageId);
 
-      // AbortController 생성하여 요청 취소 가능하도록
       const abortController = new AbortController();
       activeRequests.set(loadingMessageId, abortController);
 
@@ -82,19 +81,15 @@ export const useChatStore = defineStore(
         });
 
         const botResponse: string = res?.content || '(응답 없음)';
-        console.log('🐛 [DEBUG] Original botResponse:', botResponse);
-        console.log('🐛 [DEBUG] PART_SEPARATOR:', PART_SEPARATOR);
         const parts = botResponse
           .split(PART_SEPARATOR)
           .map((p) => p.trim())
           .filter(Boolean);
-        console.log('🐛 [DEBUG] Split parts:', parts);
 
         const currentLoadingIndex = messages.value.findIndex(
           (msg) => msg.id === loadingMessageId
         );
         if (currentLoadingIndex !== -1) {
-          // 첫 번째 응답으로 로딩 메시지 교체
           if (parts.length > 0) {
             messages.value[currentLoadingIndex] = {
               id: `bot-${Date.now()}-${Math.random()
@@ -108,7 +103,6 @@ export const useChatStore = defineStore(
               timestamp: Date.now(),
             };
 
-            // 나머지 응답들을 로딩 메시지 다음 위치에 순서대로 삽입
             for (let i = 1; i < parts.length; i++) {
               messages.value.splice(currentLoadingIndex + i, 0, {
                 id: `bot-${Date.now()}-${Math.random()
