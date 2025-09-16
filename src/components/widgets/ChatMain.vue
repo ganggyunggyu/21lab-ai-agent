@@ -4,13 +4,19 @@ import { storeToRefs } from 'pinia';
 import { NScrollbar } from 'naive-ui';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import MessageBubble from '@/components/ui/MessageBubble.vue';
+import MessageDetailModal from '@/components/ui/MessageDetailModal.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
+import PublishedDetailModal from '@/features/published/ui/PublishedDetailModal.vue';
 import { useChatStore } from '@/stores/_chat';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useScrollToBottom } from '@/hooks/useScrollToBottom';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { delay } from 'es-toolkit';
 import { AUTO_SCROLL_DELAY } from '@/constants/_timings';
+import type { Message } from '@/types/_chat';
+import type { FavoriteSearch } from '@/entities/published';
+import { convertMessageToFavoriteSearch } from '@/utils/_messageToPublished';
+import { usePublishedStore } from '@/features/published/stores/publishedStore';
 
 const chatStore = useChatStore();
 
@@ -20,7 +26,28 @@ const { handleRegenerate, deleteMessage } = chatStore;
 
 const { copyMsg, handleDownloadClick } = useChatActions();
 
+const publishedStore = usePublishedStore();
+const { openDetailModal, closeDetailModal } = publishedStore;
+
 const scrollbarRef: Ref<InstanceType<typeof NScrollbar> | null> = ref(null);
+
+const showDetailModal = ref(false);
+const selectedMessage = ref<Message | null>(null);
+
+const handleShowDetail = (message: Message) => {
+  selectedMessage.value = message;
+  showDetailModal.value = true;
+};
+
+const handleCloseDetailModal = () => {
+  showDetailModal.value = false;
+  selectedMessage.value = null;
+};
+
+const handleShowWorkModal = (message: Message) => {
+  const favoriteSearch = convertMessageToFavoriteSearch(message);
+  openDetailModal(favoriteSearch);
+};
 
 const {
   showScrollToBottom,
@@ -76,6 +103,8 @@ onMounted(async () => {
                 @download="handleDownloadClick"
                 @regenerate="handleRegenerate"
                 @delete="deleteMessage"
+                @show-detail="handleShowDetail"
+                @show-work-modal="handleShowWorkModal"
               />
             </li>
           </ul>
@@ -95,6 +124,15 @@ onMounted(async () => {
         </aside>
       </section>
     </section>
+
+    <MessageDetailModal
+      :show="showDetailModal"
+      :message="selectedMessage"
+      @close="handleCloseDetailModal"
+    />
+
+    <!-- Published Detail Modal을 사용하여 작업선택 기능 제공 -->
+    <PublishedDetailModal />
   </main>
 </template>
 <style scoped>

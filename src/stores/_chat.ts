@@ -32,9 +32,17 @@ export const useChatStore = defineStore(
     const showRefInput = ref(true);
     const activeRequests = reactive(new Map<string, AbortController>());
 
+    const showActionModal = ref(false);
+    const selectedUserMessage = ref<any>(null);
+
     const displayMessages = computed(() => messages.value);
     const hasMessages = computed(() => messages.value.length > 1);
     const isLoading = computed(() => pendingMessages.size > 0);
+
+    const openActionModal = (userMsg: any) => {
+      selectedUserMessage.value = userMsg;
+      showActionModal.value = true;
+    };
 
     const handleGenerate = async () => {
       if (!keyword.value.trim()) return;
@@ -235,6 +243,9 @@ export const useChatStore = defineStore(
       displayMessages,
       hasMessages,
       isLoading,
+      selectedUserMessage,
+      showActionModal,
+
       // actions
       handleGenerate,
       handleKeyPress,
@@ -244,6 +255,7 @@ export const useChatStore = defineStore(
       deleteMessage,
       clearChat,
       exportChat,
+      openActionModal,
     };
   },
   {

@@ -38,9 +38,16 @@ import {
 
 const chatStore = useChatStore();
 
-const { keyword, refMsg, isLoading, showRefInput } = storeToRefs(chatStore);
+const {
+  keyword,
+  refMsg,
+  isLoading,
+  showRefInput,
+  selectedUserMessage,
+  showActionModal,
+} = storeToRefs(chatStore);
 
-const { handleGenerate } = chatStore;
+const { handleGenerate, openActionModal } = chatStore;
 
 const isComposing = ref(false);
 
@@ -176,14 +183,6 @@ const cleanText = (text: string) => {
     .replace(/Previous image/gi, ' ')
     .replace(/Next image/gi, ' ')
     .trim();
-};
-
-const showActionModal = ref(false);
-const selectedUserMessage = ref<any>(null);
-
-const openActionModal = (userMsg: any) => {
-  selectedUserMessage.value = userMsg;
-  showActionModal.value = true;
 };
 
 const handleGenerateFromModal = () => {

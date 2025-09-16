@@ -5,11 +5,14 @@ import {
   Download as DownloadIcon,
   Refresh as RefreshIcon,
   Close as CloseIcon,
+  Information as InfoIcon,
+  Options as OptionsIcon,
 } from '@vicons/ionicons5';
 import { renderMarkdown } from '../../utils/_markdown';
 import type { Message } from '../../types/_chat';
 import { MODEL_OPTIONS } from '../../constants/_models';
 import ModernButton from '../ui/ModernButton.vue';
+import { useChatStore } from '@/stores';
 
 interface Props {
   message: Message;
@@ -21,10 +24,14 @@ interface Emits {
   download: [message: Message];
   regenerate: [message: Message];
   delete: [index: number];
+  showDetail: [message: Message];
+  showWorkModal: [message: Message];
 }
 
 const props = defineProps<Props>();
 defineEmits<Emits>();
+
+const { openActionModal } = useChatStore();
 
 const renderedContent = computed(() => {
   if (props.message.content === 'loading') return '';
@@ -50,13 +57,20 @@ const getServiceLabel = (service?: string) => {
   const option = MODEL_OPTIONS.find((opt) => opt.value === service);
   return option?.label || service;
 };
+
+const handleUserMessageClick = (userMsg: any) => {
+  console.log(userMsg);
+  openActionModal(userMsg);
+};
 </script>
 
 <template>
-  <article 
+  <article
     :class="['message-bubble', `message-bubble--${message.role}`]"
     role="article"
-    :aria-label="message.role === 'user' ? '사용자 메시지' : 'AI 어시스턴트 메시지'"
+    :aria-label="
+      message.role === 'user' ? '사용자 메시지' : 'AI 어시스턴트 메시지'
+    "
   >
     <div class="message-content">
       <div class="message-body">
@@ -64,13 +78,21 @@ const getServiceLabel = (service?: string) => {
           <span class="message-sender">
             {{ message.role === 'user' ? 'You' : 'AI Assistant' }}
           </span>
-          <time class="message-time" :datetime="new Date(message.timestamp || 0).toISOString()">
+          <time
+            class="message-time"
+            :datetime="new Date(message.timestamp || 0).toISOString()"
+          >
             {{ formatTime(message.timestamp) }}
           </time>
         </header>
 
         <main class="message-text">
-          <section v-if="message.content === 'loading'" class="loading-message" aria-live="polite" aria-label="AI 응답 생성 중">
+          <section
+            v-if="message.content === 'loading'"
+            class="loading-message"
+            aria-live="polite"
+            aria-label="AI 응답 생성 중"
+          >
             <div class="typing-indicator" aria-hidden="true">
               <span></span>
               <span></span>
@@ -79,9 +101,20 @@ const getServiceLabel = (service?: string) => {
             <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
           </section>
 
-          <section v-else @dblclick="message.content !== 'loading' && $emit('copy', message.content, message)" role="document">
+          <section
+            v-else
+            @dblclick="
+              message.content !== 'loading' &&
+                $emit('copy', message.content, message)
+            "
+            role="document"
+          >
             <!-- 사용자 메시지일 때 추가 정보 표시 -->
-            <aside v-if="message.role === 'user'" class="user-message-info" aria-label="메시지 생성 정보">
+            <aside
+              v-if="message.role === 'user'"
+              class="user-message-info"
+              aria-label="메시지 생성 정보"
+            >
               <div class="generation-info">
                 <span class="keyword-label">키워드:</span>
                 {{ message.keyword }}
@@ -104,7 +137,11 @@ const getServiceLabel = (service?: string) => {
         </main>
 
         <footer class="message-actions" role="toolbar" aria-label="메시지 액션">
-          <nav v-if="message.content !== 'loading'" class="bot-actions" aria-label="메시지 액션 버튼">
+          <nav
+            v-if="message.content !== 'loading'"
+            class="bot-actions"
+            aria-label="메시지 액션 버튼"
+          >
             <ModernButton
               variant="ghost"
               size="sm"
@@ -136,6 +173,28 @@ const getServiceLabel = (service?: string) => {
               aria-label="AI 응답 재생성"
             >
               재생성
+            </ModernButton>
+
+            <ModernButton
+              variant="ghost"
+              size="sm"
+              :icon="InfoIcon"
+              @click="$emit('showDetail', message)"
+              class="action-btn"
+              aria-label="메시지 상세정보 보기"
+            >
+              상세정보
+            </ModernButton>
+
+            <ModernButton
+              variant="ghost"
+              size="sm"
+              :icon="OptionsIcon"
+              @click="handleUserMessageClick(message)"
+              class="action-btn"
+              aria-label="메시지 작업선택"
+            >
+              작업선택
             </ModernButton>
           </nav>
 
