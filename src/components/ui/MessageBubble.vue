@@ -29,12 +29,10 @@ defineEmits<Emits>();
 const renderedContent = computed(() => {
   if (props.message.content === 'loading') return '';
 
-  // 첫 번째 메시지(index 0)만 마크다운으로 렌더링
   if (props.index === 0) {
     return renderMarkdown(props.message.content);
   }
 
-  // 그 외 메시지는 일반 텍스트로 처리 (줄바꿈만 적용)
   return props.message.content.replace(/\n/g, '<br>');
 });
 
