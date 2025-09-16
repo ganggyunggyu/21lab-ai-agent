@@ -48,10 +48,8 @@ const { headerRef } = useLayoutManager();
 const showClearModal = ref(false);
 const naverSearchQuery = ref('');
 
-// IME(한글 조합) 중 Enter 제출 방지용 플래그
 const isComposing = ref(false);
 
-// 드롭다운 메뉴 옵션
 const menuOptions = computed(() => [
   {
     label: '이전 버전 사용',
@@ -96,7 +94,6 @@ const handleNaverSearch = () => {
 const handleDirectNaverSearch = (query?: string) => {
   const searchTerm = query || naverSearchQuery.value.trim();
   if (!searchTerm) {
-    // 검색어가 없으면 기본 네이버 검색 앱으로 이동
     handleNaverSearch();
     return;
   }
@@ -106,10 +103,9 @@ const handleDirectNaverSearch = (query?: string) => {
     `https://naver-search-app-xu8w.vercel.app/${encodedQuery}`,
     '_blank'
   );
-  naverSearchQuery.value = ''; // 검색 후 인풋 초기화
+  naverSearchQuery.value = '';
 };
 
-// Enter 키 처리 함수 (IME 조합 중에는 무시)
 const handleSearchKeydown = (e: KeyboardEvent) => {
   if (e.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
     return;
@@ -130,7 +126,6 @@ const cancelClearChat = () => {
   showClearModal.value = false;
 };
 
-// 드롭다운 메뉴 선택 핸들러
 const handleMenuSelect = (key: string) => {
   switch (key) {
     case 'prev-version':
