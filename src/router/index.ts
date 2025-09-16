@@ -44,7 +44,6 @@ const router = createRouter({
   routes,
 });
 
-// Update document title based on route
 router.beforeEach((to, _from, next) => {
   document.title = to.meta?.title
     ? `${to.meta.title} - 21Lab AI Agent`

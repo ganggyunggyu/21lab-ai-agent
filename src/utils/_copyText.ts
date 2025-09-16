@@ -13,7 +13,6 @@ export const copyText = async (text: string): Promise<boolean> => {
     const textarea = document.createElement('textarea');
     textarea.value = text;
 
-    // 화면 밖 배치
     textarea.setAttribute('readonly', '');
     textarea.style.position = 'fixed';
     textarea.style.top = '-9999px';

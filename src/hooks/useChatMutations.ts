@@ -25,7 +25,6 @@ export const useChatGeneration = () => {
   });
 };
 
-// 여러 개의 mutation을 동시에 관리하기 위한 헬퍼
 export const useChatMutations = () => {
   const activeMutations = new Map<
     string,
