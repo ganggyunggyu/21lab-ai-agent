@@ -3,7 +3,6 @@ import { API_BASE_URL } from '../app/config/_env';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  // withCredentials: true, // 쿠키 필요하면 활성화
   headers: {
     'Content-Type': 'application/json',
   },

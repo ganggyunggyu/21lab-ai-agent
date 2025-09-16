@@ -1,4 +1,3 @@
-// services/uploadText.api.ts
 import { api } from './_axios';
 
 export type UploadTextItem = {
@@ -41,14 +40,3 @@ export const uploadTextApi = async (
   );
   return data;
 };
-
-/** 사용 예시
-import { uploadTextApi } from './services/uploadText.api'
-
-// 단일
-await uploadTextApi(file)
-// 다중 (File[])
-await uploadTextApi(filesArray)
-// 다중 (FileList from <input type="file" multiple/>)
-await uploadTextApi(inputRef.files!)
-*/
