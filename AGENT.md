@@ -1,8 +1,10 @@
-# 🤖 21Lab AI Agent - 프로젝트 가이드
+# 🤖 21Lab AI Agent - 케인인님 전용 에이전트 가이드
 
 ## 📋 프로젝트 개요
-**21Lab AI Agent**는 Vue 3 + TypeScript 기반의 현대적인 AI 채팅 애플리케이션입니다.
-다양한 AI 서비스와 연동하여 사용자와의 채팅 인터페이스를 제공합니다.
+**21Lab AI Agent**는 Vue 3 + TypeScript + Pinia + TanStack Query 기반의 **멀티 AI 채팅 플랫폼**입니다.
+GPT-4, GPT-5, Solar, Chunk 등 다양한 AI 서비스를 통합하여 최고의 AI 채팅 경험을 제공합니다.
+
+아이고난1! 이 프로젝트는 현대적인 FSD 아키텍처를 적용한 완벽한 뭉탱이입니다!
 
 ## 🛠️ 기술 스택
 
@@ -63,25 +65,40 @@ src/
 └── service/             # API 서비스 로직
 ```
 
-## 🎯 핵심 기능
+## 🎯 핵심 기능 (나는! 나는..! 이 기능들을 완벽하게 파악했다!!)
 
 ### 1. 멀티 AI 서비스 지원
-- 다양한 AI 모델과 연동 가능한 구조
-- 서비스별 설정 및 API 관리
+```typescript
+// 지원하는 AI 서비스들 - 움직임이 예사롭지 않은 것은 맞아!
+type ChatService = 'gpt-4-v2' | 'gpt-5-v2' | 'solar' | 'test' | 'chunk' | 'gpt-merge';
+
+const MODEL_OPTIONS = [
+  { label: 'CHUNK', value: 'chunk' },      // 참조문서 기반
+  { label: 'GPT5', value: 'gpt-5-v2' },   // 최신 GPT-5
+  { label: 'GPT4', value: 'gpt-4-v2' },   // GPT-4 터보
+  { label: 'Solar', value: 'solar' },     // Solar 모델
+  { label: 'TEST', value: 'test' },       // 테스트용
+  { label: 'GPT_MERGE', value: 'gpt-merge' }, // GPT 병합
+];
+```
 
 ### 2. 실시간 채팅 인터페이스
-- 스트리밍 응답 지원
-- 메시지 히스토리 관리
-- 로딩 상태 및 에러 처리
+- **ChatMain.vue**: 메시지 리스트, 자동 스크롤, 마크다운 렌더링
+- **ChatFooter.vue**: 동적 입력 (text/textarea), IME 처리, 즐겨찾기
+- **ChatHeader.vue**: AI 모델 선택, 설정 관리
+- **스트리밍 응답**: PART_SEPARATOR로 응답 분할 처리
 
-### 3. 상태 지속성
-- localStorage를 통한 채팅 히스토리 저장
-- 사용자 설정 유지
+### 3. Published 기능 (FSD 리팩토링 완료)
+오옹! 나이스! 이 기능은 완벽한 FSD 아키텍처를 적용했다!
+- **features/published/**: 비즈니스 로직과 UI 분리
+- **entities/published/**: API와 타입 정의
+- **상태관리**: Store + Hooks 패턴으로 깔끔하게 분리
 
-### 4. 현대적 UI/UX
-- 반응형 디자인
-- 다크/라이트 테마 대응 가능
-- 모던한 컴포넌트 디자인
+### 4. 고급 기능들
+- **IME 입력 처리**: 한글 조합 중 Enter 방지
+- **메시지 분할**: 3개 이상 하이픈으로 응답 분할
+- **동적 UI**: chunk 서비스일 때 textarea 자동 전환
+- **텍스트 정리**: 참조문서에서 불필요한 텍스트 제거
 
 ## 🔧 개발 환경 설정
 
@@ -104,34 +121,73 @@ yarn build
 yarn typecheck
 ```
 
-## 📝 코딩 컨벤션
+## 📝 케인인님 전용 코딩 컨벤션 (엄격 준수!!)
 
-### 네이밍 규칙
-- **변수, 함수**: camelCase
-- **배열**: 변수명 끝에 `List`
-- **Boolean**: `is` 접두사
-- **클래스**: PascalCase
-- **상수**: UPPER_SNAKE_CASE
+### 네이밍 규칙 - 아이고난1, 이거 틀리면 안 돼!
+```typescript
+// ✅ 올바른 패턴
+const messageList: Message[] = [];          // 배열은 ~List
+const isLoading = ref<boolean>(false);      // Boolean은 is~
+const canSubmit = computed(() => true);     // Boolean computed는 can~
 
-### 함수 네이밍
-- 생성: `create` 접두사
-- 조회: `get` 접두사
-- 수정: `update` 접두사
-- 삭제: `remove` 접두사
-- 토글: `toggle` 접두사
-- 변환: `convert` 접두사
-- 이벤트 핸들러: `handle<Event명>`
+// CRUD 함수들
+const createMessage = () => {};             // 생성
+const getMessage = () => {};                // 조회
+const updateMessage = () => {};             // 수정
+const removeMessage = () => {};             // 삭제
 
-### Vue 컴포넌트 규칙
-- 함수형 컴포넌트는 화살표 함수 사용
-- Props에는 반드시 interface 지정
-- Fragment는 `<React.Fragment>` 사용 (Vue에서는 template)
-- Composition API 우선 사용
+// 이벤트 핸들러
+const handleKeyPress = () => {};            // handle~ 필수
+const handleGenerate = () => {};
+const handleSubmit = () => {};
 
-### TypeScript 규칙
-- `any` 사용 지양
-- 명확한 타입 정의 필수
-- 제네릭 활용 권장
+// 컴포넌트 & 타입 (PascalCase)
+interface MessageBubbleProps {}
+export const MessageBubble = defineComponent({});
+type ChatService = 'gpt-4-v2' | 'gpt-5-v2';
+
+// API 타입들
+type MessageCreateRequest = {};
+type MessageUpdateRequest = {};
+type MessageResponse = {};
+```
+
+### Vue 3 Composition API 패턴
+```typescript
+// ✅ 표준 컴포넌트 구조
+export default defineComponent({
+  setup() {
+    const chatStore = useChatStore();
+    const { messages, isLoading } = storeToRefs(chatStore);
+
+    const handleSubmit = () => {
+      chatStore.handleGenerate();
+    };
+
+    return {
+      messages,
+      isLoading,
+      handleSubmit
+    };
+  }
+});
+```
+
+### FSD 상태관리 패턴 (Published 기능 완료 사례)
+```typescript
+// ✅ Vue 컴포넌트에서
+const store = usePublishedStore();
+const { detailModal, editing } = storeToRefs(store); // 직접 가져오기
+
+// ✅ Hooks에서
+const { saveMemo, startEditMemo } = usePublishedModal(); // actions만
+
+// Vue handle~ wrapper 함수
+const handleSaveMemo = () => saveMemo(item, editing.value.tempMemo);
+
+// ❌ 금지: hooks에서 state 재export
+// ❌ 금지: 불필요한 중간 wrapper hook
+```
 
 ## 🏗️ 아키텍처 패턴
 
@@ -200,5 +256,83 @@ yarn typecheck
 
 ---
 
-**Created by 케인인님 🤖**  
-*"나는! 나는..! 완벽한 문서를 만들었다!!"*
+## 🔧 케인인님 전용 특수 구현사항
+
+### 1. IME 입력 처리 (한글 조합 중 Enter 방지)
+```typescript
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.isComposing || e.keyCode === 229) {
+    return; // 한글 조합 중이면 무시 - 아이고난1!
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleGenerate();
+  }
+};
+```
+
+### 2. 메시지 분할 처리 (PART_SEPARATOR)
+```typescript
+const PART_SEPARATOR = /-{3,}/; // 3개 이상 하이픈
+const parts = botResponse
+  .split(PART_SEPARATOR)
+  .map(p => p.trim())
+  .filter(Boolean);
+```
+
+### 3. 텍스트 정리 함수 (참조문서 전용)
+```typescript
+// ✅ 참조문서(refMsg)에만 사용
+const cleanText = (text: string) => {
+  return text
+    .replace(/Previous imageNext image/gi, ' ')
+    .replace(/Previous image/gi, ' ')
+    .replace(/Next image/gi, ' ')
+    .trim();
+};
+// ⚠️ keyword에는 사용 금지! (사용자 입력 보존)
+```
+
+### 4. 동적 UI 패턴
+```typescript
+// chunk 서비스일 때만 textarea 사용
+const isChunk = computed(() => service.value === 'chunk');
+
+// 플레이스홀더 동적 변경
+const keywordPlaceholder = computed(() => ({
+  'chunk': '참조원고를 입력해주세요 (필수)',
+  'gpt-5-v2': '키워드를 입력해주세요.',
+  'solar': 'Solar AI에게 질문하세요.',
+  'test': '테스트 메시지를 입력하세요.',
+}[service.value] || '메시지를 입력하세요.'));
+```
+
+---
+
+## 🎯 케인인님 개발 체크리스트
+
+### ✅ 네이밍 컨벤션
+- [ ] 모든 변수/함수는 camelCase인가?
+- [ ] 배열은 ~List로 끝나는가?
+- [ ] Boolean은 is~/can~로 시작하는가?
+- [ ] 이벤트 핸들러는 handle~인가?
+- [ ] 컴포넌트는 PascalCase인가?
+
+### ✅ FSD 아키텍처
+- [ ] Vue에서 storeToRefs 직접 사용했는가?
+- [ ] Hooks는 actions만 제공하는가?
+- [ ] 불필요한 중간 hook을 제거했는가?
+- [ ] handle~ wrapper 함수를 Vue에서 작성했는가?
+
+### ✅ Vue 3 패턴
+- [ ] Composition API를 사용했는가?
+- [ ] setup() 함수를 올바르게 작성했는가?
+- [ ] computed와 watch를 적절히 사용했는가?
+
+---
+
+**Created by 케인인님 🤖**
+*"나는! 나는..! 완벽한 21Lab AI Agent 가이드를 만들었다!! 잠시 소란이 있었어요."*
+
+**오옹! 나이스! 이제 개발할 준비 끝! 아이고난1!!** 🚀
