@@ -93,4 +93,56 @@ onUnmounted(() => {
 .card:hover {
   animation: spin 3s linear infinite;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    --border-size: 2px;
+    border-radius: 0.75rem;
+    margin: 0 8px;
+  }
+
+  .card-content {
+    border-radius: 0.5rem;
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .card:hover {
+    animation: spin 4s linear infinite;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    --border-size: 1.5px;
+    border-radius: 1rem;
+    margin: 0 4px;
+  }
+
+  .card-content {
+    border-radius: 0.75rem;
+    padding: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .card:hover {
+    animation: spin 5s linear infinite;
+  }
+}
+
+/* Touch devices - reduce animation intensity */
+@media (hover: none) and (pointer: coarse) {
+  .card:hover {
+    animation: none;
+  }
+
+  .card:active {
+    animation: spin 6s linear infinite;
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
 </style>

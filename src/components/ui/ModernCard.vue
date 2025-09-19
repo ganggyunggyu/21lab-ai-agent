@@ -122,18 +122,58 @@ withDefaults(defineProps<Props>(), {
   padding-top: 16px;
 }
 
-/* Responsive padding */
+/* Responsive */
 @media (max-width: 768px) {
-  .modern-card__header,
-  .modern-card__body,
-  .modern-card__footer {
-    padding-left: 16px;
-    padding-right: 16px;
+  .modern-card {
+    border-radius: 12px;
+    margin: 0 8px;
+  }
+
+  .modern-card__header {
+    padding: 16px 20px 0;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
   }
 
   .modern-card__body {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding: 20px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .modern-card__footer {
+    padding: 0 20px 16px;
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-card {
+    border-radius: 10px;
+    margin: 0 4px;
+  }
+
+  .modern-card__header {
+    padding: 12px 16px 0;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .modern-card__body {
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .modern-card__footer {
+    padding: 0 16px 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  .modern-card--hover:hover {
+    transform: translateY(-2px);
   }
 }
 </style>
