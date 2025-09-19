@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "yarn typecheck && vite build --mode production",
+    "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
