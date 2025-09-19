@@ -53,32 +53,14 @@ export const usePublishedStore = defineStore('published', () => {
       return matchesRef && matchesBlogId && matchesActive;
     });
 
-    if (sortBy.value === 'title') {
-      return filtered.sort((a, b) => a.title.localeCompare(b.title));
-    }
-    
-    // 기본 정렬: 활성화 상태 > 블로그ID 그룹핑 > 날짜순
+    // 기본 정렬: 최신순 (다른 정렬 옵션은 추후 추가 예정)
     return filtered.sort((a, b) => {
-      // 1. 활성화 상태 우선 (활성화가 위로)
-      const aActive = a.isActive !== false;
-      const bActive = b.isActive !== false;
-      
-      if (aActive !== bActive) {
-        return aActive ? -1 : 1; // 활성화된 것이 먼저
+      // sortBy가 'title'인 경우에만 제목순 정렬
+      if (sortBy.value === 'title') {
+        return a.title.localeCompare(b.title);
       }
-      
-      // 2. 블로그ID 그룹핑 (같은 ID끼리 붙어있게)
-      const aBlogId = a.blogId || '';
-      const bBlogId = b.blogId || '';
-      
-      if (aBlogId !== bBlogId) {
-        // 블로그ID가 있는 것 우선, 그 다음 알파벳 순
-        if (!aBlogId && bBlogId) return 1;
-        if (aBlogId && !bBlogId) return -1;
-        return aBlogId.localeCompare(bBlogId);
-      }
-      
-      // 3. 같은 그룹 내에서는 날짜순 (최신순)
+
+      // 기본값('recent') 및 기타 모든 경우: 최신순 정렬
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   });
