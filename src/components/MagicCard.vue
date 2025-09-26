@@ -1,29 +1,26 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue';
 
-const card = ref<HTMLElement | null>(null)
+const card = ref<HTMLElement | null>(null);
 
 function onMouseMove(e: MouseEvent) {
-  if (!card.value)
-    return
+  if (!card.value) return;
 
-  const rect = card.value.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
+  const rect = card.value.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
-  card.value.style.setProperty('--mouse-x', `${x}px`)
-  card.value.style.setProperty('--mouse-y', `${y}px`)
+  card.value.style.setProperty('--mouse-x', `${x}px`);
+  card.value.style.setProperty('--mouse-y', `${y}px`);
 }
 
 onMounted(() => {
-  if (card.value)
-    card.value.addEventListener('mousemove', onMouseMove)
-})
+  if (card.value) card.value.addEventListener('mousemove', onMouseMove);
+});
 
 onUnmounted(() => {
-  if (card.value)
-    card.value.removeEventListener('mousemove', onMouseMove)
-})
+  if (card.value) card.value.removeEventListener('mousemove', onMouseMove);
+});
 </script>
 
 <template>
@@ -47,17 +44,12 @@ onUnmounted(() => {
     hsl(0, 0%, 22%)
   );
 
-  background-image:
-    radial-gradient(
+  background-image: radial-gradient(
       circle at var(--mouse-x) var(--mouse-y),
       hsla(0, 0%, 100%, 0.2) 0%,
       hsla(0, 0%, 100%, 0) 25%
     ),
-    linear-gradient(
-      to bottom right,
-      hsl(0, 0%, 15%),
-      hsl(0, 0%, 5%)
-    );
+    linear-gradient(to bottom right, hsl(0, 0%, 15%), hsl(0, 0%, 5%));
   position: relative;
   border-radius: 0.5rem;
   overflow: hidden;
@@ -94,7 +86,6 @@ onUnmounted(() => {
   animation: spin 3s linear infinite;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .card {
     --border-size: 2px;
@@ -133,7 +124,6 @@ onUnmounted(() => {
   }
 }
 
-/* Touch devices - reduce animation intensity */
 @media (hover: none) and (pointer: coarse) {
   .card:hover {
     animation: none;
