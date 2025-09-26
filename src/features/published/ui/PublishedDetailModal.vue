@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { NModal, NButton, NSpace, NInput, NInputNumber } from 'naive-ui';
+import { NModal, NButton, NSpace, NInputNumber } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import {
   Code as MarkdownIcon,
   CheckmarkCircle as CheckIcon,
 } from '@vicons/ionicons5';
+import ModernInput from '@/components/ui/ModernInput.vue';
 import { usePublishedStore } from '@/features/published/stores/publishedStore';
 import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
 import { usePublishedList } from '@/features/published/hooks/usePublishedList';
@@ -197,7 +198,7 @@ const handleCopyResultWithMessage = (item: any) => {
           v-if="editing.memo === detailModal.selectedItem.id"
           class="memo-edit"
         >
-          <n-input
+          <ModernInput
             v-model:value="editing.tempMemo"
             type="textarea"
             placeholder="수정 내역, 발행 일정 등을 기록해주세요 (Shift+Enter로 저장)"
@@ -246,7 +247,7 @@ const handleCopyResultWithMessage = (item: any) => {
           v-if="editing.blogId === detailModal.selectedItem.id"
           class="memo-edit"
         >
-          <n-input
+          <ModernInput
             v-model:value="editing.tempBlogId"
             placeholder="블로그 ID를 입력하세요 (Shift+Enter로 저장)"
             @keydown="handleBlogIdKeydown($event, detailModal.selectedItem!)"

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import {
-  NInput,
   NTag,
   NText,
   NPopover,
@@ -19,6 +18,7 @@ import {
 } from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import ModernCard from '@/components/ui/ModernCard.vue';
+import ModernInput from '@/components/ui/ModernInput.vue';
 import { useChatStore } from '@/stores/_chat';
 import { computed, watch, ref, onMounted } from 'vue';
 import { MODEL_OPTIONS } from '@/constants/_models';
@@ -49,17 +49,12 @@ const {
 
 const { handleGenerate, openActionModal } = chatStore;
 
-const isComposing = ref(false);
+const handleEnterPress = (value: string) => {
+  handleGenerate();
+};
 
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
-    return;
-  }
-
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleGenerate();
-  }
+const handleShiftEnterPress = (value: string) => {
+  // Shift+Enter는 줄바꿈으로 처리 (기본 동작)
 };
 
 const frequentKeywords = ref<FrequentKeyword[]>([]);
@@ -350,9 +345,9 @@ watch(refMsg, (newVal) => {
             aria-label="참조 원고 입력 영역"
           >
             <div class="input-surface" role="group" aria-label="참조 원고 입력">
-              <n-input
+              <ModernInput
                 v-model:value="refMsg"
-                :type="'textarea'"
+                type="textarea"
                 :rows="1"
                 :autosize="{ minRows: 1, maxRows: 4 }"
                 :placeholder="refPlaceholder"
@@ -371,16 +366,15 @@ watch(refMsg, (newVal) => {
             role="group"
             aria-label="키워드 입력 및 액션"
           >
-            <n-input
+            <ModernInput
               v-model:value="keyword"
-              :type="'text'"
+              type="text"
               :rows="1"
               :autosize="{ minRows: 1, maxRows: 4 }"
               :placeholder="getKeywordPlaceholder(service)"
               class="main-input"
-              @keydown="handleKeyDown"
-              @compositionstart="isComposing = true"
-              @compositionend="isComposing = false"
+              :onEnter="handleEnterPress"
+              :onShiftEnter="handleShiftEnterPress"
               @focus="showRefInput = true"
               @blur="showRefInput = false"
               aria-label="키워드 입력"
@@ -516,7 +510,6 @@ watch(refMsg, (newVal) => {
                 size="sm"
                 icon-only
                 :icon="SendIcon"
-                :loading="isLoading"
                 @click="handleGenerateWithKeyword"
                 aria-label="메시지 전송"
               />
