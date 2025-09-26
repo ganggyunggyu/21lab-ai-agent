@@ -196,6 +196,25 @@ export const useChatStore = defineStore(
       }
     };
 
+    const cancelCurrentRequest = () => {
+      // 가장 최근 요청만 취소
+      const lastRequestId = Array.from(activeRequests.keys()).pop();
+      if (lastRequestId) {
+        const controller = activeRequests.get(lastRequestId);
+        controller?.abort();
+        activeRequests.delete(lastRequestId);
+        pendingMessages.delete(lastRequestId);
+
+        // 로딩 메시지 제거
+        const loadingIndex = messages.value.findIndex(msg => msg.id === lastRequestId);
+        if (loadingIndex !== -1) {
+          messages.value.splice(loadingIndex, 1);
+        }
+
+        isLoading.value = false;
+      }
+    };
+
     const clearChat = () => {
       activeRequests.forEach((abortController: AbortController) => {
         abortController.abort();
@@ -256,6 +275,7 @@ export const useChatStore = defineStore(
       clearChat,
       exportChat,
       openActionModal,
+      cancelCurrentRequest,
     };
   },
   {
