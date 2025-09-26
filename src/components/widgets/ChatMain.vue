@@ -7,6 +7,7 @@ import MessageBubble from '@/components/ui/MessageBubble.vue';
 import MessageDetailModal from '@/components/ui/MessageDetailModal.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import PublishedDetailModal from '@/features/published/ui/PublishedDetailModal.vue';
+import PublishedRegisterModal from '@/features/published/ui/PublishedRegisterModal.vue';
 import { useChatStore } from '@/stores/_chat';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useScrollToBottom } from '@/hooks/useScrollToBottom';
@@ -34,6 +35,9 @@ const scrollbarRef: Ref<InstanceType<typeof NScrollbar> | null> = ref(null);
 const showDetailModal = ref(false);
 const selectedMessage = ref<Message | null>(null);
 
+const showRegisterModal = ref(false);
+const messageToRegister = ref<Message | null>(null);
+
 const handleShowDetail = (message: Message) => {
   selectedMessage.value = message;
   showDetailModal.value = true;
@@ -45,8 +49,19 @@ const handleCloseDetailModal = () => {
 };
 
 const handleShowWorkModal = (message: Message) => {
-  const favoriteSearch = convertMessageToFavoriteSearch(message);
-  openDetailModal(favoriteSearch);
+  messageToRegister.value = message;
+  showRegisterModal.value = true;
+};
+
+const handleCloseRegisterModal = () => {
+  showRegisterModal.value = false;
+  messageToRegister.value = null;
+};
+
+const handleRegistered = (item: FavoriteSearch) => {
+  console.log('발행원고가 등록되었습니다:', item);
+  // 등록 완료 후 상세 모달 열기 (선택사항)
+  openDetailModal(item);
 };
 
 const {
@@ -129,6 +144,14 @@ onMounted(async () => {
       :show="showDetailModal"
       :message="selectedMessage"
       @close="handleCloseDetailModal"
+    />
+
+    <!-- 발행원고 등록 모달 -->
+    <PublishedRegisterModal
+      :show="showRegisterModal"
+      :message="messageToRegister"
+      @close="handleCloseRegisterModal"
+      @registered="handleRegistered"
     />
 
     <!-- Published Detail Modal을 사용하여 작업선택 기능 제공 -->
