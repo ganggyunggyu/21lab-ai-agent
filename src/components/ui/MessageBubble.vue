@@ -62,6 +62,7 @@ const handleUserMessageClick = (userMsg: any) => {
   console.log(userMsg);
   openActionModal(userMsg);
 };
+
 </script>
 
 <template>
@@ -273,6 +274,7 @@ const handleUserMessageClick = (userMsg: any) => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
+/* Message Checkbox */
 /* Message Body */
 .message-body {
   flex: 1;

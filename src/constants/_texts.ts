@@ -43,6 +43,7 @@ export const MSG_COPY_SUCCESS = '복사 성공'
 export const MSG_COPY_FAIL = '복사 실패'
 export const MSG_DOWNLOAD_SUCCESS = '다운로드가 완료되었습니다.'
 export const MSG_DOWNLOAD_FAIL = '다운로드에 실패하였습니다.'
+export const MSG_ZIP_DOWNLOAD_SUCCESS = '선택된 원고가 압축 파일로 저장되었습니다.'
+export const MSG_ZIP_DOWNLOAD_FAIL = '압축 파일 생성에 실패했습니다.'
 export const MSG_WARN_ENTER_KEYWORD = '키워드를 입력해주세요.'
 export const categoryInfo = (category: string) => `해당 키워드의 카테고리는 ${category} 입니다.`
-

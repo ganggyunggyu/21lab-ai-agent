@@ -14,3 +14,8 @@ export type ChatService =
   | 'test'
   | 'chunk'
   | 'gpt-merge';
+
+export interface SelectedMessagePackage {
+  userMessage: Message;
+  responses: Message[];
+}

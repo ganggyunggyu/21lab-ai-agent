@@ -15,6 +15,7 @@ import {
   StarOutline as StarOutlineIcon,
   ChevronBack as ChevronBackIcon,
   ChevronForward as ChevronForwardIcon,
+  CheckmarkCircle as CheckmarkCircleIcon,
 } from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import ModernCard from '@/components/ui/ModernCard.vue';
@@ -45,9 +46,15 @@ const {
   showRefInput,
   selectedUserMessage,
   showActionModal,
+  isSelectionMode,
+  selectedMessageIds,
 } = storeToRefs(chatStore);
 
-const { handleGenerate, openActionModal } = chatStore;
+const {
+  handleGenerate,
+  openActionModal,
+  toggleMessageSelection,
+} = chatStore;
 
 const handleEnterPress = (value: string) => {
   handleGenerate();
@@ -145,6 +152,24 @@ const handleRemoveFavorite = (id: string, event: Event) => {
 const handleUserMessageClick = (userMsg: any) => {
   openActionModal(userMsg);
 };
+
+const handleUserMessageChipClick = (userMsg: any) => {
+  if (!userMsg?.id) return;
+
+  if (isSelectionMode.value) {
+    toggleMessageSelection(userMsg.id);
+    return;
+  }
+
+  handleUserMessageClick(userMsg);
+};
+
+const handleChipCheckboxToggle = (messageId: string) => {
+  toggleMessageSelection(messageId);
+};
+
+const isChipSelected = (messageId: string) =>
+  selectedMessageIds.value.has(messageId);
 
 const getServiceLabel = (serviceValue: string) => {
   const option = MODEL_OPTIONS.find((opt) => opt.value === serviceValue);
@@ -553,15 +578,36 @@ watch(refMsg, (newVal) => {
                     <n-tag
                       size="large"
                       :bordered="false"
-                      @click="handleUserMessageClick(userMsg)"
+                      @click="handleUserMessageChipClick(userMsg)"
+                      @keyup.enter.prevent="handleUserMessageChipClick(userMsg)"
                       class="smart-chip user-message-chip"
+                      :class="{
+                        'selection-active': isSelectionMode,
+                        'chip-selected': isSelectionMode && isChipSelected(userMsg.id),
+                      }"
                       type="primary"
                       tabindex="0"
+                      role="option"
+                      :aria-selected="isSelectionMode ? isChipSelected(userMsg.id) : undefined"
                       :aria-label="`${userMsg.keyword} - ${getServiceLabel(
                         userMsg.service
                       )} 서비스`"
                     >
                       <div class="chip-content">
+                        <div
+                          v-if="isSelectionMode"
+                          class="chip-checkbox"
+                          :class="{ selected: isChipSelected(userMsg.id) }"
+                          role="checkbox"
+                          :aria-checked="isChipSelected(userMsg.id)"
+                          @click.stop="handleChipCheckboxToggle(userMsg.id)"
+                        >
+                          <component
+                            v-if="isChipSelected(userMsg.id)"
+                            :is="CheckmarkCircleIcon"
+                            class="chip-checkbox-icon"
+                          />
+                        </div>
                         <div class="chip-main">
                           <span class="chip-keyword">{{
                             userMsg.keyword
@@ -1035,6 +1081,16 @@ watch(refMsg, (newVal) => {
   flex-shrink: 0; /* 칩이 줄어들지 않도록 */
 }
 
+.smart-chip.selection-active {
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.14);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.smart-chip.chip-selected {
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 8px 22px rgba(59, 130, 246, 0.25);
+}
+
 .smart-chip:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
@@ -1069,6 +1125,35 @@ watch(refMsg, (newVal) => {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.chip-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  margin-right: 8px;
+  transition: all 0.2s ease;
+}
+
+.chip-checkbox:hover {
+  border-color: rgba(59, 130, 246, 0.8);
+}
+
+.chip-checkbox.selected {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.28);
+}
+
+.chip-checkbox-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .service-badge {

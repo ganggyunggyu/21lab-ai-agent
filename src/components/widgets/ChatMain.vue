@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { NScrollbar } from 'naive-ui';
-import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
+import {
+  ChevronDown as ChevronDownIcon,
+  Checkmark as SelectIcon,
+  Close as CancelIcon,
+  Download as DownloadIcon,
+  CheckmarkCircle as SelectAllIcon,
+  Square as DeselectAllIcon,
+} from '@vicons/ionicons5';
 import MessageBubble from '@/components/ui/MessageBubble.vue';
 import MessageDetailModal from '@/components/ui/MessageDetailModal.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
@@ -14,18 +21,34 @@ import { useScrollToBottom } from '@/hooks/useScrollToBottom';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { delay } from 'es-toolkit';
 import { AUTO_SCROLL_DELAY } from '@/constants/_timings';
-import type { Message } from '@/types/_chat';
+import type { Message, SelectedMessagePackage } from '@/types/_chat';
 import type { FavoriteSearch } from '@/entities/published';
 import { convertMessageToFavoriteSearch } from '@/utils/_messageToPublished';
 import { usePublishedStore } from '@/features/published/stores/publishedStore';
+import { sanitizeFileName } from '@/utils/_sanitizeFileName';
 
 const chatStore = useChatStore();
 
-const { displayMessages, messages } = storeToRefs(chatStore);
+const {
+  displayMessages,
+  messages,
+  isSelectionMode,
+  selectedMessageIds,
+  selectedMessagesCount,
+  selectableMessagesCount,
+  hasSelectedMessages
+} = storeToRefs(chatStore);
 
-const { handleRegenerate, deleteMessage } = chatStore;
+const {
+  handleRegenerate,
+  deleteMessage,
+  toggleSelectionMode,
+  selectAllMessages,
+  clearSelection,
+  exportSelectedMessages
+} = chatStore;
 
-const { copyMsg, handleDownloadClick } = useChatActions();
+const { copyMsg, handleDownloadClick, downloadZipFiles } = useChatActions();
 
 const publishedStore = usePublishedStore();
 const { openDetailModal, closeDetailModal } = publishedStore;
@@ -64,6 +87,91 @@ const handleRegistered = (item: FavoriteSearch) => {
   openDetailModal(item);
 };
 
+const formatTimestampForFileName = (timestamp?: number): string => {
+  const target = timestamp ? new Date(timestamp) : new Date();
+  const pad = (value: number) => value.toString().padStart(2, '0');
+  return `${target.getFullYear()}${pad(target.getMonth() + 1)}${pad(
+    target.getDate()
+  )}-${pad(target.getHours())}${pad(target.getMinutes())}`;
+};
+
+const formatTimestampForContent = (timestamp?: number): string => {
+  if (!timestamp) return '기록되지 않음';
+  return new Date(timestamp).toLocaleString('ko-KR');
+};
+
+const composeResultContent = (pkg: SelectedMessagePackage): { fileName: string; content: string } => {
+  const { userMessage, responses } = pkg;
+  const safeKeyword = sanitizeFileName(userMessage.keyword || 'message');
+
+  // 결과원고만 추출 (봇 응답만)
+  const resultBody = responses.length
+    ? responses
+        .map((response) => response.content)
+        .join('\n\n---\n\n')
+    : '결과가 생성되지 않았습니다.';
+
+  // 결과원고 길이 계산 (공백 제외)
+  const resultLength = resultBody.replace(/\s+/g, '').length;
+
+  // 파일명: 키워드_결과원고길이.txt
+  const fileName = `${safeKeyword}_${resultLength}.txt`;
+
+  // 내용: 결과원고만
+  const content = resultBody;
+
+  return { fileName, content };
+};
+
+const handleDownloadSelected = async () => {
+  if (!hasSelectedMessages.value) return;
+
+  const packages = exportSelectedMessages();
+  if (packages.length === 0) {
+    return;
+  }
+
+  const files = packages.map(composeResultContent);
+  const zipName = `selected-results-${formatTimestampForFileName()}`;
+
+  const nameCountMap = new Map<string, number>();
+  const uniqueFiles = files.map(({ fileName, content }) => {
+    // .txt 확장자 분리
+    const baseName = fileName.replace(/\.txt$/, '');
+    const extension = '.txt';
+
+    const currentCount = nameCountMap.get(baseName) ?? 0;
+    nameCountMap.set(baseName, currentCount + 1);
+
+    if (currentCount === 0) {
+      return { fileName, content };
+    }
+
+    // 중복된 경우 (2), (3) 등을 파일명에 추가
+    return { fileName: `${baseName}(${currentCount + 1})${extension}`, content };
+  });
+
+  await downloadZipFiles(uniqueFiles, zipName);
+
+  toggleSelectionMode();
+};
+
+// 전체 선택/해제 토글
+const totalSelectable = computed(() => selectableMessagesCount.value);
+const isAllSelected = computed(
+  () =>
+    totalSelectable.value > 0 &&
+    selectedMessageIds.value.size === totalSelectable.value
+);
+
+const handleToggleSelectAll = () => {
+  if (isAllSelected.value) {
+    clearSelection();
+  } else {
+    selectAllMessages();
+  }
+};
+
 const {
   showScrollToBottom,
   checkScrollPosition,
@@ -94,6 +202,64 @@ onMounted(async () => {
 </script>
 <template>
   <main class="chat-main" role="main" aria-label="채팅 대화">
+    <!-- 선택 모드 툴바 -->
+    <div v-if="isSelectionMode" class="selection-toolbar" role="toolbar" aria-label="메시지 선택 도구">
+      <div class="selection-info">
+        <span class="selection-count">{{ selectedMessagesCount }}개 선택됨</span>
+      </div>
+
+      <div class="selection-actions">
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          :icon="SelectAllIcon"
+          @click="handleToggleSelectAll"
+          class="action-btn"
+          :disabled="totalSelectable === 0"
+          :title="isAllSelected ? '전체 해제' : '전체 선택'"
+        >
+          {{ isAllSelected ? '전체해제' : '전체선택' }}
+        </ModernButton>
+
+        <ModernButton
+          variant="primary"
+          size="sm"
+          :icon="DownloadIcon"
+          @click="handleDownloadSelected"
+          :disabled="!hasSelectedMessages"
+          class="action-btn download-btn"
+          title="선택된 메시지 다운로드"
+        >
+          다운로드
+        </ModernButton>
+
+        <ModernButton
+          variant="ghost"
+          size="sm"
+          :icon="CancelIcon"
+          @click="toggleSelectionMode"
+          class="action-btn cancel-btn"
+          title="선택 모드 취소"
+        >
+          취소
+        </ModernButton>
+      </div>
+    </div>
+
+    <!-- 선택 모드 시작 버튼 (평상시) -->
+    <div v-else class="normal-toolbar" role="toolbar" aria-label="채팅 도구">
+      <ModernButton
+        variant="ghost"
+        size="sm"
+        :icon="SelectIcon"
+        @click="toggleSelectionMode"
+        class="action-btn select-mode-btn"
+        title="메시지 선택 모드"
+      >
+        메시지 선택
+      </ModernButton>
+    </div>
+
     <section class="chat-container">
       <section class="messages-container" aria-label="메시지 목록">
         <n-scrollbar
@@ -220,5 +386,138 @@ onMounted(async () => {
 }
 .scroll-btn:active {
   transform: translateY(0) scale(0.95) !important;
+}
+
+/* ===== SELECTION TOOLBAR ===== */
+.selection-toolbar,
+.normal-toolbar {
+  position: fixed;
+  top: var(--header-h, 80px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  animation: slideDown 0.3s ease;
+}
+
+.selection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 400px;
+}
+
+.normal-toolbar {
+  display: flex;
+  justify-content: center;
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selection-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  padding: 4px 8px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  font-size: 14px !important;
+  padding: 6px 12px !important;
+  height: auto !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.download-btn {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-color: #3b82f6 !important;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  transform: translateY(-1px) !important;
+}
+
+.download-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+.select-mode-btn:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #3b82f6 !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .selection-toolbar {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    min-width: auto;
+    max-width: calc(100vw - 32px);
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .selection-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+  }
+
+  .normal-toolbar {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    max-width: calc(100vw - 32px);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 </style>

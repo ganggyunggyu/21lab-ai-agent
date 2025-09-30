@@ -6,7 +6,7 @@ import type { ChatService } from '../types/_chat';
 import { INTRO_MARKDOWN } from '../constants/_texts';
 import { PART_SEPARATOR } from '../constants/_regex';
 import { getSelectedService, setSelectedService } from '../utils/_localStorage';
-import type { Message } from '../types/_chat';
+import type { Message, SelectedMessagePackage } from '../types/_chat';
 
 export const useChatStore = defineStore(
   'chat',
@@ -35,9 +35,19 @@ export const useChatStore = defineStore(
     const showActionModal = ref(false);
     const selectedUserMessage = ref<any>(null);
 
+    // 메시지 선택 상태 관리
+    const selectedMessageIds = ref<Set<string>>(new Set());
+    const isSelectionMode = ref(false);
+
     const displayMessages = computed(() => messages.value);
     const hasMessages = computed(() => messages.value.length > 1);
     const isLoading = computed(() => pendingMessages.size > 0);
+    const selectedMessagesCount = computed(() => selectedMessageIds.value.size);
+    const userMessages = computed(() =>
+      messages.value.filter((msg) => msg.role === 'user' && Boolean(msg.id))
+    );
+    const selectableMessagesCount = computed(() => userMessages.value.length);
+    const hasSelectedMessages = computed(() => selectedMessagesCount.value > 0);
 
     const openActionModal = (userMsg: any) => {
       selectedUserMessage.value = userMsg;
@@ -250,6 +260,79 @@ export const useChatStore = defineStore(
       return JSON.stringify(exportData, null, 2);
     };
 
+    // 메시지 선택 관련 액션들
+    const toggleSelectionMode = () => {
+      isSelectionMode.value = !isSelectionMode.value;
+      if (!isSelectionMode.value) {
+        selectedMessageIds.value.clear();
+      }
+    };
+
+    const toggleMessageSelection = (messageId: string) => {
+      const targetMessage = userMessages.value.find(
+        (msg) => msg.id === messageId
+      );
+      if (!targetMessage) return;
+
+      const newSet = new Set(selectedMessageIds.value);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      selectedMessageIds.value = newSet;
+    };
+
+    const selectAllMessages = () => {
+      const allMessageIds = userMessages.value
+        .map((msg) => msg.id)
+        .filter((id): id is string => Boolean(id));
+      selectedMessageIds.value = new Set(allMessageIds);
+    };
+
+    const clearSelection = () => {
+      selectedMessageIds.value.clear();
+    };
+
+    const collectBotResponses = (userMessageId: string): Message[] => {
+      const userIndex = messages.value.findIndex((msg) => msg.id === userMessageId);
+      if (userIndex === -1) {
+        return [];
+      }
+
+      const responseList: Message[] = [];
+      const userMessage = messages.value[userIndex];
+
+      for (let i = userIndex + 1; i < messages.value.length; i += 1) {
+        const candidate = messages.value[i];
+
+        if (candidate.role === 'user') {
+          break;
+        }
+
+        if (
+          candidate.role === 'bot' &&
+          candidate.content !== 'loading' &&
+          candidate.keyword === userMessage.keyword
+        ) {
+          responseList.push(candidate);
+        }
+      }
+
+      return responseList;
+    };
+
+    const exportSelectedMessages = (): SelectedMessagePackage[] => {
+      const selectedMessages = userMessages.value.filter(
+        (msg) => Boolean(msg.id) && selectedMessageIds.value.has(msg.id as string)
+      );
+
+      return selectedMessages.map((userMessage) => ({
+        userMessage,
+        responses: collectBotResponses(userMessage.id as string),
+      }));
+    };
+
     return {
       // state
       messages,
@@ -258,12 +341,19 @@ export const useChatStore = defineStore(
       service,
       showRefInput,
       pendingMessages,
+      selectedMessageIds,
+      isSelectionMode,
+
       // computed
       displayMessages,
       hasMessages,
       isLoading,
       selectedUserMessage,
       showActionModal,
+      selectedMessagesCount,
+      selectableMessagesCount,
+      hasSelectedMessages,
+      userMessages,
 
       // actions
       handleGenerate,
@@ -276,6 +366,11 @@ export const useChatStore = defineStore(
       exportChat,
       openActionModal,
       cancelCurrentRequest,
+      toggleSelectionMode,
+      toggleMessageSelection,
+      selectAllMessages,
+      clearSelection,
+      exportSelectedMessages,
     };
   },
   {
