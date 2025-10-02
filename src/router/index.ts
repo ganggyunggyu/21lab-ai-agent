@@ -3,6 +3,7 @@ import ModernChatPage from './_ModernChatPage.vue';
 import ModernUploadPage from './_ModernUploadPage.vue';
 import ChatPage from './_ChatPage.vue';
 import PublishedListPage from './_PublishedListPage.vue';
+import BatchPage from '../pages/BatchPage.vue';
 
 const routes = [
   {
@@ -35,6 +36,14 @@ const routes = [
     component: PublishedListPage,
     meta: {
       title: '발행원고',
+    },
+  },
+  {
+    path: '/batch',
+    name: 'Batch',
+    component: BatchPage,
+    meta: {
+      title: '배치 원고 생성',
     },
   },
 ];

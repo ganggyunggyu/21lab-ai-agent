@@ -19,3 +19,11 @@ export interface SelectedMessagePackage {
   userMessage: Message;
   responses: Message[];
 }
+
+export interface BatchRequest {
+  id: string;
+  keyword: string;
+  refMsg?: string;
+}
+
+export type BatchStatus = 'pending' | 'loading' | 'success' | 'error';

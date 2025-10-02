@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 
 const card = ref<HTMLElement | null>(null);
 
-function onMouseMove(e: MouseEvent) {
+const onMouseMove = (e: MouseEvent) => {
   if (!card.value) return;
 
   const rect = card.value.getBoundingClientRect();
@@ -12,7 +12,7 @@ function onMouseMove(e: MouseEvent) {
 
   card.value.style.setProperty('--mouse-x', `${x}px`);
   card.value.style.setProperty('--mouse-y', `${y}px`);
-}
+};
 
 onMounted(() => {
   if (card.value) card.value.addEventListener('mousemove', onMouseMove);

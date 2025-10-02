@@ -16,6 +16,7 @@ import {
   ChevronBack as ChevronBackIcon,
   ChevronForward as ChevronForwardIcon,
   CheckmarkCircle as CheckmarkCircleIcon,
+  ListOutline as ListOutlineIcon,
 } from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import ModernCard from '@/components/ui/ModernCard.vue';
@@ -154,22 +155,35 @@ const handleUserMessageClick = (userMsg: any) => {
 };
 
 const handleUserMessageChipClick = (userMsg: any) => {
-  if (!userMsg?.id) return;
+  console.log('🎯 Chip clicked:', userMsg);
+  if (!userMsg?.id) {
+    console.warn('⚠️ No ID for userMsg:', userMsg);
+    return;
+  }
 
   if (isSelectionMode.value) {
+    console.log('📌 Selection mode active, toggling:', userMsg.id);
     toggleMessageSelection(userMsg.id);
     return;
   }
 
+  console.log('📄 Normal mode, opening modal');
   handleUserMessageClick(userMsg);
 };
 
 const handleChipCheckboxToggle = (messageId: string) => {
+  console.log('🔧 Toggle checkbox for:', messageId);
   toggleMessageSelection(messageId);
+  console.log('✅ After toggle, selectedIds:', selectedMessageIds.value);
 };
 
-const isChipSelected = (messageId: string) =>
-  selectedMessageIds.value.has(messageId);
+const isChipSelected = (messageId: string) => {
+  // selectedMessageIds가 배열로 복원될 수 있으므로 안전하게 체크
+  if (Array.isArray(selectedMessageIds.value)) {
+    return selectedMessageIds.value.includes(messageId);
+  }
+  return selectedMessageIds.value.has?.(messageId) ?? false;
+};
 
 const getServiceLabel = (serviceValue: string) => {
   const option = MODEL_OPTIONS.find((opt) => opt.value === serviceValue);
@@ -363,29 +377,29 @@ watch(refMsg, (newVal) => {
   >
     <section class="input-container" aria-label="메시지 입력 컨테이너">
       <div variant="glass" class="input-card">
-        <transition name="ref-slide">
-          <section
-            v-show="showRefInput"
-            class="ref-input-section"
-            aria-label="참조 원고 입력 영역"
-          >
-            <div class="input-surface" role="group" aria-label="참조 원고 입력">
-              <ModernInput
-                v-model:value="refMsg"
-                type="textarea"
-                :rows="1"
-                :autosize="{ minRows: 1, maxRows: 4 }"
-                :placeholder="refPlaceholder"
-                class="main-input"
-                @focus="showRefInput = true"
-                @blur="showRefInput = false"
-                aria-label="참조 원고 텍스트 영역"
-              />
-            </div>
-          </section>
-        </transition>
+          <transition name="ref-slide">
+            <section
+              v-show="showRefInput"
+              class="ref-input-section"
+              aria-label="참조 원고 입력 영역"
+            >
+              <div class="input-surface" role="group" aria-label="참조 원고 입력">
+                <ModernInput
+                  v-model:value="refMsg"
+                  type="textarea"
+                  :rows="1"
+                  :autosize="{ minRows: 1, maxRows: 4 }"
+                  :placeholder="refPlaceholder"
+                  class="main-input"
+                  @focus="showRefInput = true"
+                  @blur="showRefInput = false"
+                  aria-label="참조 원고 텍스트 영역"
+                />
+              </div>
+            </section>
+          </transition>
 
-        <section class="main-input-row" aria-label="메인 입력 영역">
+          <section class="main-input-row" aria-label="메인 입력 영역">
           <div
             class="input-wrapper"
             role="group"
@@ -542,7 +556,7 @@ watch(refMsg, (newVal) => {
           </div>
         </section>
 
-        <section class="bottom-actions" aria-label="하단 액션 및 제안">
+          <section class="bottom-actions" aria-label="하단 액션 및 제안">
           <div class="smart-suggestions" role="region" aria-label="스마트 제안">
             <section
               v-if="userMessages.length > 0"

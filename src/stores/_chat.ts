@@ -6,7 +6,7 @@ import type { ChatService } from '../types/_chat';
 import { INTRO_MARKDOWN } from '../constants/_texts';
 import { PART_SEPARATOR } from '../constants/_regex';
 import { getSelectedService, setSelectedService } from '../utils/_localStorage';
-import type { Message, SelectedMessagePackage } from '../types/_chat';
+import type { Message, SelectedMessagePackage, BatchRequest } from '../types/_chat';
 
 export const useChatStore = defineStore(
   'chat',
@@ -39,10 +39,20 @@ export const useChatStore = defineStore(
     const selectedMessageIds = ref<Set<string>>(new Set());
     const isSelectionMode = ref(false);
 
+    // 배치 모드 상태 관리
+    const isBatchMode = ref(false);
+    const batchRequests = ref<BatchRequest[]>([]);
+    const batchStatuses = reactive<Record<string, 'pending' | 'loading' | 'success' | 'error'>>({});
+
     const displayMessages = computed(() => messages.value);
     const hasMessages = computed(() => messages.value.length > 1);
     const isLoading = computed(() => pendingMessages.size > 0);
-    const selectedMessagesCount = computed(() => selectedMessageIds.value.size);
+    const selectedMessagesCount = computed(() => {
+      const ids = selectedMessageIds.value;
+      if (ids instanceof Set) return ids.size;
+      if (Array.isArray(ids)) return ids.length;
+      return 0;
+    });
     const userMessages = computed(() =>
       messages.value.filter((msg) => msg.role === 'user' && Boolean(msg.id))
     );
@@ -264,7 +274,7 @@ export const useChatStore = defineStore(
     const toggleSelectionMode = () => {
       isSelectionMode.value = !isSelectionMode.value;
       if (!isSelectionMode.value) {
-        selectedMessageIds.value.clear();
+        clearSelection();
       }
     };
 
@@ -274,12 +284,25 @@ export const useChatStore = defineStore(
       );
       if (!targetMessage) return;
 
-      const newSet = new Set(selectedMessageIds.value);
+      // 배열인 경우와 Set인 경우 모두 처리
+      const currentIds = selectedMessageIds.value;
+      let newSet: Set<string>;
+
+      if (currentIds instanceof Set) {
+        newSet = new Set(currentIds);
+      } else if (Array.isArray(currentIds)) {
+        newSet = new Set(currentIds);
+      } else {
+        newSet = new Set();
+      }
+
       if (newSet.has(messageId)) {
         newSet.delete(messageId);
       } else {
         newSet.add(messageId);
       }
+
+      // 반응성을 위해 새 Set 객체 할당
       selectedMessageIds.value = newSet;
     };
 
@@ -291,7 +314,8 @@ export const useChatStore = defineStore(
     };
 
     const clearSelection = () => {
-      selectedMessageIds.value.clear();
+      // 반응성을 위해 새로운 빈 Set 할당
+      selectedMessageIds.value = new Set();
     };
 
     const collectBotResponses = (userMessageId: string): Message[] => {
@@ -323,14 +347,69 @@ export const useChatStore = defineStore(
     };
 
     const exportSelectedMessages = (): SelectedMessagePackage[] => {
-      const selectedMessages = userMessages.value.filter(
-        (msg) => Boolean(msg.id) && selectedMessageIds.value.has(msg.id as string)
-      );
+      const ids = selectedMessageIds.value;
+      const selectedMessages = userMessages.value.filter((msg) => {
+        if (!msg.id) return false;
+        if (ids instanceof Set) return ids.has(msg.id);
+        if (Array.isArray(ids)) return ids.includes(msg.id);
+        return false;
+      });
 
       return selectedMessages.map((userMessage) => ({
         userMessage,
         responses: collectBotResponses(userMessage.id as string),
       }));
+    };
+
+    // 배치 모드 관련 액션들
+    const addBatchRequest = () => {
+      if (batchRequests.value.length >= 20) return;
+
+      const newRequest: BatchRequest = {
+        id: `batch-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+        keyword: '',
+        refMsg: '',
+      };
+
+      batchRequests.value.push(newRequest);
+      batchStatuses[newRequest.id] = 'pending';
+    };
+
+    const removeBatchRequest = (index: number) => {
+      const removed = batchRequests.value.splice(index, 1);
+      if (removed[0]) {
+        delete batchStatuses[removed[0].id];
+      }
+    };
+
+    const updateBatchRequest = (index: number, updates: Partial<BatchRequest>) => {
+      if (batchRequests.value[index]) {
+        batchRequests.value[index] = {
+          ...batchRequests.value[index],
+          ...updates,
+        };
+      }
+    };
+
+    const clearBatchRequests = () => {
+      batchRequests.value = [];
+      Object.keys(batchStatuses).forEach(key => delete batchStatuses[key]);
+    };
+
+    const handleBatchGenerate = () => {
+      const validRequests = batchRequests.value.filter(req => req.keyword.trim());
+
+      if (validRequests.length === 0) return;
+
+      // 각 요청을 그냥 handleGenerate로 실행
+      validRequests.forEach((req) => {
+        keyword.value = req.keyword;
+        refMsg.value = req.refMsg || '';
+        handleGenerate();
+      });
+
+      // 전송 후 배치 요청 클리어
+      clearBatchRequests();
     };
 
     return {
@@ -343,6 +422,9 @@ export const useChatStore = defineStore(
       pendingMessages,
       selectedMessageIds,
       isSelectionMode,
+      isBatchMode,
+      batchRequests,
+      batchStatuses,
 
       // computed
       displayMessages,
@@ -371,12 +453,61 @@ export const useChatStore = defineStore(
       selectAllMessages,
       clearSelection,
       exportSelectedMessages,
+      addBatchRequest,
+      removeBatchRequest,
+      updateBatchRequest,
+      clearBatchRequests,
+      handleBatchGenerate,
     };
   },
   {
     persist: {
       key: 'chat-store',
       storage: localStorage,
+      beforeRestore: (context) => {
+        console.log('🔍 Before restore:', context);
+      },
+      afterRestore: (context) => {
+        console.log('🔍 After restore - before fix:', context.store.selectedMessageIds);
+
+        // selectedMessageIds가 배열이면 Set으로 변환
+        if (Array.isArray(context.store.selectedMessageIds)) {
+          context.store.selectedMessageIds = new Set(context.store.selectedMessageIds);
+        }
+
+        // null이거나 undefined면 빈 Set으로
+        if (!context.store.selectedMessageIds) {
+          context.store.selectedMessageIds = new Set();
+        }
+
+        console.log('🔍 After restore - after fix:', context.store.selectedMessageIds);
+      },
+      serializer: {
+        serialize: (state) => {
+          // Set을 배열로 변환하여 저장
+          const serialized = {
+            ...state,
+            selectedMessageIds: state.selectedMessageIds instanceof Set
+              ? Array.from(state.selectedMessageIds)
+              : state.selectedMessageIds
+          };
+          console.log('💾 Serializing:', serialized.selectedMessageIds);
+          return JSON.stringify(serialized);
+        },
+        deserialize: (value) => {
+          const parsed = JSON.parse(value);
+          console.log('📦 Deserializing:', parsed.selectedMessageIds);
+
+          // 배열을 다시 Set으로 변환
+          if (Array.isArray(parsed.selectedMessageIds)) {
+            parsed.selectedMessageIds = new Set(parsed.selectedMessageIds);
+          } else if (!parsed.selectedMessageIds) {
+            parsed.selectedMessageIds = new Set();
+          }
+
+          return parsed;
+        }
+      }
     },
   }
 );
