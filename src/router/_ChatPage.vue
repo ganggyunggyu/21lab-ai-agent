@@ -160,8 +160,7 @@ watch(
   }
 );
 
-onMounted(() => {
-});
+onMounted(() => {});
 </script>
 
 <template>
