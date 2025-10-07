@@ -205,7 +205,7 @@ const handleFileChange = (event: Event) => {
                 <td class="col-keyword">
                   <ModernInput
                     :modelValue="req.keyword"
-                    @update:modelValue="(val: string) => updateBatchRequest(Number(idx), { keyword: val })"
+                    @update:modelValue="(val: string) => updateBatchRequest(idx as number, { keyword: val })"
                     placeholder="키워드를 입력하세요..."
                     type="text"
                     class="table-input"
@@ -214,7 +214,7 @@ const handleFileChange = (event: Event) => {
                 <td class="col-ref">
                   <ModernInput
                     :modelValue="req.refMsg || ''"
-                    @update:modelValue="(val: string) => updateBatchRequest(Number(idx), { refMsg: val })"
+                    @update:modelValue="(val: string) => updateBatchRequest(idx as number, { refMsg: val })"
                     placeholder="참조원고 (선택)"
                     type="textarea"
                     :rows="1"
