@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores/_chat';
 import ModernInput from '@/components/ui/ModernInput.vue';
-import Papa from 'papaparse';
+import * as Papa from 'papaparse';
 
 const router = useRouter();
 const chatStore = useChatStore();
