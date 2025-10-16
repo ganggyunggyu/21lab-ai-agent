@@ -6,4 +6,5 @@ export const MODEL_OPTIONS: { label: string; value: ChatService }[] = [
   { label: 'GPT4', value: 'gpt-4-v2' },
   { label: 'TEST', value: 'test' },
   { label: 'GPT_MERGE', value: 'gpt-merge' },
+  { label: 'Clean', value: 'clean' },
 ];
