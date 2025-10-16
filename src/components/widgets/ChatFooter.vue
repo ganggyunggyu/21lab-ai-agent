@@ -98,6 +98,7 @@ const keywordPlaceholder: Record<string, string> = {
   'gpt-5': '키워드를 입력해주세요.',
   'gpt-4': '키워드를 입력해주세요.',
   chunk: '키워드를 입력해주세요.',
+  clean: '키워드를 입력해주세요.',
 };
 
 const defaultPlaceholder = '참고 문서나 컨텍스트를 입력해주세요 (선택사항)';
