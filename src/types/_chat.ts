@@ -13,7 +13,8 @@ export type ChatService =
   | 'gpt-5-v2'
   | 'test'
   | 'chunk'
-  | 'gpt-merge';
+  | 'gpt-merge'
+  | 'clean';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
