@@ -14,7 +14,8 @@ export type ChatService =
   | 'test'
   | 'chunk'
   | 'gpt-merge'
-  | 'clean';
+  | 'clean'
+  | 'translation_compare';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
