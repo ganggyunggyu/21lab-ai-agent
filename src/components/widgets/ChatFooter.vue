@@ -99,6 +99,7 @@ const keywordPlaceholder: Record<string, string> = {
   'gpt-4': '키워드를 입력해주세요.',
   chunk: '키워드를 입력해주세요.',
   clean: '키워드를 입력해주세요.',
+  translation_compare: '책 제목 - 작가명을 입력해주세요. (예: 데미안 - 헤르만 헤세)',
 };
 
 const defaultPlaceholder = '참고 문서나 컨텍스트를 입력해주세요 (선택사항)';
