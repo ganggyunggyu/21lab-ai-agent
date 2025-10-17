@@ -7,4 +7,5 @@ export const MODEL_OPTIONS: { label: string; value: ChatService }[] = [
   { label: 'TEST', value: 'test' },
   { label: 'GPT_MERGE', value: 'gpt-merge' },
   { label: 'Clean', value: 'clean' },
+  { label: '번역본 비교', value: 'translation_compare' },
 ];
