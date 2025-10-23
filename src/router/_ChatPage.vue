@@ -10,6 +10,7 @@ import {
 import { delay } from 'es-toolkit';
 import { generateText, getCategory } from '../service/_chat.service';
 import { downloadText } from '../utils/_downloadText';
+import { sanitizeFileName } from '../utils/_sanitizeFileName';
 import { MODEL_OPTIONS } from '../constants/_models';
 import {
   INTRO_MARKDOWN,
@@ -129,7 +130,8 @@ const copyMsg = async (text: string) => {
 };
 
 const handleDownloadClick = (msg: Message) => {
-  const fileName = `${msg.keyword}_${
+  const safeKeyword = sanitizeFileName(msg.keyword || 'message');
+  const fileName = `${safeKeyword}-${
     msg.content.trim().replace(/\s+/g, '').length
   }`;
   const content = msg?.content;

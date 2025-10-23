@@ -424,7 +424,6 @@ const addFiles = (newFiles: File[]) => {
 const removeFile = (index: number) => {
   fileList.value.splice(index, 1);
 };
-
 const clearFiles = () => {
   fileList.value = [];
   message.success('모든 파일이 제거되었습니다');
@@ -437,6 +436,7 @@ const handleUpload = async () => {
   }
 
   isUploading.value = true;
+
   result.value = null;
 
   try {
