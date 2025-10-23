@@ -440,6 +440,9 @@ const handleUserMessageClick = (userMsg: any) => {
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
+  max-height: calc(1.6em * 3);
+  overflow: hidden;
+  line-height: 1.6;
 }
 
 .keyword-label,
