@@ -19,6 +19,7 @@ import { useChatActions } from '@/hooks/useChatActions';
 import { useScrollToBottom } from '@/hooks/useScrollToBottom';
 import { useLayoutManager } from '@/hooks/useLayoutManager';
 import { MODEL_OPTIONS } from '@/constants/_models';
+import { sanitizeFileName } from '@/utils/_sanitizeFileName';
 
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import ModernButton from '../ui/ModernButton.vue';
@@ -194,8 +195,8 @@ const handleDownloadSelected = async () => {
       : '결과가 생성되지 않았습니다.';
 
     const resultLength = resultBody.replace(/\s+/g, '').length;
-    const safeKeyword = (pkg.userMessage.keyword || 'message').replace(/[^\w가-힣]/g, '_');
-    const fileName = `${safeKeyword}_${resultLength}.txt`;
+    const safeKeyword = sanitizeFileName(pkg.userMessage.keyword || 'message');
+    const fileName = `${safeKeyword}-${resultLength}.txt`;
 
     return { fileName, content: resultBody };
   });

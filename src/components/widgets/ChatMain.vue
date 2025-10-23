@@ -114,8 +114,8 @@ const composeResultContent = (pkg: SelectedMessagePackage): { fileName: string; 
   // 결과원고 길이 계산 (공백 제외)
   const resultLength = resultBody.replace(/\s+/g, '').length;
 
-  // 파일명: 키워드_결과원고길이.txt
-  const fileName = `${safeKeyword}_${resultLength}.txt`;
+  // 파일명: 키워드-결과원고길이.txt
+  const fileName = `${safeKeyword}-${resultLength}.txt`;
 
   // 내용: 결과원고만
   const content = resultBody;
