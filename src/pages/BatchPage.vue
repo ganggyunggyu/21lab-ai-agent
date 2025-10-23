@@ -1,35 +1,37 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { NButton, NCard, NIcon, NProgress, useMessage } from 'naive-ui';
+import { NButton, NCard, NIcon, NProgress, NSelect, useMessage } from 'naive-ui';
 import {
   Add as AddIcon,
   Trash as TrashIcon,
   Send as SendIcon,
   ArrowBack as BackIcon,
   CloudUpload as UploadIcon,
+  TimeOutline as HistoryIcon,
+  RefreshOutline as ReloadIcon,
 } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores/_chat';
 import ModernInput from '@/components/ui/ModernInput.vue';
 import * as Papa from 'papaparse';
+import { getBatchHistory, removeBatchHistory, type BatchHistoryItem } from '@/utils/_localStorage';
+import { MODEL_OPTIONS } from '@/constants/_models';
 
 const router = useRouter();
 const chatStore = useChatStore();
 const message = useMessage();
 
 const { batchRequests, batchStatuses, service } = storeToRefs(chatStore);
-const { addBatchRequest, removeBatchRequest, updateBatchRequest, handleBatchGenerate } = chatStore;
+const { addBatchRequest, removeBatchRequest, updateBatchRequest, handleBatchGenerate, clearBatchRequests } = chatStore;
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const batchHistory = ref<BatchHistoryItem[]>(getBatchHistory());
+const showHistory = ref(false);
 
 const validRequests = computed(() => {
   return batchRequests.value.filter((req) => req.keyword.trim());
 });
-
-const handleGenerate = async () => {
-  await handleBatchGenerate();
-};
 
 const getStatusText = (status: 'pending' | 'loading' | 'success' | 'error') => {
   const map = {
@@ -113,6 +115,40 @@ const handleFileChange = (event: Event) => {
     }
   });
 };
+
+const refreshHistory = () => {
+  batchHistory.value = getBatchHistory();
+};
+
+const loadHistoryItem = (item: BatchHistoryItem) => {
+  clearBatchRequests();
+
+  item.requests.forEach((req) => {
+    if (batchRequests.value.length >= 20) return;
+
+    addBatchRequest();
+    const idx = batchRequests.value.length - 1;
+    updateBatchRequest(idx, {
+      keyword: req.keyword,
+      refMsg: req.refMsg || ''
+    });
+  });
+
+  service.value = item.service as any;
+  showHistory.value = false;
+  message.success(`${item.requests.length}개의 원고를 불러왔습니다`);
+};
+
+const deleteHistoryItem = (id: string) => {
+  removeBatchHistory(id);
+  refreshHistory();
+  message.success('히스토리가 삭제되었습니다');
+};
+
+const handleGenerate = async () => {
+  await handleBatchGenerate();
+  refreshHistory();
+};
 </script>
 
 <template>
@@ -126,9 +162,27 @@ const handleFileChange = (event: Event) => {
           돌아가기
         </NButton>
         <h1 class="page-title">배치 원고 생성</h1>
+        <NSelect
+          v-model:value="service"
+          :options="MODEL_OPTIONS"
+          size="large"
+          class="service-selector"
+        />
       </div>
 
       <div class="header-right">
+        <NButton
+          secondary
+          size="large"
+          @click="showHistory = !showHistory"
+          class="history-btn-header"
+        >
+          <template #icon>
+            <NIcon :component="HistoryIcon" />
+          </template>
+          히스토리 ({{ batchHistory.length }})
+        </NButton>
+
         <NButton
           secondary
           size="large"
@@ -270,6 +324,69 @@ const handleFileChange = (event: Event) => {
           </div>
         </NCard>
       </div>
+
+      <!-- 히스토리 섹션 -->
+      <div v-if="showHistory" class="history-section">
+        <NCard class="history-card">
+          <div class="history-header">
+            <h3>배치 생성 히스토리</h3>
+            <NButton text @click="showHistory = false">닫기</NButton>
+          </div>
+
+          <div v-if="batchHistory.length === 0" class="empty-history">
+            <p>저장된 히스토리가 없습니다</p>
+          </div>
+
+          <div v-else class="history-list">
+            <div
+              v-for="item in batchHistory"
+              :key="item.id"
+              class="history-item"
+            >
+              <div class="history-item-header">
+                <div class="history-title">
+                  <strong>{{ item.title }}</strong>
+                  <span class="history-meta">
+                    {{ new Date(item.timestamp).toLocaleString('ko-KR') }} ·
+                    {{ item.totalCount }}개 원고 ·
+                    서비스: {{ item.service.toUpperCase() }}
+                  </span>
+                </div>
+                <div class="history-actions">
+                  <NButton
+                    size="small"
+                    type="primary"
+                    @click="loadHistoryItem(item)"
+                  >
+                    <template #icon>
+                      <NIcon :component="ReloadIcon" />
+                    </template>
+                    불러오기
+                  </NButton>
+                  <NButton
+                    size="small"
+                    type="error"
+                    @click="deleteHistoryItem(item.id)"
+                  >
+                    <template #icon>
+                      <NIcon :component="TrashIcon" />
+                    </template>
+                    삭제
+                  </NButton>
+                </div>
+              </div>
+              <div class="history-preview">
+                <span v-for="(req, idx) in item.requests.slice(0, 3)" :key="idx" class="preview-keyword">
+                  {{ req.keyword }}
+                </span>
+                <span v-if="item.requests.length > 3" class="preview-more">
+                  외 {{ item.requests.length - 3 }}개
+                </span>
+              </div>
+            </div>
+          </div>
+        </NCard>
+      </div>
     </div>
   </div>
 </template>
@@ -314,6 +431,10 @@ const handleFileChange = (event: Event) => {
   font-size: 24px;
   font-weight: 700;
   color: #1e293b;
+}
+
+.service-selector {
+  width: 150px;
 }
 
 .header-right {
@@ -565,6 +686,120 @@ const handleFileChange = (event: Event) => {
   padding: 8px 16px;
   background: #f8fafc;
   border-radius: 8px;
+}
+
+.history-section {
+  margin-top: 24px;
+}
+
+.history-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.history-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.history-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.history-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-title strong {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.history-meta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.history-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preview-keyword {
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.preview-more {
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.history-btn-header {
+  font-weight: 600;
+  color: #8b5cf6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  transition: all 0.3s;
+}
+
+.history-btn-header:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
 }
 
 @keyframes pulse {
