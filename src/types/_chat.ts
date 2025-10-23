@@ -8,14 +8,7 @@ export interface Message {
   service?: string;
 }
 
-export type ChatService =
-  | 'gpt-4-v2'
-  | 'gpt-5-v2'
-  | 'test'
-  | 'chunk'
-  | 'gpt-merge'
-  | 'clean'
-  | 'translation_compare';
+export type ChatService = 'gpt-5-v2' | 'test' | 'restaurant' | 'grok';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
