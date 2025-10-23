@@ -2,6 +2,7 @@ import { createDiscreteApi } from 'naive-ui';
 import { copyToClipboard } from '../utils/_clipboard';
 import { downloadText } from '../utils/_downloadText';
 import { downloadZip, type ZipFileItem } from '../utils/_downloadZip';
+import { sanitizeFileName } from '../utils/_sanitizeFileName';
 import {
   MSG_COPY_SUCCESS,
   MSG_COPY_FAIL,
@@ -18,10 +19,12 @@ export const useChatActions = () => {
   const copyMsg = async (text: string, msgObj?: any) => {
     try {
       await copyToClipboard(text);
-      
-      // 키워드 정보가 있으면 포함해서 토스트 메시지 표시
+
       if (msgObj?.keyword) {
-        message.success(`"${msgObj.keyword}" ${msgObj.role === 'user' ? '키워드' : '응답'}이 복사되었습니다`);
+        const truncatedKeyword = msgObj.keyword.length > 30
+          ? msgObj.keyword.slice(0, 30) + '...'
+          : msgObj.keyword;
+        message.success(`"${truncatedKeyword}" ${msgObj.role === 'user' ? '키워드' : '응답'}이 복사되었습니다`);
       } else {
         message.success(MSG_COPY_SUCCESS);
       }
@@ -32,7 +35,8 @@ export const useChatActions = () => {
 
   const handleDownloadClick = (msg: Message) => {
     try {
-      const fileName = `${msg.keyword || 'message'}_${
+      const safeKeyword = sanitizeFileName(msg.keyword || 'message');
+      const fileName = `${safeKeyword}-${
         msg.content.replace(/\s/g, '').length
       }`;
       const content = msg.content;
