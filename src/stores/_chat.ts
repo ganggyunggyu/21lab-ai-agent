@@ -5,7 +5,7 @@ import { MODEL_OPTIONS } from '../constants/_models';
 import type { ChatService } from '../types/_chat';
 import { INTRO_MARKDOWN } from '../constants/_texts';
 import { PART_SEPARATOR } from '../constants/_regex';
-import { getSelectedService, setSelectedService } from '../utils/_localStorage';
+import { getSelectedService, setSelectedService, addBatchHistory } from '../utils/_localStorage';
 import type { Message, SelectedMessagePackage, BatchRequest } from '../types/_chat';
 
 export const useChatStore = defineStore(
@@ -400,6 +400,13 @@ export const useChatStore = defineStore(
       const validRequests = batchRequests.value.filter(req => req.keyword.trim());
 
       if (validRequests.length === 0) return;
+
+      // 배치 히스토리에 저장
+      const requestsForHistory = validRequests.map(req => ({
+        keyword: req.keyword,
+        refMsg: req.refMsg
+      }));
+      addBatchHistory(service.value, requestsForHistory);
 
       // 각 요청을 그냥 handleGenerate로 실행
       validRequests.forEach((req) => {
