@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   FREQUENT_KEYWORDS: 'frequent_keywords',
   FAVORITE_SEARCHES: 'favorite_searches',
   SEARCH_HISTORY: 'search_history',
+  BATCH_HISTORY: 'batch_history',
 } as const;
 
 export const getStoredValue = <T>(key: string, defaultValue: T): T => {
@@ -237,4 +238,45 @@ export const addSearchHistory = (keyword: string, ref?: string, service?: string
   // 최대 15개까지 유지
   const top15 = history.slice(0, 15);
   setStoredValue(STORAGE_KEYS.SEARCH_HISTORY, top15);
+};
+
+// 배치 히스토리
+export interface BatchHistoryItem {
+  id: string;
+  timestamp: number;
+  service: string;
+  requests: Array<{ keyword: string; refMsg?: string }>;
+  totalCount: number;
+  title?: string;
+}
+
+export const getBatchHistory = (): BatchHistoryItem[] =>
+  getStoredValue(STORAGE_KEYS.BATCH_HISTORY, []);
+
+export const addBatchHistory = (
+  service: string,
+  requests: Array<{ keyword: string; refMsg?: string }>,
+  title?: string
+): void => {
+  const history = getBatchHistory();
+  const newHistory: BatchHistoryItem = {
+    id: Date.now().toString(),
+    timestamp: Date.now(),
+    service,
+    requests,
+    totalCount: requests.length,
+    title: title || `배치 생성 ${new Date().toLocaleString('ko-KR')}`,
+  };
+
+  history.unshift(newHistory);
+
+  // 최대 20개까지 유지
+  const top20 = history.slice(0, 20);
+  setStoredValue(STORAGE_KEYS.BATCH_HISTORY, top20);
+};
+
+export const removeBatchHistory = (id: string): void => {
+  const history = getBatchHistory();
+  const filtered = history.filter(h => h.id !== id);
+  setStoredValue(STORAGE_KEYS.BATCH_HISTORY, filtered);
 };
