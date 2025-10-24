@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { NProgress } from 'naive-ui';
 import {
   Copy as CopyIcon,
   Download as DownloadIcon,
@@ -94,12 +95,17 @@ const handleUserMessageClick = (userMsg: any) => {
             aria-live="polite"
             aria-label="AI 응답 생성 중"
           >
-            <div class="typing-indicator" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
+            <div class="progress-container">
+              <NProgress
+                type="line"
+                :percentage="message.loadingProgress || 0"
+                :show-indicator="false"
+                :height="8"
+                color="#6366f1"
+                rail-color="rgba(99, 102, 241, 0.1)"
+              />
+              <span class="progress-text">{{ message.loadingProgress || 0 }}%</span>
             </div>
-            <span class="loading-text">AI가 응답을 생성하고 있습니다...</span>
           </section>
 
           <section
@@ -361,36 +367,23 @@ const handleUserMessageClick = (userMsg: any) => {
 .loading-message {
   display: flex;
   align-items: center;
-  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
 }
 
-.typing-indicator {
+.progress-container {
   display: flex;
-  gap: 4px;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
 }
 
-.typing-indicator span {
-  width: 8px;
-  height: 8px;
-  background: #10b981;
-  border-radius: 50%;
-  animation: typing 1.4s infinite ease-in-out;
-}
-
-.typing-indicator span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-.typing-indicator span:nth-child(2) {
-  animation-delay: -0.16s;
-}
-.typing-indicator span:nth-child(3) {
-  animation-delay: 0s;
-}
-
-.loading-text {
-  font-size: 16px;
-  color: #000000;
-  font-style: italic;
+.progress-text {
+  font-size: 14px;
+  color: #6366f1;
+  font-weight: 600;
+  text-align: right;
 }
 
 /* Message Actions */
@@ -679,19 +672,6 @@ const handleUserMessageClick = (userMsg: any) => {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes typing {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-  30% {
-    transform: translateY(-10px);
-    opacity: 1;
   }
 }
 
