@@ -5,6 +5,7 @@ import { MODEL_OPTIONS } from '../constants/_models';
 import type { ChatService } from '../types/_chat';
 import { INTRO_MARKDOWN } from '../constants/_texts';
 import { PART_SEPARATOR } from '../constants/_regex';
+import { EXPECTED_RESPONSE_TIME } from '../constants/_timings';
 import { getSelectedService, setSelectedService, addBatchHistory } from '../utils/_localStorage';
 import type { Message, SelectedMessagePackage, BatchRequest } from '../types/_chat';
 
@@ -92,6 +93,7 @@ export const useChatStore = defineStore(
         ref: refSnapshot,
         service: service.value,
         timestamp: Date.now(),
+        loadingProgress: 0,
       });
 
       keyword.value = '';
@@ -100,6 +102,18 @@ export const useChatStore = defineStore(
 
       const abortController = new AbortController();
       activeRequests.set(loadingMessageId, abortController);
+
+      const startTime = Date.now();
+      const expectedTime = (EXPECTED_RESPONSE_TIME[service.value as keyof typeof EXPECTED_RESPONSE_TIME] || 30) * 1000;
+
+      const progressInterval = setInterval(() => {
+        const loadingMsg = messages.value.find((msg) => msg.id === loadingMessageId);
+        if (loadingMsg) {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(95, (elapsed / expectedTime) * 100);
+          loadingMsg.loadingProgress = Math.round(progress);
+        }
+      }, 100);
 
       try {
         const res = await generateText({
@@ -178,6 +192,7 @@ export const useChatStore = defineStore(
         }
         console.error(error);
       } finally {
+        clearInterval(progressInterval);
         pendingMessages.delete(loadingMessageId);
         activeRequests.delete(loadingMessageId);
         refMsg.value = '';
