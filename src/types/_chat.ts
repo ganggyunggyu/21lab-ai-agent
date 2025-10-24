@@ -6,6 +6,7 @@ export interface Message {
   id?: string;
   ref?: string;
   service?: string;
+  loadingProgress?: number;
 }
 
 export type ChatService = 'gpt-5-v2' | 'test' | 'restaurant' | 'grok';
