@@ -58,9 +58,7 @@ const handleCopyKeyword = async (e: Event) => {
   e.stopPropagation();
   try {
     await copyText(props.item.keyword);
-    console.log('키워드가 복사되었습니다:', props.item.keyword);
   } catch (error) {
-    console.error('키워드 복사 실패:', error);
   }
 };
 
@@ -69,12 +67,8 @@ const handleCopyBotContent = async (e: Event) => {
   try {
     if (props.item.botContent) {
       await copyText(props.item.botContent);
-      console.log('결과원고가 복사되었습니다');
-    } else {
-      console.warn('복사할 결과원고가 없습니다');
     }
   } catch (error) {
-    console.error('결과원고 복사 실패:', error);
   }
 };
 

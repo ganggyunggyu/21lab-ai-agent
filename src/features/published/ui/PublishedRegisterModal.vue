@@ -96,10 +96,7 @@ const handleRegister = async () => {
 
     emit('registered', favoriteSearch);
     handleClose();
-
-    console.log('발행원고로 등록되었습니다:', favoriteSearch);
   } catch (error) {
-    console.error('발행원고 등록 실패:', error);
   } finally {
     isLoading.value = false;
   }

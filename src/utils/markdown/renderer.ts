@@ -37,7 +37,6 @@ export const validateMarkdown = (content: string): boolean => {
     renderMarkdown(content);
     return true;
   } catch (error) {
-    console.error('Markdown validation failed:', error);
     return false;
   }
 };

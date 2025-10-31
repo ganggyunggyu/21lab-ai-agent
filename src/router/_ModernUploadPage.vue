@@ -462,7 +462,6 @@ const handleUpload = async () => {
       );
     }
   } catch (error: any) {
-    console.error('Upload error:', error);
     message.error(`업로드 오류: ${error.message || error}`);
   } finally {
     isUploading.value = false;

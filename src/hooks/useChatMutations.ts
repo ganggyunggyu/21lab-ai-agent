@@ -17,10 +17,6 @@ export const useChatGeneration = () => {
       return { ...response, messageId };
     },
     onError: (error, variables) => {
-      console.error(
-        `Message generation failed for ${variables.messageId}:`,
-        error
-      );
     },
   });
 };

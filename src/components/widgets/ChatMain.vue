@@ -82,7 +82,6 @@ const handleCloseRegisterModal = () => {
 };
 
 const handleRegistered = (item: FavoriteSearch) => {
-  console.log('발행원고가 등록되었습니다:', item);
   // 등록 완료 후 상세 모달 열기 (선택사항)
   openDetailModal(item);
 };

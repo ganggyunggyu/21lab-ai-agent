@@ -157,26 +157,20 @@ const handleUserMessageClick = (userMsg: any) => {
 };
 
 const handleUserMessageChipClick = (userMsg: any) => {
-  console.log('🎯 Chip clicked:', userMsg);
   if (!userMsg?.id) {
-    console.warn('⚠️ No ID for userMsg:', userMsg);
     return;
   }
 
   if (isSelectionMode.value) {
-    console.log('📌 Selection mode active, toggling:', userMsg.id);
     toggleMessageSelection(userMsg.id);
     return;
   }
 
-  console.log('📄 Normal mode, opening modal');
   handleUserMessageClick(userMsg);
 };
 
 const handleChipCheckboxToggle = (messageId: string) => {
-  console.log('🔧 Toggle checkbox for:', messageId);
   toggleMessageSelection(messageId);
-  console.log('✅ After toggle, selectedIds:', selectedMessageIds.value);
 };
 
 const isChipSelected = (messageId: string) => {
@@ -243,8 +237,6 @@ const handleCopyRefFromModal = () => {
   const cleanedRef = cleanText(selectedUserMessage.value.ref);
   navigator.clipboard.writeText(cleanedRef);
   showActionModal.value = false;
-
-  console.log('참조원고가 클립보드에 복사되었습니다.');
 };
 
 const handleCopyKeywordFromModal = () => {
@@ -252,8 +244,6 @@ const handleCopyKeywordFromModal = () => {
 
   navigator.clipboard.writeText(selectedUserMessage.value.keyword);
   showActionModal.value = false;
-
-  console.log('키워드가 클립보드에 복사되었습니다.');
 };
 
 const getBotResponsesForUserMessage = (userMsg: any) => {
@@ -286,15 +276,12 @@ const handleCopyResultFromModal = () => {
 
   const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
   if (botResponses.length === 0) {
-    console.log('해당 메시지에 대한 응답을 찾을 수 없습니다.');
     return;
   }
 
   const fullResult = botResponses.map((msg) => msg.content).join('\n\n---\n\n');
   navigator.clipboard.writeText(fullResult);
   showActionModal.value = false;
-
-  console.log('원고 결과물이 클립보드에 복사되었습니다.');
 };
 
 const convertToThreeLineSample = (text: string): string => {
@@ -308,8 +295,6 @@ const convertToThreeLineSample = (text: string): string => {
 const handleAddPublishedFromModal = () => {
   if (!selectedUserMessage.value) return;
 
-  console.log('Debug - selectedUserMessage:', selectedUserMessage.value);
-
   const title = prompt(
     '발행원고 제목을 입력하세요:',
     `[발행] ${selectedUserMessage.value.keyword}`
@@ -319,13 +304,9 @@ const handleAddPublishedFromModal = () => {
   const memo = prompt('메모를 입력하세요 (수정 내역, 발행 일정 등):', '');
 
   const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
-  console.log('Debug - botResponses:', botResponses);
 
   const fullResult = botResponses.map((m) => m.content).join('\n\n---\n\n');
   const resultSample = convertToThreeLineSample(fullResult);
-
-  console.log('Debug - fullResult:', fullResult);
-  console.log('Debug - resultSample:', resultSample);
 
   const firstBotResponse = botResponses[0];
 
@@ -343,7 +324,6 @@ const handleAddPublishedFromModal = () => {
   );
   loadFavoriteSearches();
   showActionModal.value = false;
-  console.log('발행원고로 등록되었습니다.');
 };
 
 const handleGenerateWithKeyword = () => {

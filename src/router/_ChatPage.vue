@@ -97,7 +97,6 @@ const handleGenerate = async () => {
       }`,
       keyword: input,
     };
-    console.error(error);
   } finally {
     isLoading.value = false;
   }
@@ -114,7 +113,6 @@ const handleCategoryClick = async () => {
     category.value = res;
     message.info(categoryInfo(category.value));
   } catch (error) {
-    console.error(error);
   } finally {
     isCategoryLoading.value = false;
   }

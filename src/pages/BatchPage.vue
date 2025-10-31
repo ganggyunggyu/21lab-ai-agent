@@ -107,7 +107,6 @@ const handleFileChange = (event: Event) => {
         if (target) target.value = '';
       } catch (error) {
         message.error('파일 파싱 중 오류가 발생했습니다');
-        console.error(error);
       }
     },
     error: (error: Error) => {

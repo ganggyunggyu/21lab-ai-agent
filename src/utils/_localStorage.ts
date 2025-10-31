@@ -19,7 +19,6 @@ export const setStoredValue = <T>(key: string, value: T): void => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error('localStorage 저장 실패:', error);
   }
 };
 
@@ -27,7 +26,6 @@ export const removeStoredValue = (key: string): void => {
   try {
     localStorage.removeItem(key);
   } catch (error) {
-    console.error('localStorage 삭제 실패:', error);
   }
 };
 

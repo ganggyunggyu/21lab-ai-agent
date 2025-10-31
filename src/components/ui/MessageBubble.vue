@@ -60,7 +60,6 @@ const getServiceLabel = (service?: string) => {
 };
 
 const handleUserMessageClick = (userMsg: any) => {
-  console.log(userMsg);
   openActionModal(userMsg);
 };
 

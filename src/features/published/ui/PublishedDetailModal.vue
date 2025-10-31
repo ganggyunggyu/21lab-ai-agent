@@ -76,23 +76,17 @@ const handleToggleActive = (item: any) => {
 // 개선된 복사 핸들러들
 const handleCopyKeywordWithMessage = (item: any) => {
   navigator.clipboard.writeText(item.keyword);
-  // TODO: 토스트 메시지로 변경 필요
-  console.log(`"${item.keyword}" 키워드가 클립보드에 복사되었습니다.`);
 };
 
 const handleCopyRefWithMessage = (item: any) => {
   if (item.refMsg) {
     navigator.clipboard.writeText(item.refMsg);
-    // TODO: 토스트 메시지로 변경 필요
-    console.log(`"${item.keyword}"의 참조원고가 클립보드에 복사되었습니다.`);
   }
 };
 
 const handleCopyResultWithMessage = (item: any) => {
   if (item.botContent) {
     navigator.clipboard.writeText(item.botContent);
-    // TODO: 토스트 메시지로 변경 필요
-    console.log(`"${item.keyword}"의 결과원고가 클립보드에 복사되었습니다.`);
   }
 };
 </script>

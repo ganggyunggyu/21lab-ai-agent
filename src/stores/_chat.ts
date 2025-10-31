@@ -190,7 +190,6 @@ export const useChatStore = defineStore(
             timestamp: Date.now(),
           };
         }
-        console.error(error);
       } finally {
         clearInterval(progressInterval);
         pendingMessages.delete(loadingMessageId);
@@ -486,12 +485,7 @@ export const useChatStore = defineStore(
     persist: {
       key: 'chat-store',
       storage: localStorage,
-      beforeRestore: (context) => {
-        console.log('🔍 Before restore:', context);
-      },
       afterRestore: (context) => {
-        console.log('🔍 After restore - before fix:', context.store.selectedMessageIds);
-
         // selectedMessageIds가 배열이면 Set으로 변환
         if (Array.isArray(context.store.selectedMessageIds)) {
           context.store.selectedMessageIds = new Set(context.store.selectedMessageIds);
@@ -501,8 +495,6 @@ export const useChatStore = defineStore(
         if (!context.store.selectedMessageIds) {
           context.store.selectedMessageIds = new Set();
         }
-
-        console.log('🔍 After restore - after fix:', context.store.selectedMessageIds);
       },
       serializer: {
         serialize: (state) => {
@@ -513,12 +505,10 @@ export const useChatStore = defineStore(
               ? Array.from(state.selectedMessageIds)
               : state.selectedMessageIds
           };
-          console.log('💾 Serializing:', serialized.selectedMessageIds);
           return JSON.stringify(serialized);
         },
         deserialize: (value) => {
           const parsed = JSON.parse(value);
-          console.log('📦 Deserializing:', parsed.selectedMessageIds);
 
           // 배열을 다시 Set으로 변환
           if (Array.isArray(parsed.selectedMessageIds)) {

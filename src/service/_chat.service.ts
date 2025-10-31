@@ -25,7 +25,6 @@ export const generateText = async (params: GenerationRequest) => {
         'API 요청 할당량을 초과했습니다. 잠시 후 다시 시도해주세요.'
       );
     }
-    console.error(error);
     throw error;
   }
 };
@@ -36,8 +35,6 @@ export const getCategory = async (params: GetCategoryReq) => {
 
     return response.data;
   } catch (error) {
-    console.error(error);
-
     throw error;
   }
 };
