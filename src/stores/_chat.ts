@@ -104,7 +104,7 @@ export const useChatStore = defineStore(
       activeRequests.set(loadingMessageId, abortController);
 
       const startTime = Date.now();
-      const expectedTime = (EXPECTED_RESPONSE_TIME[service.value as keyof typeof EXPECTED_RESPONSE_TIME] || 30) * 1000;
+      const expectedTime = (EXPECTED_RESPONSE_TIME[service.value] || 30) * 1000;
 
       const progressInterval = setInterval(() => {
         const loadingMsg = messages.value.find((msg) => msg.id === loadingMessageId);

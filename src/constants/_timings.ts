@@ -1,9 +1,10 @@
+import type { ChatService } from '@/types/_chat';
+
 export const AUTO_SCROLL_DELAY = 300;
 
-// 서비스별 예상 응답 시간 (초)
-export const EXPECTED_RESPONSE_TIME = {
-  grok: 20,
-  restaurant: 20,
-  test: 60,
-  'gpt-5-v2': 60,
-} as const;
+export const EXPECTED_RESPONSE_TIME: Record<ChatService, number> = {
+  'gpt-5-v2': 90,
+  test: 45,
+  restaurant: 70,
+  grok: 25,
+};
