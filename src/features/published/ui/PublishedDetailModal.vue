@@ -193,7 +193,7 @@ const handleCopyResultWithMessage = (item: any) => {
           class="memo-edit"
         >
           <ModernInput
-            v-model:value="editing.tempMemo"
+            v-model="editing.tempMemo"
             type="textarea"
             placeholder="수정 내역, 발행 일정 등을 기록해주세요 (Shift+Enter로 저장)"
             :autosize="{ minRows: 2, maxRows: 4 }"
@@ -242,7 +242,7 @@ const handleCopyResultWithMessage = (item: any) => {
           class="memo-edit"
         >
           <ModernInput
-            v-model:value="editing.tempBlogId"
+            v-model="editing.tempBlogId"
             placeholder="블로그 ID를 입력하세요 (Shift+Enter로 저장)"
             @keydown="handleBlogIdKeydown($event, detailModal.selectedItem!)"
             aria-label="블로그 ID 입력"

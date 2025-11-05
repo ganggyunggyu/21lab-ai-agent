@@ -367,7 +367,7 @@ watch(refMsg, (newVal) => {
             >
               <div class="input-surface" role="group" aria-label="참조 원고 입력">
                 <ModernInput
-                  v-model:value="refMsg"
+                  v-model="refMsg"
                   type="textarea"
                   :rows="1"
                   :autosize="{ minRows: 1, maxRows: 4 }"
@@ -388,7 +388,7 @@ watch(refMsg, (newVal) => {
             aria-label="키워드 입력 및 액션"
           >
             <ModernInput
-              v-model:value="keyword"
+              v-model="keyword"
               type="text"
               :rows="1"
               :autosize="{ minRows: 1, maxRows: 4 }"

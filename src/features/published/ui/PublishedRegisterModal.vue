@@ -138,7 +138,7 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
       >
         <n-form-item label="제목" required>
           <ModernInput
-            v-model:value="formData.title"
+            v-model="formData.title"
             placeholder="발행원고 제목을 입력해주세요"
             @keydown="handleCtrlEnterPress"
           />
@@ -146,7 +146,7 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
 
         <n-form-item label="블로그 ID">
           <ModernInput
-            v-model:value="formData.blogId"
+            v-model="formData.blogId"
             placeholder="블로그 포스트 ID를 입력해주세요 (선택사항)"
             @keydown="handleCtrlEnterPress"
           />
@@ -157,7 +157,7 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
 
         <n-form-item label="메모">
           <ModernInput
-            v-model:value="formData.memo"
+            v-model="formData.memo"
             type="textarea"
             placeholder="메모를 입력해주세요 (선택사항)"
             :autosize="{ minRows: 2, maxRows: 4 }"
