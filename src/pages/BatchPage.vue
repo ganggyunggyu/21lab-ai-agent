@@ -158,9 +158,7 @@ const handleGenerate = async () => {
           <template #icon>
             <NIcon :component="BackIcon" />
           </template>
-          돌아가기
         </NButton>
-        <h1 class="page-title">배치 원고 생성</h1>
         <NSelect
           v-model:value="service"
           :options="MODEL_OPTIONS"
@@ -206,8 +204,6 @@ const handleGenerate = async () => {
           </template>
           원고 추가 ({{ batchRequests.length }}/20)
         </NButton>
-
-        <span class="request-count">{{ validRequests.length }}개 대기</span>
 
         <NButton
           type="primary"
@@ -415,41 +411,84 @@ const handleGenerate = async () => {
 }
 
 .back-btn {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
   color: #64748b;
   transition: all 0.2s;
+  min-height: 40px;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
 }
 
 .back-btn:hover {
   color: #6366f1;
-}
-
-.page-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #1e293b;
+  background: rgba(99, 102, 241, 0.1);
 }
 
 .service-selector {
   width: 150px;
 }
 
+.service-selector :deep(.n-base-selection) {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+  min-height: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.service-selector :deep(.n-base-selection:hover) {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 0.95));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.service-selector :deep(.n-base-selection-label) {
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.service-selector :deep(.n-base-selection-input) {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.service-selector :deep(.n-base-selection-input__content) {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.service-selector :deep(.n-base-suffix) {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-.request-count {
-  font-size: 14px;
-  font-weight: 600;
-  color: #6366f1;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
-  border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+.header-right :deep(.n-button) {
+  min-height: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 .upload-btn-header {
