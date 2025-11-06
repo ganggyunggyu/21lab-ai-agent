@@ -12,9 +12,9 @@ import {
   Copy as CopyIcon,
   Document as DocumentIcon,
 } from '@vicons/ionicons5';
-import { ModernCard, ModernButton } from '@/components/ui';
+import { Card, Button } from '@/components/ui';
 import { usePublishedList, usePublishedModal } from '@/features';
-import { copyText } from '@/utils';
+import { copyText, extractKeywordDisplay } from '@/utils';
 import { MODEL_OPTIONS } from '@/constants';
 import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities';
 
@@ -97,7 +97,7 @@ const getServiceColor = (service?: string) => {
 </script>
 
 <template>
-  <ModernCard
+  <Card
     variant="glass"
     :class="[
       'published-item-card',
@@ -117,7 +117,7 @@ const getServiceColor = (service?: string) => {
           </span>
         </div>
         <div class="item-actions">
-          <ModernButton
+          <Button
             v-if="item.botContent"
             variant="ghost"
             size="sm"
@@ -127,7 +127,7 @@ const getServiceColor = (service?: string) => {
             title="결과원고 복사"
             class="action-btn copy-content-button"
           />
-          <ModernButton
+          <Button
             variant="ghost"
             size="sm"
             icon-only
@@ -140,7 +140,7 @@ const getServiceColor = (service?: string) => {
               item.isActive !== false ? 'active-button' : 'inactive-button',
             ]"
           />
-          <ModernButton
+          <Button
             variant="ghost"
             size="sm"
             icon-only
@@ -155,8 +155,8 @@ const getServiceColor = (service?: string) => {
       <div class="item-content compact">
         <div class="keyword-line">
           <div class="keyword-section">
-            <span class="keyword">{{ item.keyword }}</span>
-            <ModernButton
+            <span class="keyword">{{ extractKeywordDisplay(item.keyword) }}</span>
+            <Button
               variant="ghost"
               size="sm"
               icon-only
@@ -218,7 +218,7 @@ const getServiceColor = (service?: string) => {
         </div>
       </div>
     </div>
-  </ModernCard>
+  </Card>
 </template>
 
 <style scoped>
@@ -380,6 +380,11 @@ const getServiceColor = (service?: string) => {
   flex: 1;
   min-width: 0;
   word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .copy-keyword-btn {
