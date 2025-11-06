@@ -3,6 +3,7 @@ import { useLayoutManager } from '@/hooks/useLayoutManager';
 import ChatFooter from '@/components/widgets/ChatFooter.vue';
 import ChatMain from '@/components/widgets/ChatMain.vue';
 import ChatHeader from '@/components/widgets/ChatHeader.vue';
+import DocumentPanel from '@/components/widgets/DocumentPanel.vue';
 
 const { appRef } = useLayoutManager();
 </script>
@@ -11,7 +12,10 @@ const { appRef } = useLayoutManager();
   <div class="app-container" ref="appRef" role="application" aria-label="AI 채팅 애플리케이션">
     <ChatHeader />
 
-    <ChatMain />
+    <div class="main-wrapper">
+      <ChatMain />
+      <DocumentPanel />
+    </div>
 
     <ChatFooter />
   </div>
@@ -43,5 +47,12 @@ const { appRef } = useLayoutManager();
   flex-direction: column;
   position: relative;
   overflow: hidden;
+}
+
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
 }
 </style>
