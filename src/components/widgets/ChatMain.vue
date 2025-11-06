@@ -6,7 +6,7 @@ import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import {
   MessageBubble,
   MessageDetailModal,
-  ModernButton,
+  Button,
 } from '@/components/ui';
 import {
   PublishedDetailModal,
@@ -40,7 +40,7 @@ const {
   exportSelectedMessages,
 } = chatStore;
 
-const { copyMsg, handleDownloadClick, downloadZipFiles } = useChatActions();
+const { copyMsg, handleDownloadClick, downloadMultipleFiles } = useChatActions();
 
 const publishedStore = usePublishedStore();
 const { openDetailModal, closeDetailModal } = publishedStore;
@@ -166,17 +166,26 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <main class="chat-main" role="main" aria-label="채팅 대화">
-    <section class="chat-container">
-      <section class="messages-container" aria-label="메시지 목록">
+  <main
+    class="flex-1 px-4 overflow-hidden flex flex-col pt-[calc(var(--spacing-header)+var(--spacing-main-top))]"
+    role="main"
+    aria-label="채팅 대화"
+  >
+    <section
+      class="w-screen max-w-[90vw] md:w-screen md:max-w-screen mx-auto flex-1 flex flex-col overflow-hidden"
+    >
+      <section
+        class="flex-1 flex flex-col overflow-hidden relative"
+        aria-label="메시지 목록"
+      >
         <n-scrollbar
           ref="scrollbarRef"
-          class="messages-scroll"
+          class="flex-1 h-full"
           role="log"
           aria-live="polite"
           aria-label="채팅 메시지들"
         >
-          <ul class="messages-list" role="list">
+          <ul class="py-4 pb-[200px] flex flex-col gap-4" role="list">
             <li
               v-for="(msg, idx) in displayMessages"
               :key="`${idx}-${msg.timestamp}`"
@@ -194,18 +203,21 @@ onMounted(async () => {
                 @show-work-modal="handleShowWorkModal"
               />
             </li>
-            <div ref="scrollAnchorRef" class="scroll-anchor"></div>
+            <div ref="scrollAnchorRef" class="h-px w-px"></div>
           </ul>
         </n-scrollbar>
 
-        <aside class="scroll-to-bottom" aria-label="스크롤 컨트롤">
-          <ModernButton
+        <aside
+          class="fixed bottom-[150px] left-1/2 -translate-x-1/2 z-[100]"
+          aria-label="스크롤 컨트롤"
+        >
+          <Button
             variant="secondary"
             size="lg"
             icon-only
             :icon="ChevronDownIcon"
             @click="handleScrollToBottom"
-            class="scroll-btn"
+            class="!w-12 !h-12 rounded-full! !shadow-[0_4px_16px_rgba(0,0,0,0.12),0_8px_32px_rgba(59,130,246,0.2)] backdrop-blur-[10px] !transition-all !duration-300 !ease-[cubic-bezier(0.23,1,0.32,1)] hover:!-translate-y-0.5 hover:!scale-105 hover:!shadow-[0_8px_32px_rgba(0,0,0,0.16),0_12px_48px_rgba(59,130,246,0.3)] active:!translate-y-0 active:!scale-95"
             title="맨 아래로 스크롤"
             aria-label="채팅 맨 아래로 이동"
           />
@@ -219,7 +231,6 @@ onMounted(async () => {
       @close="handleCloseDetailModal"
     />
 
-    <!-- 발행원고 등록 모달 -->
     <PublishedRegisterModal
       :show="showRegisterModal"
       :message="messageToRegister"
@@ -227,81 +238,6 @@ onMounted(async () => {
       @registered="handleRegistered"
     />
 
-    <!-- Published Detail Modal을 사용하여 작업선택 기능 제공 -->
     <PublishedDetailModal />
   </main>
 </template>
-<style scoped>
-.chat-main {
-  flex: 1;
-  padding: calc(var(--header-h, 80px) + var(--main-top-pad, 16px))
-    var(--page-pad-x, 16px) 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.chat-container {
-  width: 100vw;
-  max-width: 90vw;
-  margin: 0 auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-
-  /* 작은 화면에서 100vw */
-  @media (max-width: 768px) {
-    width: 100vw;
-    max-width: 100vw;
-  }
-}
-.messages-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-}
-.messages-scroll {
-  flex: 1;
-  height: 100%;
-}
-.messages-list {
-  padding: 16px 0 200px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ===== SCROLL TO BOTTOM BUTTON ===== */
-.scroll-to-bottom {
-  position: fixed;
-  bottom: 150px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-}
-.scroll-btn {
-  width: 48px !important;
-  height: 48px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(59, 130, 246, 0.2) !important;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
-}
-.scroll-btn:hover {
-  transform: translateY(-2px) scale(1.05) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16),
-    0 12px 48px rgba(59, 130, 246, 0.3) !important;
-}
-.scroll-btn:active {
-  transform: translateY(0) scale(0.95) !important;
-}
-
-/* 선택 툴바 제거 - 이제 헤더에 통합됨 */
-
-.scroll-anchor {
-  height: 1px;
-  width: 1px;
-}
-</style>

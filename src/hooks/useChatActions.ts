@@ -1,17 +1,19 @@
 import { createDiscreteApi } from 'naive-ui';
 import { copyToClipboard } from '../utils/_clipboard';
 import { downloadText } from '../utils/_downloadText';
-import { downloadZip, type ZipFileItem } from '../utils/_downloadZip';
 import { sanitizeFileName } from '../utils/_sanitizeFileName';
 import {
   MSG_COPY_SUCCESS,
   MSG_COPY_FAIL,
   MSG_DOWNLOAD_SUCCESS,
   MSG_DOWNLOAD_FAIL,
-  MSG_ZIP_DOWNLOAD_FAIL,
-  MSG_ZIP_DOWNLOAD_SUCCESS,
 } from '../constants/_texts';
 import type { Message } from '../types/_chat';
+
+export interface MultipleFileItem {
+  fileName: string;
+  content: string;
+}
 
 export const useChatActions = () => {
   const { message } = createDiscreteApi(['message']);
@@ -60,14 +62,17 @@ export const useChatActions = () => {
     }
   };
 
-  const downloadZipFiles = async (files: ZipFileItem[], zipName: string) => {
+  const downloadMultipleFiles = (files: MultipleFileItem[]) => {
     if (files.length === 0) return;
 
     try {
-      await downloadZip({ files, zipName });
-      message.success(MSG_ZIP_DOWNLOAD_SUCCESS);
+      files.forEach(({ fileName, content }) => {
+        const safeFileName = sanitizeFileName(fileName);
+        downloadText({ fileName: safeFileName, content });
+      });
+      message.success(`${files.length}개 파일이 다운로드되었습니다`);
     } catch {
-      message.error(MSG_ZIP_DOWNLOAD_FAIL);
+      message.error('파일 다운로드에 실패했습니다');
     }
   };
 
@@ -75,6 +80,6 @@ export const useChatActions = () => {
     copyMsg,
     handleDownloadClick,
     downloadChatHistory,
-    downloadZipFiles,
+    downloadMultipleFiles,
   };
 };
