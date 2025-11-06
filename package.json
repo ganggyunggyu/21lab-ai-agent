@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.16",
     "@tanstack/vue-query": "^5.85.5",
     "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.11.0",
+    "clsx": "^2.1.1",
     "es-toolkit": "^1.39.8",
     "fs": "^0.0.1-security",
     "jszip": "^3.10.1",
@@ -21,6 +23,8 @@
     "papaparse": "^5.5.3",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.16",
     "vue": "^3.5.17",
     "vue-router": "4"
   },
