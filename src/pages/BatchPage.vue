@@ -13,7 +13,7 @@ import {
 } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores';
-import { ModernInput } from '@/components/ui';
+import { Input } from '@/components/ui';
 import * as Papa from 'papaparse';
 import { getBatchHistory, removeBatchHistory, type BatchHistoryItem } from '@/utils/_localStorage';
 import { MODEL_OPTIONS } from '@/constants/_models';
@@ -252,7 +252,7 @@ const handleGenerate = async () => {
                   <span class="row-number">{{ idx + 1 }}</span>
                 </td>
                 <td class="col-keyword">
-                  <ModernInput
+                  <Input
                     :modelValue="req.keyword"
                     @update:modelValue="(val: string) => updateBatchRequest(idx as number, { keyword: val })"
                     placeholder="키워드를 입력하세요..."
@@ -261,7 +261,7 @@ const handleGenerate = async () => {
                   />
                 </td>
                 <td class="col-ref">
-                  <ModernInput
+                  <Input
                     :modelValue="req.refMsg || ''"
                     @update:modelValue="(val: string) => updateBatchRequest(idx as number, { refMsg: val })"
                     placeholder="참조원고 (선택)"

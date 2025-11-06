@@ -27,7 +27,7 @@
       <div class="upload-container">
         <!-- Upload Zone -->
         <section class="upload-section">
-          <ModernCard
+          <Card
             :class="[
               'upload-zone',
               {
@@ -106,7 +106,7 @@
                   <h4 class="files-title">
                     선택된 파일 {{ fileList.length }}개
                   </h4>
-                  <ModernButton
+                  <Button
                     variant="ghost"
                     size="sm"
                     :icon="TrashIcon"
@@ -128,7 +128,7 @@
                         {{ formatFileSize(file.size) }}
                       </div>
                     </div>
-                    <ModernButton
+                    <Button
                       variant="ghost"
                       size="sm"
                       :icon="CloseIcon"
@@ -139,7 +139,7 @@
                 </div>
 
                 <div class="upload-actions">
-                  <ModernButton
+                  <Button
                     variant="primary"
                     size="lg"
                     :icon="SendIcon"
@@ -147,16 +147,16 @@
                     :disabled="fileList.length === 0"
                   >
                     {{ fileList.length }}개 파일 업로드
-                  </ModernButton>
+                  </Button>
                 </div>
               </div>
             </div>
-          </ModernCard>
+          </Card>
         </section>
 
         <!-- Results Section -->
         <section v-if="result" class="results-section">
-          <ModernCard variant="glass" class="results-card">
+          <Card variant="glass" class="results-card">
             <template #header>
               <div class="results-header">
                 <div class="results-title">
@@ -168,14 +168,14 @@
                     </p>
                   </div>
                 </div>
-                <ModernButton
+                <Button
                   variant="secondary"
                   size="sm"
                   :icon="DownloadIcon"
                   @click="downloadResults"
                 >
                   결과 다운로드
-                </ModernButton>
+                </Button>
               </div>
             </template>
 
@@ -217,7 +217,7 @@
                     </div>
 
                     <div v-if="item.ok" class="result-actions">
-                      <ModernButton
+                      <Button
                         variant="ghost"
                         size="sm"
                         :icon="EyeIcon"
@@ -243,14 +243,14 @@
                 </div>
               </div>
             </div>
-          </ModernCard>
+          </Card>
         </section>
       </div>
     </main>
 
     <!-- Full Text Modal -->
     <div v-if="showFullText" class="modal-overlay" @click="closeFullText">
-      <ModernCard class="full-text-modal" variant="solid" @click.stop>
+      <Card class="full-text-modal" variant="solid" @click.stop>
         <template #header>
           <div class="modal-header">
             <div class="modal-title">
@@ -260,7 +260,7 @@
                 <p class="modal-subtitle">{{ selectedItem?.length }} 글자</p>
               </div>
             </div>
-            <ModernButton
+            <Button
               variant="ghost"
               size="sm"
               :icon="CloseIcon"
@@ -276,19 +276,19 @@
 
         <template #footer>
           <div class="modal-footer">
-            <ModernButton
+            <Button
               variant="secondary"
               :icon="CopyIcon"
               @click="copyFullText"
             >
               복사
-            </ModernButton>
-            <ModernButton variant="primary" @click="closeFullText">
+            </Button>
+            <Button variant="primary" @click="closeFullText">
               닫기
-            </ModernButton>
+            </Button>
           </div>
         </template>
-      </ModernCard>
+      </Card>
     </div>
 
     <!-- Hidden File Input -->
@@ -320,8 +320,8 @@ import {
   type UploadTextItem,
 } from '../service/_upload.service';
 import { copyToClipboard } from '../utils/_clipboard';
-import ModernButton from '../components/ui/ModernButton.vue';
-import ModernCard from '../components/ui/ModernCard.vue';
+import Button from '../components/ui/Button.vue';
+import Card from '../components/ui/Card.vue';
 
 const { message } = createDiscreteApi(['message']);
 

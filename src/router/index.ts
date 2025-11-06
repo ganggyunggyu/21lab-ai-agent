@@ -4,6 +4,7 @@ import ModernUploadPage from './_ModernUploadPage.vue';
 import ChatPage from './_ChatPage.vue';
 import PublishedListPage from './_PublishedListPage.vue';
 import BatchPage from '../pages/BatchPage.vue';
+import ComponentsPage from '../pages/ComponentsPage.vue';
 
 const routes = [
   {
@@ -44,6 +45,14 @@ const routes = [
     component: BatchPage,
     meta: {
       title: '배치 원고 생성',
+    },
+  },
+  {
+    path: '/components',
+    name: 'Components',
+    component: ComponentsPage,
+    meta: {
+      title: '컴포넌트 쇼케이스',
     },
   },
 ];
