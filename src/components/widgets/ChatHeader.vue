@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, type Ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import {
-  NScrollbar,
   NSelect,
   NModal,
   NCard,
@@ -16,57 +15,33 @@ import {
 import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores';
 import { useChatActions } from '@/hooks/useChatActions';
-import { useScrollToBottom } from '@/hooks/useScrollToBottom';
 import { useLayoutManager } from '@/hooks/useLayoutManager';
 import { MODEL_OPTIONS } from '@/constants/_models';
-import { sanitizeFileName } from '@/utils/_sanitizeFileName';
+import { useThemeStore } from '@/stores/_theme';
 
-import { useAutoScroll } from '@/hooks/useAutoScroll';
 import ModernButton from '../ui/ModernButton.vue';
 import { ChatService } from '@/types';
 import {
   ChevronDown as MenuIcon,
-  Checkmark as SelectIcon,
-  Close as CancelIcon,
-  Download as DownloadIcon,
-  CheckmarkCircle as SelectAllIcon,
+  Sunny as LightIcon,
+  Moon as DarkIcon,
 } from '@vicons/ionicons5';
 
 const chatStore = useChatStore();
 
-const {
-  messages,
-  service,
-  isSelectionMode,
-  selectedMessageIds,
-  selectedMessagesCount,
-  selectableMessagesCount,
-  hasSelectedMessages,
-} = storeToRefs(chatStore);
+const { messages, service } = storeToRefs(chatStore);
 
-const {
-  updateService,
-  clearChat,
-  exportChat,
-  toggleSelectionMode,
-  selectAllMessages,
-  clearSelection,
-  exportSelectedMessages,
-} = chatStore;
+const { updateService, clearChat, exportChat } = chatStore;
 
-const { downloadChatHistory, downloadZipFiles } = useChatActions();
-
-const scrollbarRef: Ref<InstanceType<typeof NScrollbar> | null> = ref(null);
-const { scrollToLast } = useAutoScroll({
-  containerRef: scrollbarRef,
-  lastItemRef: ref(null),
-});
-
-const { hardScrollToBottom } = useScrollToBottom(scrollbarRef);
+const { downloadChatHistory } = useChatActions();
 
 const router = useRouter();
 
 const { headerRef } = useLayoutManager();
+
+const themeStore = useThemeStore();
+const { isDark } = storeToRefs(themeStore);
+const { toggleTheme } = themeStore;
 
 const showClearModal = ref(false);
 const naverSearchQuery = ref('');
@@ -104,10 +79,6 @@ const handlePrevChat = () => {
 
 const handleClearChat = () => {
   showClearModal.value = true;
-};
-
-const handlePublishedList = () => {
-  router.push('/published');
 };
 
 const handleBatchPage = () => {
@@ -167,53 +138,8 @@ const handleMenuSelect = (key: string) => {
   }
 };
 
-// 선택 모드 관련
-const totalSelectable = computed(() => selectableMessagesCount.value);
-const isAllSelected = computed(
-  () =>
-    totalSelectable.value > 0 &&
-    selectedMessageIds.value.size === totalSelectable.value
-);
-
-const handleToggleSelectAll = () => {
-  if (isAllSelected.value) {
-    clearSelection();
-  } else {
-    selectAllMessages();
-  }
-};
-
-const handleDownloadSelected = async () => {
-  if (!hasSelectedMessages.value) return;
-
-  const packages = exportSelectedMessages();
-  if (packages.length === 0) return;
-
-  const files = packages.map((pkg: any) => {
-    const resultBody = pkg.responses.length
-      ? pkg.responses.map((r: any) => r.content).join('\n\n---\n\n')
-      : '결과가 생성되지 않았습니다.';
-
-    const resultLength = resultBody.replace(/\s+/g, '').length;
-    const safeKeyword = sanitizeFileName(pkg.userMessage.keyword || 'message');
-    const fileName = `${safeKeyword}-${resultLength}.txt`;
-
-    return { fileName, content: resultBody };
-  });
-
-  const timestamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
-  await downloadZipFiles(files, `selected-results-${timestamp}`);
-
-  toggleSelectionMode();
-};
-
 watch(service, (newService) => {
   updateService(newService as ChatService);
-});
-
-onMounted(async () => {
-  scrollToLast();
-  hardScrollToBottom(false);
 });
 </script>
 
@@ -221,135 +147,79 @@ onMounted(async () => {
   <header class="floating-header" ref="headerRef">
     <section class="header-content">
       <nav class="header-navigation" aria-label="채팅 컨트롤">
-        <!-- 선택 모드일 때 -->
-        <div v-if="isSelectionMode" class="selection-toolbar-inline">
-          <div class="selection-info">
-            <span class="selection-count">{{ selectedMessagesCount }}개 선택</span>
-          </div>
+        <!-- 왼쪽: 검색 -->
+        <section class="naver-search-group" aria-label="네이버 검색">
+          <n-input
+            v-model:value="naverSearchQuery"
+            placeholder="검색어..."
+            size="small"
+            class="search-input"
+            @keydown="handleSearchKeydown"
+            @compositionstart="isComposing = true"
+            @compositionend="isComposing = false"
+            clearable
+          />
+          <ModernButton
+            variant="ghost"
+            size="sm"
+            @click="() => handleDirectNaverSearch()"
+            title="네이버 검색 실행 (Enter)"
+            class="naver-search-button compact-button"
+          >
+            검색
+          </ModernButton>
+        </section>
 
-          <div class="selection-actions">
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              :icon="SelectAllIcon"
-              @click="handleToggleSelectAll"
-              class="action-btn"
-              :disabled="totalSelectable === 0"
-            >
-              {{ isAllSelected ? '전체해제' : '전체선택' }}
-            </ModernButton>
+        <!-- 오른쪽 그룹: 액션 & 설정 -->
+        <div class="header-right-group">
+          <ModernButton
+            variant="ghost"
+            size="sm"
+            @click="handleBatchPage"
+            title="배치 원고 생성"
+            class="batch-button compact-button"
+          >
+            배치생성
+          </ModernButton>
 
-            <ModernButton
-              variant="primary"
-              size="sm"
-              :icon="DownloadIcon"
-              @click="handleDownloadSelected"
-              :disabled="!hasSelectedMessages"
-              class="action-btn download-btn"
-            >
-              다운로드
-            </ModernButton>
-
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              :icon="CancelIcon"
-              @click="toggleSelectionMode"
-              class="action-btn cancel-btn"
-            >
-              취소
-            </ModernButton>
-          </div>
-        </div>
-
-        <!-- 일반 모드 -->
-        <template v-else>
-          <!-- 왼쪽 그룹: 주요 액션 -->
-          <div class="header-left-group">
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              @click="handlePublishedList"
-              title="발행원고 목록 보기"
-              class="published-button compact-button"
-            >
-              발행원고
-            </ModernButton>
-
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              @click="handleBatchPage"
-              title="배치 원고 생성"
-              class="batch-button compact-button"
-            >
-              배치생성
-            </ModernButton>
-
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              :icon="SelectIcon"
-              @click="toggleSelectionMode"
-              class="compact-button select-mode-btn"
-              title="메시지 선택 모드"
-            >
-              메시지선택
-            </ModernButton>
-          </div>
-
-          <!-- 중앙: 검색 -->
-          <section class="naver-search-group" aria-label="네이버 검색">
-            <n-input
-              v-model:value="naverSearchQuery"
-              placeholder="검색어..."
+          <section class="model-selector" aria-label="AI 모델 선택">
+            <n-select
+              v-model:value="service"
+              :options="MODEL_OPTIONS"
               size="small"
-              class="search-input"
-              @keydown="handleSearchKeydown"
-              @compositionstart="isComposing = true"
-              @compositionend="isComposing = false"
-              clearable
+              :consistent-menu-width="false"
             />
-            <ModernButton
-              variant="ghost"
-              size="sm"
-              @click="() => handleDirectNaverSearch()"
-              title="네이버 검색 실행 (Enter)"
-              class="naver-search-button compact-button"
-            >
-              검색
-            </ModernButton>
           </section>
 
-          <!-- 오른쪽 그룹: 설정 -->
-          <div class="header-right-group">
-            <section class="model-selector" aria-label="AI 모델 선택">
-              <n-select
-                v-model:value="service"
-                :options="MODEL_OPTIONS"
-                size="small"
-                :consistent-menu-width="false"
-              />
-            </section>
+          <ModernButton
+            variant="ghost"
+            size="sm"
+            @click="toggleTheme"
+            :title="isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
+            class="compact-button theme-toggle-button"
+          >
+            <n-icon size="18">
+              <component :is="isDark ? LightIcon : DarkIcon" />
+            </n-icon>
+          </ModernButton>
 
-            <n-dropdown
-              trigger="click"
-              :options="menuOptions"
-              @select="handleMenuSelect"
+          <n-dropdown
+            trigger="click"
+            :options="menuOptions"
+            @select="handleMenuSelect"
+          >
+            <ModernButton
+              variant="ghost"
+              size="sm"
+              title="더보기 메뉴"
+              class="compact-button menu-button"
             >
-              <ModernButton
-                variant="ghost"
-                size="sm"
-                title="더보기 메뉴"
-                class="compact-button menu-button"
-              >
-                <n-icon size="16">
-                  <MenuIcon />
-                </n-icon>
-              </ModernButton>
-            </n-dropdown>
-          </div>
-        </template>
+              <n-icon size="16">
+                <MenuIcon />
+              </n-icon>
+            </ModernButton>
+          </n-dropdown>
+        </div>
       </nav>
     </section>
 
@@ -408,8 +278,7 @@ onMounted(async () => {
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08),
-    0 2px 0 rgba(255, 255, 255, 0.9) inset,
-    0 -2px 0 rgba(0, 0, 0, 0.03) inset;
+    0 2px 0 rgba(255, 255, 255, 0.9) inset, 0 -2px 0 rgba(0, 0, 0, 0.03) inset;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
   overflow: hidden;
@@ -490,24 +359,40 @@ onMounted(async () => {
 
 .published-button {
   color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.1),
+    rgba(16, 185, 129, 0.05)
+  );
   border-color: rgba(16, 185, 129, 0.2);
 }
 
 .published-button:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.15),
+    rgba(16, 185, 129, 0.08)
+  );
   border-color: rgba(16, 185, 129, 0.3);
   box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
 }
 
 .batch-button {
   color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.1),
+    rgba(245, 158, 11, 0.05)
+  );
   border-color: rgba(245, 158, 11, 0.2);
 }
 
 .batch-button:hover {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.15),
+    rgba(245, 158, 11, 0.08)
+  );
   border-color: rgba(245, 158, 11, 0.3);
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
 }
@@ -516,7 +401,11 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, rgba(6, 214, 160, 0.12), rgba(6, 214, 160, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(6, 214, 160, 0.12),
+    rgba(6, 214, 160, 0.08)
+  );
   border-radius: 14px;
   padding: 6px 12px;
   border: 1px solid rgba(6, 214, 160, 0.25);
@@ -526,7 +415,11 @@ onMounted(async () => {
 }
 
 .naver-search-group:hover {
-  background: linear-gradient(135deg, rgba(6, 214, 160, 0.18), rgba(6, 214, 160, 0.12));
+  background: linear-gradient(
+    135deg,
+    rgba(6, 214, 160, 0.18),
+    rgba(6, 214, 160, 0.12)
+  );
   border-color: rgba(6, 214, 160, 0.4);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(6, 214, 160, 0.2);
@@ -563,7 +456,11 @@ onMounted(async () => {
 }
 
 .model-selector :deep(.n-base-selection) {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(248, 250, 252, 0.9)
+  );
   border-radius: 12px;
   border: 1px solid rgba(99, 102, 241, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -572,7 +469,11 @@ onMounted(async () => {
 
 .model-selector :deep(.n-base-selection:hover) {
   border-color: rgba(99, 102, 241, 0.4);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 0.95));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1),
+    rgba(248, 250, 252, 0.95)
+  );
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
 }
@@ -621,7 +522,11 @@ onMounted(async () => {
   font-weight: 700;
   color: #6366f1;
   padding: 6px 14px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.15),
+    rgba(99, 102, 241, 0.1)
+  );
   border-radius: 10px;
   border: 1px solid rgba(99, 102, 241, 0.3);
 }
@@ -653,7 +558,11 @@ onMounted(async () => {
 }
 
 .cancel-btn:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.08)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.12),
+    rgba(239, 68, 68, 0.08)
+  ) !important;
   color: #ef4444 !important;
   border-color: rgba(239, 68, 68, 0.3) !important;
   transform: translateY(-2px) !important;
@@ -666,7 +575,11 @@ onMounted(async () => {
 }
 
 .select-mode-btn:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.1)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.15),
+    rgba(99, 102, 241, 0.1)
+  ) !important;
   color: #4f46e5 !important;
   border-color: rgba(99, 102, 241, 0.35) !important;
   transform: translateY(-2px) !important;
