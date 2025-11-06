@@ -186,7 +186,3 @@ const inputProps = computed(() => ({
     @compositionend="handleCompositionEnd"
   />
 </template>
-
-<style scoped>
-/* 추가적인 스타일링이 필요한 경우 */
-</style>
