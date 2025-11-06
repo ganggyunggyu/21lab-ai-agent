@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NButton, NSpace } from 'naive-ui';
-import { ModernInput } from '@/components/ui';
+import { Input } from '@/components/ui';
 import type { BatchRequest } from '@/types';
 import { Trash as TrashIcon } from '@vicons/ionicons5';
 
@@ -74,14 +74,14 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
         </header>
 
         <n-space vertical :size="12">
-          <ModernInput
+          <Input
             :value="req.keyword"
             @update:value="(val) => handleKeywordUpdate(idx, val)"
             placeholder="키워드를 입력해주세요"
             type="text"
           />
 
-          <ModernInput
+          <Input
             :value="req.refMsg || ''"
             @update:value="(val) => handleRefMsgUpdate(idx, val)"
             placeholder="참조원고 (선택)"
