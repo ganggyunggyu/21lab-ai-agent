@@ -1,6 +1,7 @@
 export interface Message {
   role: 'user' | 'bot';
   content: string;
+  title?: string;
   keyword?: string;
   timestamp?: number;
   id?: string;
