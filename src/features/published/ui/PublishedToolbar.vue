@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { NSelect, NSwitch } from 'naive-ui';
-import { ModernCard } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { usePublishedStore } from '@/features';
 
 // storeToRefs로 반응성 유지
@@ -16,7 +16,7 @@ const sortOptions = [
 
 <template>
   <div class="compact-toolbar">
-    <ModernCard variant="glass" class="compact-toolbar-card">
+    <Card variant="glass" class="compact-toolbar-card">
       <div class="compact-toolbar-content">
         <!-- 정렬 선택 -->
         <div class="toolbar-section">
@@ -49,7 +49,7 @@ const sortOptions = [
           </div>
         </div>
       </div>
-    </ModernCard>
+    </Card>
   </div>
 </template>
 

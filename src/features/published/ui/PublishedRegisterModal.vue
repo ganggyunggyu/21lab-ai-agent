@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { NModal, NForm, NFormItem, NButton, NSpace, NSwitch } from 'naive-ui';
 import { Save as SaveIcon, Close as CloseIcon } from '@vicons/ionicons5';
-import { ModernInput } from '@/components/ui';
+import { Input } from '@/components/ui';
 import type { FavoriteSearch } from '@/entities';
 import { PublishedApi } from '@/entities';
 
@@ -137,7 +137,7 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
         require-mark-placement="right-hanging"
       >
         <n-form-item label="제목" required>
-          <ModernInput
+          <Input
             v-model="formData.title"
             placeholder="발행원고 제목을 입력해주세요"
             @keydown="handleCtrlEnterPress"
@@ -145,7 +145,7 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
         </n-form-item>
 
         <n-form-item label="블로그 ID">
-          <ModernInput
+          <Input
             v-model="formData.blogId"
             placeholder="블로그 포스트 ID를 입력해주세요 (선택사항)"
             @keydown="handleCtrlEnterPress"
@@ -156,7 +156,7 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
         </n-form-item>
 
         <n-form-item label="메모">
-          <ModernInput
+          <Input
             v-model="formData.memo"
             type="textarea"
             placeholder="메모를 입력해주세요 (선택사항)"

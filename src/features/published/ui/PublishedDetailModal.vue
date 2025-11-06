@@ -5,7 +5,7 @@ import {
   Code as MarkdownIcon,
   CheckmarkCircle as CheckIcon,
 } from '@vicons/ionicons5';
-import { ModernInput } from '@/components/ui';
+import { Input } from '@/components/ui';
 import { usePublishedStore, usePublishedModal, usePublishedList } from '@/features';
 
 // 직접 store에서 reactive data 가져오기
@@ -190,7 +190,7 @@ const handleCopyResultWithMessage = (item: any) => {
           v-if="editing.memo === detailModal.selectedItem.id"
           class="memo-edit"
         >
-          <ModernInput
+          <Input
             v-model="editing.tempMemo"
             type="textarea"
             placeholder="수정 내역, 발행 일정 등을 기록해주세요 (Shift+Enter로 저장)"
@@ -239,7 +239,7 @@ const handleCopyResultWithMessage = (item: any) => {
           v-if="editing.blogId === detailModal.selectedItem.id"
           class="memo-edit"
         >
-          <ModernInput
+          <Input
             v-model="editing.tempBlogId"
             placeholder="블로그 ID를 입력하세요 (Shift+Enter로 저장)"
             @keydown="handleBlogIdKeydown($event, detailModal.selectedItem!)"

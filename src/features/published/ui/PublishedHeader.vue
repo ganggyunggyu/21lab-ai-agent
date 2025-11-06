@@ -8,7 +8,7 @@ import {
   RadioButtonOff as InactiveIcon,
   Apps as AllIcon,
 } from '@vicons/ionicons5';
-import { ModernButton } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { usePublishedStore } from '@/features';
 
 interface Props {
@@ -49,7 +49,7 @@ onMounted(() => {
   <div class="page-header">
     <div class="header-wrapper">
       <!-- 뒤로가기 버튼 -->
-      <ModernButton
+      <Button
         variant="ghost"
         size="sm"
         :icon="BackIcon"
@@ -70,7 +70,7 @@ onMounted(() => {
 
       <!-- 필터 버튼들 -->
       <div class="filter-section">
-        <ModernButton
+        <Button
           variant="ghost"
           size="sm"
           :icon="ActiveIcon"
@@ -78,8 +78,8 @@ onMounted(() => {
           :class="['filter-button', { active: activeFilter === 'active' }]"
         >
           활성화
-        </ModernButton>
-        <ModernButton
+        </Button>
+        <Button
           variant="ghost"
           size="sm"
           :icon="InactiveIcon"
@@ -87,8 +87,8 @@ onMounted(() => {
           :class="['filter-button', { active: activeFilter === 'inactive' }]"
         >
           비활성화
-        </ModernButton>
-        <ModernButton
+        </Button>
+        <Button
           variant="ghost"
           size="sm"
           :icon="AllIcon"
@@ -96,7 +96,7 @@ onMounted(() => {
           :class="['filter-button', { active: activeFilter === 'all' }]"
         >
           모두보기
-        </ModernButton>
+        </Button>
       </div>
     </div>
   </div>
