@@ -3,28 +3,30 @@ import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { NScrollbar } from 'naive-ui';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
-import MessageBubble from '@/components/ui/MessageBubble.vue';
-import MessageDetailModal from '@/components/ui/MessageDetailModal.vue';
-import ModernButton from '@/components/ui/ModernButton.vue';
-import PublishedDetailModal from '@/features/published/ui/PublishedDetailModal.vue';
-import PublishedRegisterModal from '@/features/published/ui/PublishedRegisterModal.vue';
-import { useChatStore } from '@/stores/_chat';
-import { useChatActions } from '@/hooks/useChatActions';
+import {
+  MessageBubble,
+  MessageDetailModal,
+  ModernButton,
+} from '@/components/ui';
+import {
+  PublishedDetailModal,
+  PublishedRegisterModal,
+  usePublishedStore,
+} from '@/features';
+import { useChatStore } from '@/stores';
+import { useChatActions } from '@/hooks';
 import { delay } from 'es-toolkit';
-import { AUTO_SCROLL_DELAY } from '@/constants/_timings';
-import type { Message, SelectedMessagePackage } from '@/types/_chat';
-import type { FavoriteSearch } from '@/entities/published';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
-import { sanitizeFileName } from '@/utils/_sanitizeFileName';
+import { AUTO_SCROLL_DELAY } from '@/constants';
+import type { Message, SelectedMessagePackage } from '@/types';
+import type { FavoriteSearch } from '@/entities';
+import { sanitizeFileName } from '@/utils';
 
 const chatStore = useChatStore();
 
 const {
   displayMessages,
   messages,
-  isSelectionMode,
   selectedMessageIds,
-  selectedMessagesCount,
   selectableMessagesCount,
   hasSelectedMessages,
 } = storeToRefs(chatStore);
@@ -73,7 +75,6 @@ const handleCloseRegisterModal = () => {
 };
 
 const handleRegistered = (item: FavoriteSearch) => {
-  // 등록 완료 후 상세 모달 열기 (선택사항)
   openDetailModal(item);
 };
 
@@ -85,71 +86,25 @@ const formatTimestampForFileName = (timestamp?: number): string => {
   )}-${pad(target.getHours())}${pad(target.getMinutes())}`;
 };
 
-const formatTimestampForContent = (timestamp?: number): string => {
-  if (!timestamp) return '기록되지 않음';
-  return new Date(timestamp).toLocaleString('ko-KR');
-};
-
 const composeResultContent = (
   pkg: SelectedMessagePackage
 ): { fileName: string; content: string } => {
   const { userMessage, responses } = pkg;
   const safeKeyword = sanitizeFileName(userMessage.keyword || 'message');
 
-  // 결과원고만 추출 (봇 응답만)
   const resultBody = responses.length
     ? responses.map((response) => response.content).join('\n\n---\n\n')
     : '결과가 생성되지 않았습니다.';
 
-  // 결과원고 길이 계산 (공백 제외)
   const resultLength = resultBody.replace(/\s+/g, '').length;
 
-  // 파일명: 키워드-결과원고길이.txt
   const fileName = `${safeKeyword}-${resultLength}.txt`;
 
-  // 내용: 결과원고만
   const content = resultBody;
 
   return { fileName, content };
 };
 
-const handleDownloadSelected = async () => {
-  if (!hasSelectedMessages.value) return;
-
-  const packages = exportSelectedMessages();
-  if (packages.length === 0) {
-    return;
-  }
-
-  const files = packages.map(composeResultContent);
-  const zipName = `selected-results-${formatTimestampForFileName()}`;
-
-  const nameCountMap = new Map<string, number>();
-  const uniqueFiles = files.map(({ fileName, content }) => {
-    // .txt 확장자 분리
-    const baseName = fileName.replace(/\.txt$/, '');
-    const extension = '.txt';
-
-    const currentCount = nameCountMap.get(baseName) ?? 0;
-    nameCountMap.set(baseName, currentCount + 1);
-
-    if (currentCount === 0) {
-      return { fileName, content };
-    }
-
-    // 중복된 경우 (2), (3) 등을 파일명에 추가
-    return {
-      fileName: `${baseName}(${currentCount + 1})${extension}`,
-      content,
-    };
-  });
-
-  await downloadZipFiles(uniqueFiles, zipName);
-
-  toggleSelectionMode();
-};
-
-// 전체 선택/해제 토글
 const totalSelectable = computed(() => selectableMessagesCount.value);
 const isAllSelected = computed(
   () =>
@@ -166,10 +121,30 @@ const handleToggleSelectAll = () => {
 };
 
 const handleScrollToBottom = () => {
-  scrollAnchorRef.value?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'end',
-  });
+  try {
+    const scrollbarEl = scrollbarRef.value?.$el as HTMLElement | undefined;
+    const contentEl = scrollbarEl?.querySelector(
+      '.n-scrollbar-container'
+    ) as HTMLElement | null;
+
+    if (contentEl && scrollAnchorRef.value) {
+      const anchorTop = scrollAnchorRef.value.offsetTop;
+      contentEl.scrollTo({
+        top: anchorTop + 150,
+        behavior: 'smooth',
+      });
+    } else {
+      scrollAnchorRef.value?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+    }
+  } catch (err) {
+    scrollAnchorRef.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'end',
+    });
+  }
 };
 
 watch(

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { NSelect, NSwitch } from 'naive-ui';
-import ModernCard from '@/components/ui/ModernCard.vue';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
+import { ModernCard } from '@/components/ui';
+import { usePublishedStore } from '@/features';
 
 // storeToRefs로 반응성 유지
 const publishedStore = usePublishedStore();

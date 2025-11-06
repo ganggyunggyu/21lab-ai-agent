@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useChatStore } from '@/stores/_chat';
-import { downloadText } from '@/utils/_downloadText';
-import { copyText } from '@/utils/_copyText';
-import type { Message } from '@/types/_chat';
+import { useChatStore } from '@/stores';
+import { downloadText, copyText } from '@/utils';
+import type { Message } from '@/types';
 import {
   CheckmarkOutline as CheckmarkIcon,
   CheckmarkCircleOutline as CheckmarkCircleIcon,
   Download as DownloadIcon,
   Close as CloseIcon,
-  ChevronForward as ChevronRightIcon,
-  Square as SquareIcon,
 } from '@vicons/ionicons5';
 import { NIcon } from 'naive-ui';
 
@@ -24,7 +21,6 @@ const {
   toggleSelectionMode,
   toggleMessageSelection,
   selectAllMessages,
-  clearSelection,
   exportSelectedMessages,
 } = chatStore;
 
@@ -32,7 +28,6 @@ const isOpen = ref(true);
 const selectedDocument = ref<Message | null>(null);
 const showActionOverlay = ref(false);
 
-// 생성 중인 메시지 (loading 또는 loadingProgress가 있는 것)
 const generatingMessages = computed(() => {
   return messages.value.filter(
     (msg) =>
@@ -41,27 +36,23 @@ const generatingMessages = computed(() => {
   );
 });
 
-// 완료된 메시지 (user 메시지 기준으로 필터링)
 const completedMessages = computed(() => {
-  // user 메시지들을 가져오고, 각 메시지에 대한 bot 응답이 있는지 확인
   return messages.value.filter((msg) => {
     if (msg.role !== 'user') return false;
     if (!msg.keyword) return false;
 
-    // 이 user 메시지 이후에 bot 응답이 있는지 확인
     const userIndex = messages.value.findIndex((m) => m.id === msg.id);
     if (userIndex === -1) return false;
 
-    // 다음 메시지가 bot이고 loading이 아닌지 확인
     for (let i = userIndex + 1; i < messages.value.length; i++) {
       const nextMsg = messages.value[i];
-      if (nextMsg.role === 'user') break; // 다음 user 메시지를 만나면 중단
+      if (nextMsg.role === 'user') break;
       if (
         nextMsg.role === 'bot' &&
         nextMsg.content !== 'loading' &&
         !nextMsg.loadingProgress
       ) {
-        return true; // 완료된 bot 응답이 있음
+        return true;
       }
     }
     return false;
@@ -153,17 +144,12 @@ const handleDownload = () => {
   const botResponses = getBotResponses(userMsg);
   if (botResponses.length === 0) return;
 
-  const timestamp = userMsg.timestamp || Date.now();
-  const date = new Date(timestamp);
-  const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}${String(date.getDate()).padStart(2, '0')}`;
-
   const keyword = userMsg.keyword || '원고';
   const sanitizedKeyword = keyword.slice(0, 30).replace(/[/\\?%*:|"<>]/g, '_');
   const content = botResponses.map((r) => r.content).join('\n\n---\n\n');
-  const fileName = `${sanitizedKeyword}_${dateStr}`;
+
+  const resultLength = content.replace(/\s+/g, '').length;
+  const fileName = `${sanitizedKeyword}-${resultLength}`;
 
   downloadText({ content, fileName });
   closeOverlay();
@@ -195,13 +181,11 @@ const handleCopyKeyword = async () => {
 const handleDelete = () => {
   if (!selectedDocument.value) return;
 
-  // user 메시지와 그 이후 bot 응답들을 모두 삭제
   const userIndex = messages.value.findIndex(
     (m) => m.id === selectedDocument.value?.id
   );
   if (userIndex === -1) return;
 
-  // 삭제할 메시지 인덱스들 수집 (역순으로 삭제해야 인덱스가 꼬이지 않음)
   const indicesToDelete: number[] = [userIndex];
   for (let i = userIndex + 1; i < messages.value.length; i++) {
     const msg = messages.value[i];
@@ -211,7 +195,6 @@ const handleDelete = () => {
     }
   }
 
-  // 역순으로 삭제
   indicesToDelete.reverse().forEach((idx) => {
     deleteMessage(idx);
   });
@@ -361,7 +344,12 @@ const getMessageTitle = (msg: Message) => {
               class="checkbox"
               :class="{ checked: isMessageSelected(msg.id) }"
             >
-              <n-icon v-if="isMessageSelected(msg.id)" :component="CheckmarkIcon" :size="14" color="white" />
+              <n-icon
+                v-if="isMessageSelected(msg.id)"
+                :component="CheckmarkIcon"
+                :size="14"
+                color="white"
+              />
             </div>
             <div class="document-title">{{ getMessageTitle(msg) }}</div>
           </div>

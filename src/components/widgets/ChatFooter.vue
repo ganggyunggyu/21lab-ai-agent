@@ -12,10 +12,8 @@ import {
   Send as SendIcon,
   StarOutline as StarOutlineIcon,
 } from '@vicons/ionicons5';
-import ModernButton from '@/components/ui/ModernButton.vue';
-import ModernCard from '@/components/ui/ModernCard.vue';
-import ModernInput from '@/components/ui/ModernInput.vue';
-import { useChatStore } from '@/stores/_chat';
+import { ModernButton, ModernCard, ModernInput } from '@/components/ui';
+import { useChatStore } from '@/stores';
 import { computed, watch, ref, onMounted } from 'vue';
 import {
   getFrequentKeywords,
@@ -28,7 +26,7 @@ import {
   getSearchHistory,
   addSearchHistory,
   type SearchHistory,
-} from '@/utils/_localStorage';
+} from '@/utils';
 
 const chatStore = useChatStore();
 

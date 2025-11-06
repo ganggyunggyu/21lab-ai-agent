@@ -12,13 +12,11 @@ import {
   Copy as CopyIcon,
   Document as DocumentIcon,
 } from '@vicons/ionicons5';
-import ModernCard from '@/components/ui/ModernCard.vue';
-import ModernButton from '@/components/ui/ModernButton.vue';
-import { usePublishedList } from '@/features/published/hooks/usePublishedList';
-import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
-import { copyText } from '@/utils/_copyText';
-import { MODEL_OPTIONS } from '@/constants/_models';
-import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities/published';
+import { ModernCard, ModernButton } from '@/components/ui';
+import { usePublishedList, usePublishedModal } from '@/features';
+import { copyText } from '@/utils';
+import { MODEL_OPTIONS } from '@/constants';
+import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities';
 
 interface Props {
   item: FavoriteSearch;

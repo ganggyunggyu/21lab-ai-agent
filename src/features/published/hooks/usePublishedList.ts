@@ -1,9 +1,9 @@
 import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities/published';
-import { useChatStore } from '@/stores/_chat';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
-import { PublishedApi } from '@/entities/published';
+import type { FavoriteSearch, BlogIdGroupInfo } from '@/entities';
+import { useChatStore } from '@/stores';
+import { usePublishedStore } from '@/features';
+import { PublishedApi } from '@/entities';
 
 export const usePublishedList = () => {
   const chatStore = useChatStore();

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NButton, NSpace } from 'naive-ui';
-import ModernInput from '@/components/ui/ModernInput.vue';
-import type { BatchRequest } from '@/types/_chat';
+import { ModernInput } from '@/components/ui';
+import type { BatchRequest } from '@/types';
 import { Trash as TrashIcon } from '@vicons/ionicons5';
 
 const props = defineProps<{

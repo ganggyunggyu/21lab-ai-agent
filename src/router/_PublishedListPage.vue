@@ -4,14 +4,15 @@ import { storeToRefs } from 'pinia';
 import { NEmpty, NGrid, NGridItem } from 'naive-ui';
 import { DocumentText as DocumentIcon } from '@vicons/ionicons5';
 
-import PublishedHeader from '@/features/published/ui/PublishedHeader.vue';
-import PublishedToolbar from '@/features/published/ui/PublishedToolbar.vue';
-import PublishedCard from '@/features/published/ui/PublishedCard.vue';
-import PublishedDetailModal from '@/features/published/ui/PublishedDetailModal.vue';
-import PublishedMarkdownModal from '@/features/published/ui/PublishedMarkdownModal.vue';
-
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
-import { usePublishedList } from '@/features/published/hooks/usePublishedList';
+import {
+  PublishedHeader,
+  PublishedToolbar,
+  PublishedCard,
+  PublishedDetailModal,
+  PublishedMarkdownModal,
+  usePublishedStore,
+  usePublishedList,
+} from '@/features';
 
 // 직접 store 사용
 const publishedStore = usePublishedStore();

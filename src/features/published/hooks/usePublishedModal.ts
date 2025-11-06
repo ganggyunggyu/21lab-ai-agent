@@ -1,7 +1,7 @@
 import { storeToRefs } from 'pinia';
-import type { FavoriteSearch } from '@/entities/published';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
-import { PublishedApi } from '@/entities/published';
+import type { FavoriteSearch } from '@/entities';
+import { usePublishedStore } from '@/features';
+import { PublishedApi } from '@/entities';
 import { renderMarkdown } from '@/utils/markdown/renderer';
 
 export const usePublishedModal = () => {

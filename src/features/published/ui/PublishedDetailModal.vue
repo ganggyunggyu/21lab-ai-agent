@@ -5,10 +5,8 @@ import {
   Code as MarkdownIcon,
   CheckmarkCircle as CheckIcon,
 } from '@vicons/ionicons5';
-import ModernInput from '@/components/ui/ModernInput.vue';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
-import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
-import { usePublishedList } from '@/features/published/hooks/usePublishedList';
+import { ModernInput } from '@/components/ui';
+import { usePublishedStore, usePublishedModal, usePublishedList } from '@/features';
 
 // 직접 store에서 reactive data 가져오기
 const publishedStore = usePublishedStore();

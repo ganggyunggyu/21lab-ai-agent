@@ -12,8 +12,8 @@ import {
   RefreshOutline as ReloadIcon,
 } from '@vicons/ionicons5';
 import { useRouter } from 'vue-router';
-import { useChatStore } from '@/stores/_chat';
-import ModernInput from '@/components/ui/ModernInput.vue';
+import { useChatStore } from '@/stores';
+import { ModernInput } from '@/components/ui';
 import * as Papa from 'papaparse';
 import { getBatchHistory, removeBatchHistory, type BatchHistoryItem } from '@/utils/_localStorage';
 import { MODEL_OPTIONS } from '@/constants/_models';

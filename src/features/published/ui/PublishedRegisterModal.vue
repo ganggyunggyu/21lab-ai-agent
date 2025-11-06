@@ -2,9 +2,9 @@
 import { ref, computed, watch } from 'vue';
 import { NModal, NForm, NFormItem, NButton, NSpace, NSwitch } from 'naive-ui';
 import { Save as SaveIcon, Close as CloseIcon } from '@vicons/ionicons5';
-import ModernInput from '@/components/ui/ModernInput.vue';
-import type { FavoriteSearch } from '@/entities/published';
-import { PublishedApi } from '@/entities/published';
+import { ModernInput } from '@/components/ui';
+import type { FavoriteSearch } from '@/entities';
+import { PublishedApi } from '@/entities';
 
 interface Props {
   show: boolean;

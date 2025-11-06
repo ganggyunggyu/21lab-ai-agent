@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { useLayoutManager } from '@/hooks/useLayoutManager';
-import ChatFooter from '@/components/widgets/ChatFooter.vue';
-import ChatMain from '@/components/widgets/ChatMain.vue';
-import ChatHeader from '@/components/widgets/ChatHeader.vue';
-import DocumentPanel from '@/components/widgets/DocumentPanel.vue';
+import { useLayoutManager } from '@/hooks';
+import { ChatFooter, ChatMain, ChatHeader, DocumentPanel } from '@/components/widgets';
 
 const { appRef } = useLayoutManager();
 </script>

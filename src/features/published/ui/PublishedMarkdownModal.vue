@@ -2,8 +2,7 @@
 import { NModal, NButton, NSpace, NText } from 'naive-ui';
 import { Code as MarkdownIcon, Eye as PreviewIcon } from '@vicons/ionicons5';
 import { storeToRefs } from 'pinia';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
-import { usePublishedModal } from '@/features/published/hooks/usePublishedModal';
+import { usePublishedStore, usePublishedModal } from '@/features';
 
 // 직접 store에서 reactive data 가져오기
 const publishedStore = usePublishedStore();

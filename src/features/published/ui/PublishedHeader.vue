@@ -8,8 +8,8 @@ import {
   RadioButtonOff as InactiveIcon,
   Apps as AllIcon,
 } from '@vicons/ionicons5';
-import ModernButton from '@/components/ui/ModernButton.vue';
-import { usePublishedStore } from '@/features/published/stores/publishedStore';
+import { ModernButton } from '@/components/ui';
+import { usePublishedStore } from '@/features';
 
 interface Props {
   onGoBack?: () => void;
