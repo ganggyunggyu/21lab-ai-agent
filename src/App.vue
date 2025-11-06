@@ -8,6 +8,7 @@
 </template>
 
 <script setup lang="ts">
+import './style.css';
 import { onMounted } from 'vue';
 import { NConfigProvider, NMessageProvider, NGlobalStyle } from 'naive-ui';
 import { koKR, dateKoKR } from 'naive-ui';
