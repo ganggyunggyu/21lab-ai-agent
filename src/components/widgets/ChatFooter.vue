@@ -1,36 +1,28 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import {
-  NTag,
   NText,
   NPopover,
   NCard,
   NButton,
   NSpace,
-  NModal,
 } from 'naive-ui';
 import {
   Document as DocumentIcon,
   Send as SendIcon,
   StarOutline as StarOutlineIcon,
-  ChevronBack as ChevronBackIcon,
-  ChevronForward as ChevronForwardIcon,
-  CheckmarkCircle as CheckmarkCircleIcon,
-  ListOutline as ListOutlineIcon,
 } from '@vicons/ionicons5';
 import ModernButton from '@/components/ui/ModernButton.vue';
 import ModernCard from '@/components/ui/ModernCard.vue';
 import ModernInput from '@/components/ui/ModernInput.vue';
 import { useChatStore } from '@/stores/_chat';
 import { computed, watch, ref, onMounted } from 'vue';
-import { MODEL_OPTIONS } from '@/constants/_models';
 import {
   getFrequentKeywords,
   addKeywordToFrequent,
   type FrequentKeyword,
   getFavoriteSearches,
   addFavoriteSearch,
-  addPublishedSearch,
   removeFavoriteSearch,
   type FavoriteSearch,
   getSearchHistory,
@@ -45,16 +37,10 @@ const {
   refMsg,
   isLoading,
   showRefInput,
-  selectedUserMessage,
-  showActionModal,
-  isSelectionMode,
-  selectedMessageIds,
 } = storeToRefs(chatStore);
 
 const {
   handleGenerate,
-  openActionModal,
-  toggleMessageSelection,
 } = chatStore;
 
 const handleEnterPress = (value: string) => {
@@ -72,18 +58,6 @@ const showFavorites = ref(false);
 
 const searchHistory = ref<SearchHistory[]>([]);
 
-const userMessages = computed(() => {
-  return chatStore.messages
-    .filter((msg) => msg.role === 'user' && msg.keyword)
-    .reverse()
-    .map((msg) => ({
-      id: msg.id || Date.now().toString(),
-      keyword: msg.keyword || '',
-      ref: msg.ref,
-      service: msg.service || 'gpt-5-v2',
-      timestamp: new Date(msg.timestamp || Date.now()),
-    }));
-});
 
 const { service } = storeToRefs(chatStore);
 
@@ -152,60 +126,6 @@ const handleRemoveFavorite = (id: string, event: Event) => {
   loadFavoriteSearches();
 };
 
-const handleUserMessageClick = (userMsg: any) => {
-  openActionModal(userMsg);
-};
-
-const handleUserMessageChipClick = (userMsg: any) => {
-  if (!userMsg?.id) {
-    return;
-  }
-
-  if (isSelectionMode.value) {
-    toggleMessageSelection(userMsg.id);
-    return;
-  }
-
-  handleUserMessageClick(userMsg);
-};
-
-const handleChipCheckboxToggle = (messageId: string) => {
-  toggleMessageSelection(messageId);
-};
-
-const isChipSelected = (messageId: string) => {
-  // selectedMessageIds가 배열로 복원될 수 있으므로 안전하게 체크
-  if (Array.isArray(selectedMessageIds.value)) {
-    return selectedMessageIds.value.includes(messageId);
-  }
-  return selectedMessageIds.value.has?.(messageId) ?? false;
-};
-
-const getServiceLabel = (serviceValue: string) => {
-  const option = MODEL_OPTIONS.find((opt) => opt.value === serviceValue);
-  return option?.label || serviceValue;
-};
-
-const chipsScrollRef = ref<HTMLElement | null>(null);
-
-const scrollChips = (direction: 'left' | 'right') => {
-  if (!chipsScrollRef.value) return;
-
-  const scrollAmount = 200;
-  const currentScroll = chipsScrollRef.value.scrollLeft;
-
-  if (direction === 'left') {
-    chipsScrollRef.value.scrollTo({
-      left: currentScroll - scrollAmount,
-      behavior: 'smooth',
-    });
-  } else {
-    chipsScrollRef.value.scrollTo({
-      left: currentScroll + scrollAmount,
-      behavior: 'smooth',
-    });
-  }
-};
 
 const cleanText = (text: string) => {
   return text
@@ -215,116 +135,6 @@ const cleanText = (text: string) => {
     .trim();
 };
 
-const handleGenerateFromModal = () => {
-  if (!selectedUserMessage.value) return;
-
-  keyword.value = selectedUserMessage.value.keyword;
-  if (selectedUserMessage.value.ref) {
-    refMsg.value = cleanText(selectedUserMessage.value.ref);
-    showRefInput.value = true;
-  } else {
-    showRefInput.value = false;
-  }
-  chatStore.updateService(selectedUserMessage.value.service as any);
-
-  showActionModal.value = false;
-  handleGenerate();
-};
-
-const handleCopyRefFromModal = () => {
-  if (!selectedUserMessage.value?.ref) return;
-
-  const cleanedRef = cleanText(selectedUserMessage.value.ref);
-  navigator.clipboard.writeText(cleanedRef);
-  showActionModal.value = false;
-};
-
-const handleCopyKeywordFromModal = () => {
-  if (!selectedUserMessage.value?.keyword) return;
-
-  navigator.clipboard.writeText(selectedUserMessage.value.keyword);
-  showActionModal.value = false;
-};
-
-const getBotResponsesForUserMessage = (userMsg: any) => {
-  const userIndex = chatStore.messages.findIndex(
-    (msg) => msg.id === userMsg.id
-  );
-  if (userIndex === -1) return [];
-
-  const botResponses = [];
-
-  for (let i = userIndex + 1; i < chatStore.messages.length; i++) {
-    const message = chatStore.messages[i];
-
-    if (message.role === 'user') break;
-
-    if (
-      message.role === 'bot' &&
-      message.keyword === userMsg.keyword &&
-      message.content !== 'loading'
-    ) {
-      botResponses.push(message);
-    }
-  }
-
-  return botResponses;
-};
-
-const handleCopyResultFromModal = () => {
-  if (!selectedUserMessage.value) return;
-
-  const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
-  if (botResponses.length === 0) {
-    return;
-  }
-
-  const fullResult = botResponses.map((msg) => msg.content).join('\n\n---\n\n');
-  navigator.clipboard.writeText(fullResult);
-  showActionModal.value = false;
-};
-
-const convertToThreeLineSample = (text: string): string => {
-  const lineList = text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-  return lineList.slice(0, 3).join('\n');
-};
-
-const handleAddPublishedFromModal = () => {
-  if (!selectedUserMessage.value) return;
-
-  const title = prompt(
-    '발행원고 제목을 입력하세요:',
-    `[발행] ${selectedUserMessage.value.keyword}`
-  );
-  if (!title) return;
-
-  const memo = prompt('메모를 입력하세요 (수정 내역, 발행 일정 등):', '');
-
-  const botResponses = getBotResponsesForUserMessage(selectedUserMessage.value);
-
-  const fullResult = botResponses.map((m) => m.content).join('\n\n---\n\n');
-  const resultSample = convertToThreeLineSample(fullResult);
-
-  const firstBotResponse = botResponses[0];
-
-  addPublishedSearch(
-    selectedUserMessage.value.keyword,
-    selectedUserMessage.value.ref,
-    title,
-    resultSample,
-    selectedUserMessage.value.id,
-    firstBotResponse?.id,
-    fullResult,
-    selectedUserMessage.value.service,
-    selectedUserMessage.value.timestamp,
-    memo
-  );
-  loadFavoriteSearches();
-  showActionModal.value = false;
-};
 
 const handleGenerateWithKeyword = () => {
   if (keyword.value.trim()) {
@@ -538,255 +348,18 @@ watch(refMsg, (newVal) => {
           </div>
         </section>
 
-          <section class="bottom-actions" aria-label="하단 액션 및 제안">
-          <div class="smart-suggestions" role="region" aria-label="스마트 제안">
-            <section
-              v-if="userMessages.length > 0"
-              class="suggestion-section"
-              aria-label="최근 메시지"
-            >
-              <div
-                class="chips-scroll-container"
-                role="group"
-                aria-label="메시지 스크롤 영역"
-              >
-                <!-- 왼쪽 스크롤 버튼 -->
-                <button
-                  class="scroll-button scroll-button-left"
-                  @click="scrollChips('left')"
-                  aria-label="왼쪽으로 스크롤"
-                >
-                  <component :is="ChevronBackIcon" />
-                </button>
-
-                <!-- 칩 컨테이너 -->
-                <ul
-                  ref="chipsScrollRef"
-                  class="suggestion-chips"
-                  role="list"
-                  aria-label="최근 메시지 목록"
-                >
-                  <li
-                    v-for="userMsg in userMessages"
-                    :key="userMsg.id"
-                    role="listitem"
-                  >
-                    <n-tag
-                      size="large"
-                      :bordered="false"
-                      @click="handleUserMessageChipClick(userMsg)"
-                      @keyup.enter.prevent="handleUserMessageChipClick(userMsg)"
-                      class="smart-chip user-message-chip"
-                      :class="{
-                        'selection-active': isSelectionMode,
-                        'chip-selected': isSelectionMode && isChipSelected(userMsg.id),
-                      }"
-                      type="primary"
-                      tabindex="0"
-                      role="option"
-                      :aria-selected="isSelectionMode ? isChipSelected(userMsg.id) : undefined"
-                      :aria-label="`${userMsg.keyword} - ${getServiceLabel(
-                        userMsg.service
-                      )} 서비스`"
-                    >
-                      <div class="chip-content">
-                        <div
-                          v-if="isSelectionMode"
-                          class="chip-checkbox"
-                          :class="{ selected: isChipSelected(userMsg.id) }"
-                          role="checkbox"
-                          :aria-checked="isChipSelected(userMsg.id)"
-                          @click.stop="handleChipCheckboxToggle(userMsg.id)"
-                        >
-                          <component
-                            v-if="isChipSelected(userMsg.id)"
-                            :is="CheckmarkCircleIcon"
-                            class="chip-checkbox-icon"
-                          />
-                        </div>
-                        <div class="chip-main">
-                          <span class="chip-keyword">{{
-                            userMsg.keyword
-                          }}</span>
-                          <div class="chip-badges">
-                            <span class="service-badge">{{
-                              getServiceLabel(userMsg.service)
-                            }}</span>
-                            <span
-                              v-if="userMsg.ref"
-                              class="ref-badge"
-                              aria-label="참조 포함"
-                              >📎</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                    </n-tag>
-                  </li>
-                </ul>
-
-                <!-- 오른쪽 스크롤 버튼 -->
-                <button
-                  class="scroll-button scroll-button-right"
-                  @click="scrollChips('right')"
-                  aria-label="오른쪽으로 스크롤"
-                >
-                  <component :is="ChevronForwardIcon" />
-                </button>
-              </div>
-            </section>
+        <footer class="footer-info" aria-label="입력 정보">
+          <div
+            class="char-count"
+            v-if="keyword.length > 0"
+            aria-label="문자 수"
+          >
+            <n-text depth="3">{{ keyword.length }}/1000</n-text>
           </div>
-
-          <footer class="footer-info" aria-label="입력 정보">
-            <div
-              class="char-count"
-              v-if="keyword.length > 0"
-              aria-label="문자 수"
-            >
-              <n-text depth="3">{{ keyword.length }}/1000</n-text>
-            </div>
-          </footer>
-        </section>
+        </footer>
       </div>
     </section>
 
-    <!-- 액션 선택 모달 -->
-    <n-modal v-model:show="showActionModal">
-      <n-card
-        style="width: 400px"
-        title="작업 선택"
-        :bordered="false"
-        size="huge"
-        role="dialog"
-        aria-modal="true"
-        aria-label="메시지 액션 선택"
-      >
-        <template #header-extra> </template>
-        <main style="margin-bottom: 16px" aria-label="선택된 메시지 정보">
-          <section class="modal-item" aria-label="키워드 정보">
-            <header class="modal-item-header">
-              <strong>키워드:</strong>
-              <n-button
-                size="tiny"
-                type="default"
-                @click="handleCopyKeywordFromModal"
-                style="margin-left: 8px"
-                aria-label="키워드 복사"
-              >
-                복사
-              </n-button>
-            </header>
-            <p class="modal-text">
-              {{
-                selectedUserMessage?.keyword &&
-                selectedUserMessage.keyword.length > 80
-                  ? selectedUserMessage.keyword.slice(0, 80) + '...'
-                  : selectedUserMessage?.keyword
-              }}
-            </p>
-          </section>
-
-          <section
-            v-if="selectedUserMessage?.ref"
-            class="modal-item"
-            style="margin-top: 12px"
-            aria-label="참조원고 정보"
-          >
-            <header class="modal-item-header">
-              <strong>참조원고:</strong>
-              <n-button
-                size="tiny"
-                type="default"
-                @click="handleCopyRefFromModal"
-                style="margin-left: 8px"
-                aria-label="참조원고 복사"
-              >
-                복사
-              </n-button>
-            </header>
-            <p class="modal-text">
-              {{ selectedUserMessage.ref.slice(0, 100) }}...
-            </p>
-          </section>
-
-          <section
-            class="modal-item"
-            style="margin-top: 12px"
-            aria-label="서비스 정보"
-          >
-            <strong>서비스:</strong>
-            {{ getServiceLabel(selectedUserMessage?.service || '') }}
-          </section>
-
-          <!-- 원고 결과물 미리보기 -->
-          <section
-            v-if="getBotResponsesForUserMessage(selectedUserMessage).length > 0"
-            class="modal-item"
-            style="margin-top: 12px"
-            aria-label="원고 결과물"
-          >
-            <header class="modal-item-header">
-              <strong>원고 결과물:</strong>
-              <n-button
-                size="tiny"
-                type="default"
-                @click="handleCopyResultFromModal"
-                style="margin-left: 8px"
-                aria-label="원고 결과물 복사"
-              >
-                복사
-              </n-button>
-            </header>
-            <p class="modal-text result-preview">
-              {{
-                getBotResponsesForUserMessage(selectedUserMessage)
-                  .map((msg) => msg.content)
-                  .join('\n\n')
-                  .split('\n')
-                  .slice(0, 3)
-                  .join('\n')
-              }}...
-            </p>
-          </section>
-        </main>
-        <p style="color: #666; font-size: 14px">
-          어떤 작업을 수행하시겠습니까?
-        </p>
-        <template #footer>
-          <nav aria-label="모달 액션">
-            <n-space justify="space-between">
-              <n-button
-                type="warning"
-                @click="handleAddPublishedFromModal"
-                style="
-                  background: linear-gradient(135deg, #f59e0b, #d97706);
-                  border: none;
-                  color: white;
-                "
-                aria-label="발행원고로 등록"
-              >
-                📝 발행원고 등록
-              </n-button>
-              <n-space>
-                <n-button
-                  @click="showActionModal = false"
-                  aria-label="모달 취소"
-                >
-                  취소
-                </n-button>
-                <n-button
-                  type="primary"
-                  @click="handleGenerateFromModal"
-                  aria-label="원고 작성 실행"
-                >
-                  원고 작성
-                </n-button>
-              </n-space>
-            </n-space>
-          </nav>
-        </template>
-      </n-card>
-    </n-modal>
   </footer>
 </template>
 <style scoped>
