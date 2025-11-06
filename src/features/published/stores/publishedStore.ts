@@ -60,8 +60,10 @@ export const usePublishedStore = defineStore('published', () => {
         return a.title.localeCompare(b.title);
       }
 
-      // 기본값('recent') 및 기타 모든 경우: 최신순 정렬
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      // 기본값('recent') 및 기타 모든 경우: 최신순 정렬 (최신 항목이 위로)
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return timeB - timeA; // 큰 값(최신)이 먼저 오도록
     });
   });
 
