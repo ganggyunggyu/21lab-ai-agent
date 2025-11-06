@@ -28,21 +28,45 @@ export const useAutoScroll = <T = ScrollTarget>({
 
   const scrollToLast = async () => {
     await nextTick()
-    const lastEl = lastItemRef.value
-    const container = containerRef.value as unknown as ScrollTarget | undefined
-    if (!lastEl || !container) return
-    const top = getOffsetTop ? getOffsetTop(lastEl) : lastEl.offsetTop
+
+    const container = containerRef.value as any
+    if (!container) return
 
     try {
-      if (typeof container.scrollTo === 'function') {
-        container.scrollTo({ top, behavior: 'smooth' })
-        return
-      }
-    } catch {}
+      // NScrollbar 컴포넌트 처리
+      if (container.$el) {
+        const scrollbarEl = container.$el as HTMLElement
+        const contentEl = scrollbarEl.querySelector('.n-scrollbar-container') as HTMLElement | null
 
-    // Fallback to direct scrollTop if available
-    if ('scrollTop' in (container as any)) {
-      ;(container as any).scrollTop = top
+        if (contentEl) {
+          contentEl.scrollTo({
+            top: contentEl.scrollHeight,
+            behavior: 'smooth'
+          })
+          return
+        }
+      }
+
+      // lastItemRef 사용 (기존 로직)
+      const lastEl = lastItemRef.value
+      if (lastEl) {
+        const top = getOffsetTop ? getOffsetTop(lastEl) : lastEl.offsetTop
+        if (typeof container.scrollTo === 'function') {
+          container.scrollTo({ top, behavior: 'smooth' })
+          return
+        }
+        if ('scrollTop' in container) {
+          container.scrollTop = top
+          return
+        }
+      }
+
+      // 최종 fallback
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({ top: 1e9, behavior: 'smooth' })
+      }
+    } catch (err) {
+      console.warn('Auto scroll failed:', err)
     }
   }
 

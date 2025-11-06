@@ -2,14 +2,7 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { NScrollbar } from 'naive-ui';
-import {
-  ChevronDown as ChevronDownIcon,
-  Checkmark as SelectIcon,
-  Close as CancelIcon,
-  Download as DownloadIcon,
-  CheckmarkCircle as SelectAllIcon,
-  Square as DeselectAllIcon,
-} from '@vicons/ionicons5';
+import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import MessageBubble from '@/components/ui/MessageBubble.vue';
 import MessageDetailModal from '@/components/ui/MessageDetailModal.vue';
 import ModernButton from '@/components/ui/ModernButton.vue';
@@ -17,13 +10,10 @@ import PublishedDetailModal from '@/features/published/ui/PublishedDetailModal.v
 import PublishedRegisterModal from '@/features/published/ui/PublishedRegisterModal.vue';
 import { useChatStore } from '@/stores/_chat';
 import { useChatActions } from '@/hooks/useChatActions';
-import { useScrollToBottom } from '@/hooks/useScrollToBottom';
-import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { delay } from 'es-toolkit';
 import { AUTO_SCROLL_DELAY } from '@/constants/_timings';
 import type { Message, SelectedMessagePackage } from '@/types/_chat';
 import type { FavoriteSearch } from '@/entities/published';
-import { convertMessageToFavoriteSearch } from '@/utils/_messageToPublished';
 import { usePublishedStore } from '@/features/published/stores/publishedStore';
 import { sanitizeFileName } from '@/utils/_sanitizeFileName';
 
@@ -36,7 +26,7 @@ const {
   selectedMessageIds,
   selectedMessagesCount,
   selectableMessagesCount,
-  hasSelectedMessages
+  hasSelectedMessages,
 } = storeToRefs(chatStore);
 
 const {
@@ -45,7 +35,7 @@ const {
   toggleSelectionMode,
   selectAllMessages,
   clearSelection,
-  exportSelectedMessages
+  exportSelectedMessages,
 } = chatStore;
 
 const { copyMsg, handleDownloadClick, downloadZipFiles } = useChatActions();
@@ -54,6 +44,7 @@ const publishedStore = usePublishedStore();
 const { openDetailModal, closeDetailModal } = publishedStore;
 
 const scrollbarRef: Ref<InstanceType<typeof NScrollbar> | null> = ref(null);
+const scrollAnchorRef = ref<HTMLDivElement | null>(null);
 
 const showDetailModal = ref(false);
 const selectedMessage = ref<Message | null>(null);
@@ -99,15 +90,15 @@ const formatTimestampForContent = (timestamp?: number): string => {
   return new Date(timestamp).toLocaleString('ko-KR');
 };
 
-const composeResultContent = (pkg: SelectedMessagePackage): { fileName: string; content: string } => {
+const composeResultContent = (
+  pkg: SelectedMessagePackage
+): { fileName: string; content: string } => {
   const { userMessage, responses } = pkg;
   const safeKeyword = sanitizeFileName(userMessage.keyword || 'message');
 
   // 결과원고만 추출 (봇 응답만)
   const resultBody = responses.length
-    ? responses
-        .map((response) => response.content)
-        .join('\n\n---\n\n')
+    ? responses.map((response) => response.content).join('\n\n---\n\n')
     : '결과가 생성되지 않았습니다.';
 
   // 결과원고 길이 계산 (공백 제외)
@@ -147,7 +138,10 @@ const handleDownloadSelected = async () => {
     }
 
     // 중복된 경우 (2), (3) 등을 파일명에 추가
-    return { fileName: `${baseName}(${currentCount + 1})${extension}`, content };
+    return {
+      fileName: `${baseName}(${currentCount + 1})${extension}`,
+      content,
+    };
   });
 
   await downloadZipFiles(uniqueFiles, zipName);
@@ -171,32 +165,29 @@ const handleToggleSelectAll = () => {
   }
 };
 
-const {
-  showScrollToBottom,
-  checkScrollPosition,
-  handleScrollToBottom,
-  hardScrollToBottom,
-} = useScrollToBottom(scrollbarRef);
-
-const { scrollToLast } = useAutoScroll({
-  containerRef: scrollbarRef,
-  lastItemRef: ref(null),
-});
+const handleScrollToBottom = () => {
+  scrollAnchorRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'end',
+  });
+};
 
 watch(
   () => messages.value.length,
   async (newLength, oldLength) => {
     if (newLength > oldLength) {
       await delay(AUTO_SCROLL_DELAY);
-      scrollToLast();
-      hardScrollToBottom(true);
+      scrollAnchorRef.value?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
     }
   }
 );
 
 onMounted(async () => {
-  scrollToLast();
-  hardScrollToBottom(false);
+  await delay(100);
+  scrollAnchorRef.value?.scrollIntoView({ behavior: 'auto', block: 'end' });
 });
 </script>
 <template>
@@ -206,13 +197,12 @@ onMounted(async () => {
         <n-scrollbar
           ref="scrollbarRef"
           class="messages-scroll"
-          @scroll="checkScrollPosition"
           role="log"
           aria-live="polite"
           aria-label="채팅 메시지들"
         >
           <ul class="messages-list" role="list">
-            <li 
+            <li
               v-for="(msg, idx) in displayMessages"
               :key="`${idx}-${msg.timestamp}`"
               role="listitem"
@@ -229,10 +219,11 @@ onMounted(async () => {
                 @show-work-modal="handleShowWorkModal"
               />
             </li>
+            <div ref="scrollAnchorRef" class="scroll-anchor"></div>
           </ul>
         </n-scrollbar>
 
-        <aside v-show="showScrollToBottom" class="scroll-to-bottom" aria-label="스크롤 컨트롤">
+        <aside class="scroll-to-bottom" aria-label="스크롤 컨트롤">
           <ModernButton
             variant="secondary"
             size="lg"
@@ -269,32 +260,39 @@ onMounted(async () => {
 .chat-main {
   flex: 1;
   padding: calc(var(--header-h, 80px) + var(--main-top-pad, 16px))
-    var(--page-pad-x, 16px)
-    calc(var(--footer-h, 120px) + var(--main-bot-pad, 80px));
+    var(--page-pad-x, 16px) 0;
   overflow: hidden;
-}
-.chat-container {
-  max-width: 90vw;
-  margin: 0 auto;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  
+}
+.chat-container {
+  width: 100vw;
+  max-width: 90vw;
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
   /* 작은 화면에서 100vw */
   @media (max-width: 768px) {
-    max-width: calc(100vw - 32px);
+    width: 100vw;
+    max-width: 100vw;
   }
 }
 .messages-container {
-  height: calc(100dvh - var(--header-h, 80px) - var(--footer-h, 180px));
+  flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 .messages-scroll {
+  flex: 1;
   height: 100%;
 }
 .messages-list {
-  padding: 16px 0;
+  padding: 16px 0 200px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -302,17 +300,13 @@ onMounted(async () => {
 
 /* ===== SCROLL TO BOTTOM BUTTON ===== */
 .scroll-to-bottom {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10;
+  position: fixed;
+  bottom: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
 }
 .scroll-btn {
-  position: fixed;
-  bottom: 230px;
-  left: 50%;
-  translate: -50% 0;
-  z-index: 100;
   width: 48px !important;
   height: 48px !important;
   border-radius: 50% !important;
@@ -330,4 +324,9 @@ onMounted(async () => {
 }
 
 /* 선택 툴바 제거 - 이제 헤더에 통합됨 */
+
+.scroll-anchor {
+  height: 1px;
+  width: 1px;
+}
 </style>

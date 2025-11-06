@@ -6,22 +6,47 @@ export const useScrollToBottom = (scrollbarRef: Ref<InstanceType<typeof NScrollb
 
   const hardScrollToBottom = (isSmooth: boolean = true) => {
     try {
-      if (isSmooth) {
-        scrollbarRef.value?.scrollTo({ top: 1e9, left: 0, behavior: 'smooth' });
+      // NScrollbar 내부 DOM 직접 접근
+      const scrollbarEl = scrollbarRef.value?.$el as HTMLElement | undefined;
+      const contentEl = scrollbarEl?.querySelector('.n-scrollbar-container') as HTMLElement | null;
+
+      if (contentEl) {
+        contentEl.scrollTo({
+          top: contentEl.scrollHeight,
+          behavior: isSmooth ? 'smooth' : 'auto'
+        });
       } else {
-        scrollbarRef.value?.scrollTo({ top: 1e9, left: 0 });
+        // fallback
+        scrollbarRef.value?.scrollTo({ top: 1e9, left: 0, behavior: isSmooth ? 'smooth' : 'auto' });
       }
-    } catch {}
+    } catch (err) {
+      console.warn('Scroll failed:', err);
+    }
   };
 
   const checkScrollPosition = (e: Event) => {
-    const target = e.target as HTMLElement;
-    if (!target) return;
+    try {
+      // NScrollbar의 실제 스크롤 컨테이너 찾기
+      let target = e.target as HTMLElement;
 
-    const { scrollTop, scrollHeight, clientHeight } = target;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      // .n-scrollbar-container 요소 찾기
+      if (!target.classList.contains('n-scrollbar-container')) {
+        const scrollbarEl = scrollbarRef.value?.$el as HTMLElement | undefined;
+        const containerEl = scrollbarEl?.querySelector('.n-scrollbar-container') as HTMLElement | null;
+        if (containerEl) {
+          target = containerEl;
+        }
+      }
 
-    showScrollToBottom.value = distanceFromBottom > 50;
+      if (!target) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = target;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+      showScrollToBottom.value = distanceFromBottom > 50;
+    } catch (err) {
+      console.warn('Check scroll position failed:', err);
+    }
   };
 
   const handleScrollToBottom = () => {
@@ -30,7 +55,6 @@ export const useScrollToBottom = (scrollbarRef: Ref<InstanceType<typeof NScrollb
 
   return {
     showScrollToBottom,
-    hardScrollToBottom,
     checkScrollPosition,
     handleScrollToBottom,
   };
