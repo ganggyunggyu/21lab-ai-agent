@@ -9,7 +9,7 @@ import { MODEL_OPTIONS } from '@/constants/_models';
 import { useThemeStore } from '@/stores/_theme';
 
 import { Button, Select, Input, Dropdown, Modal } from '@/components/ui';
-import { ChatService } from '@/types';
+import type { ChatService } from '@/types';
 import {
   ChevronDown as MenuIcon,
   Sunny as LightIcon,
@@ -138,7 +138,7 @@ watch(service, (newService) => {
     class="fixed top-5 left-1/2 -translate-x-1/2 z-100 w-screen max-w-[90vw] md:max-w-[calc(100vw-32px)] md:top-3"
   >
     <section
-      class="flex items-center justify-center px-6 py-3 bg-linear-to-br from-white/95 to-slate-50/90 backdrop-blur-[30px] backdrop-saturate-200 rounded-3xl border border-white/60 shadow-[0_12px_48px_rgba(0,0,0,0.08),0_2px_0_rgba(255,255,255,0.9)_inset,0_-2px_0_rgba(0,0,0,0.03)_inset] transition-all duration-400 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_20px_64px_rgba(99,102,241,0.12),0_2px_0_rgba(255,255,255,1)_inset] hover:border-indigo-500/20 before:absolute before:top-0 before:-left-full before:w-full before:h-full before:bg-linear-to-r before:from-transparent before:via-indigo-500/8 before:to-transparent before:transition-[left] before:duration-600 hover:before:left-full"
+      class="flex items-center justify-center px-6 py-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-gray-700/50 shadow-lg dark:shadow-black/50 transition-all"
     >
       <nav
         class="flex items-center gap-5 flex-nowrap whitespace-nowrap w-full justify-between"
@@ -146,7 +146,7 @@ watch(service, (newService) => {
       >
         <!-- 왼쪽: 검색 -->
         <section
-          class="flex items-center gap-2 bg-linear-to-br from-[#06d6a0]/12 to-[#06d6a0]/8 rounded-[14px] px-3 py-1.5 border border-[#06d6a0]/25 transition-all duration-300 flex-[0_1_auto] max-w-80 relative hover:bg-linear-to-br hover:from-[#06d6a0]/18 hover:to-[#06d6a0]/12 hover:border-[#06d6a0]/40 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(6,214,160,0.2)] after:absolute after:-right-2.5 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-6 after:bg-linear-to-b after:from-transparent after:via-black/10 after:to-transparent md:after:hidden"
+          class="flex items-center gap-2 bg-gradient-to-br from-[#06d6a0]/12 to-[#06d6a0]/8 rounded-[14px] px-3 py-1.5 border border-[#06d6a0]/25 transition-all duration-300 flex-[0_1_auto] max-w-80 relative hover:bg-gradient-to-br hover:from-[#06d6a0]/18 hover:to-[#06d6a0]/12 hover:border-[#06d6a0]/40 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(6,214,160,0.2)] after:absolute after:-right-2.5 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-6 after:bg-gradient-to-b after:from-transparent after:via-black/10 after:to-transparent md:after:hidden"
           aria-label="네이버 검색"
         >
           <Input
@@ -176,7 +176,7 @@ watch(service, (newService) => {
             size="sm"
             @click="handleBatchPage"
             title="배치 원고 생성"
-            class="text-sm px-4 py-2 min-w-0 whitespace-nowrap font-semibold rounded-xl transition-all duration-300 bg-linear-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 text-amber-500 hover:-translate-y-0.5 hover:bg-linear-to-br hover:from-amber-500/15 hover:to-amber-500/8 hover:border-amber-500/30 hover:shadow-[0_8px_24px_rgba(245,158,11,0.15)] md:text-[13px] md:px-3 md:py-1.5"
+            class="text-sm px-4 py-2 min-w-0 whitespace-nowrap font-semibold rounded-xl transition-all duration-300 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 text-amber-500 hover:-translate-y-0.5 hover:bg-gradient-to-br hover:from-amber-500/15 hover:to-amber-500/8 hover:border-amber-500/30 hover:shadow-[0_8px_24px_rgba(245,158,11,0.15)] md:text-[13px] md:px-3 md:py-1.5"
           >
             배치생성
           </Button>

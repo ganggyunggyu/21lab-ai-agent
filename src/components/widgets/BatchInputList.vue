@@ -51,15 +51,17 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
 </script>
 
 <template>
-  <div class="batch-list">
+  <div class="flex flex-col gap-3 p-4">
     <TransitionGroup name="batch-item">
       <article
         v-for="(req, idx) in requests"
         :key="req.id"
-        class="batch-item-card"
+        class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border border-black/8 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_4px_16px_rgba(99,102,241,0.1)]"
       >
-        <header class="batch-item-header">
-          <span class="batch-number">{{ idx + 1 }}</span>
+        <header class="flex justify-between items-center mb-3">
+          <span class="font-bold text-base text-indigo-500 bg-indigo-500/10 w-8 h-8 rounded-full flex items-center justify-center">
+            {{ idx + 1 }}
+          </span>
           <n-button
             size="tiny"
             type="error"
@@ -90,8 +92,15 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
             :autosize="{ minRows: 2, maxRows: 4 }"
           />
 
-          <div v-if="statuses[req.id]" class="batch-status">
-            <span :class="getStatusClass(statuses[req.id])">
+          <div v-if="statuses[req.id]" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/3 text-[13px] font-medium">
+            <span
+              :class="[
+                statuses[req.id] === 'pending' && 'text-gray-600',
+                statuses[req.id] === 'loading' && 'text-amber-600 animate-pulse',
+                statuses[req.id] === 'success' && 'text-emerald-600',
+                statuses[req.id] === 'error' && 'text-red-600'
+              ]"
+            >
               {{ getStatusText(statuses[req.id]) }}
             </span>
           </div>
@@ -105,7 +114,7 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
       dashed
       block
       size="large"
-      class="add-batch-btn"
+      class="mt-2 border-2 border-dashed border-indigo-500/30 text-indigo-500 font-semibold transition-all duration-200 hover:border-indigo-500/50 hover:bg-indigo-500/5 disabled:opacity-40 disabled:cursor-not-allowed"
     >
       + 원고 추가 ({{ requests.length }}/{{ maxCountValue }})
     </n-button>
@@ -113,103 +122,7 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
 </template>
 
 <style scoped>
-.batch-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
-
-.batch-item-card {
-  background: linear-gradient(145deg, #f8fafc, #f1f5f9);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.batch-item-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
-}
-
-.batch-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.batch-number {
-  font-weight: 700;
-  font-size: 16px;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.batch-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.03);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.status-pending {
-  color: #6b7280;
-}
-
-.status-loading {
-  color: #f59e0b;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.status-success {
-  color: #10b981;
-}
-
-.status-error {
-  color: #ef4444;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.add-batch-btn {
-  margin-top: 8px;
-  border: 2px dashed rgba(99, 102, 241, 0.3);
-  color: #6366f1;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.add-batch-btn:hover:not(:disabled) {
-  border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(99, 102, 241, 0.05);
-}
-
-.add-batch-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* 애니메이션 */
+/* TransitionGroup 애니메이션 */
 .batch-item-enter-active {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

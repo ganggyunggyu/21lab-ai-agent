@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, type Ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { NScrollbar } from 'naive-ui';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
-import {
-  MessageBubble,
-  MessageDetailModal,
-  Button,
-} from '@/components/ui';
+import { MessageBubble, MessageDetailModal, Button } from '@/components/ui';
 import {
   PublishedDetailModal,
   PublishedRegisterModal,
@@ -28,24 +23,17 @@ const {
   messages,
   selectedMessageIds,
   selectableMessagesCount,
-  hasSelectedMessages,
 } = storeToRefs(chatStore);
 
-const {
-  handleRegenerate,
-  deleteMessage,
-  toggleSelectionMode,
-  selectAllMessages,
-  clearSelection,
-  exportSelectedMessages,
-} = chatStore;
+const { handleRegenerate, deleteMessage, selectAllMessages, clearSelection } =
+  chatStore;
 
-const { copyMsg, handleDownloadClick, downloadMultipleFiles } = useChatActions();
+const { copyMsg, handleDownloadClick } = useChatActions();
 
 const publishedStore = usePublishedStore();
-const { openDetailModal, closeDetailModal } = publishedStore;
+const { openDetailModal } = publishedStore;
 
-const scrollbarRef: Ref<InstanceType<typeof NScrollbar> | null> = ref(null);
+const scrollbarRef: Ref<HTMLDivElement | null> = ref(null);
 const scrollAnchorRef = ref<HTMLDivElement | null>(null);
 
 const showDetailModal = ref(false);
@@ -122,28 +110,19 @@ const handleToggleSelectAll = () => {
 
 const handleScrollToBottom = () => {
   try {
-    const scrollbarEl = scrollbarRef.value?.$el as HTMLElement | undefined;
-    const contentEl = scrollbarEl?.querySelector(
-      '.n-scrollbar-container'
-    ) as HTMLElement | null;
-
-    if (contentEl && scrollAnchorRef.value) {
-      const anchorTop = scrollAnchorRef.value.offsetTop;
-      contentEl.scrollTo({
-        top: anchorTop + 150,
+    if (scrollbarRef.value) {
+      scrollbarRef.value.scrollTo({
+        top: scrollbarRef.value.scrollHeight,
         behavior: 'smooth',
       });
-    } else {
-      scrollAnchorRef.value?.scrollIntoView({
+    } else if (scrollAnchorRef.value) {
+      scrollAnchorRef.value.scrollIntoView({
         behavior: 'smooth',
         block: 'end',
       });
     }
   } catch (err) {
-    scrollAnchorRef.value?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'end',
-    });
+    console.error('Scroll to bottom error:', err);
   }
 };
 
@@ -178,9 +157,9 @@ onMounted(async () => {
         class="flex-1 flex flex-col overflow-hidden relative"
         aria-label="메시지 목록"
       >
-        <n-scrollbar
+        <div
           ref="scrollbarRef"
-          class="flex-1 h-full"
+          class="flex-1 h-full overflow-y-auto"
           role="log"
           aria-live="polite"
           aria-label="채팅 메시지들"
@@ -205,7 +184,7 @@ onMounted(async () => {
             </li>
             <div ref="scrollAnchorRef" class="h-px w-px"></div>
           </ul>
-        </n-scrollbar>
+        </div>
 
         <aside
           class="fixed bottom-[150px] left-1/2 -translate-x-1/2 z-[100]"
@@ -217,7 +196,7 @@ onMounted(async () => {
             icon-only
             :icon="ChevronDownIcon"
             @click="handleScrollToBottom"
-            class="!w-12 !h-12 rounded-full! !shadow-[0_4px_16px_rgba(0,0,0,0.12),0_8px_32px_rgba(59,130,246,0.2)] backdrop-blur-[10px] !transition-all !duration-300 !ease-[cubic-bezier(0.23,1,0.32,1)] hover:!-translate-y-0.5 hover:!scale-105 hover:!shadow-[0_8px_32px_rgba(0,0,0,0.16),0_12px_48px_rgba(59,130,246,0.3)] active:!translate-y-0 active:!scale-95"
+            class="w-12 h-12 rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.12),0_8px_32px_rgba(59,130,246,0.2)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_8px_32px_rgba(0,0,0,0.16),0_12px_48px_rgba(59,130,246,0.3)] active:translate-y-0 active:scale-95"
             title="맨 아래로 스크롤"
             aria-label="채팅 맨 아래로 이동"
           />
