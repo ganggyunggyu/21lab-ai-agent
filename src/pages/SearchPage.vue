@@ -95,7 +95,7 @@ const handleCardClick = (doc: SearchDocument) => {
       </header>
 
       <!-- Search Bar -->
-      <NCard class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] mb-6 p-6">
         <div class="flex flex-col md:flex-row gap-3">
           <!-- Search Input -->
           <div class="flex-1">
@@ -133,7 +133,7 @@ const handleCardClick = (doc: SearchDocument) => {
             검색
           </NButton>
         </div>
-      </NCard>
+      </div>
 
       <!-- Search Results Summary -->
       <div
