@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { NIcon } from 'naive-ui';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import { cn } from '@/utils';
 
@@ -38,19 +37,19 @@ const selectedOption = computed(() => {
 const selectClasses = computed(() => {
   return cn(
     'relative inline-flex items-center justify-between gap-2 px-4 py-2 rounded-xl border transition-all duration-200',
-    'bg-white/95 border-indigo-500/20 shadow-[0_2px_8px_rgba(99,102,241,0.08)]',
-    'hover:border-indigo-500/40 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(99,102,241,0.15)]',
-    'cursor-pointer select-none',
+    'bg-white/95 dark:bg-gray-800/95 border-indigo-500/20 dark:border-gray-600/40 shadow-lg dark:shadow-black/50',
+    'hover:border-indigo-500/40 dark:hover:border-gray-500/60 hover:-translate-y-px',
+    'cursor-pointer select-none text-gray-900 dark:text-gray-100',
     {
       'text-sm min-w-[100px]': props.size === 'sm',
       'text-base min-w-[120px]': props.size === 'md',
       'text-lg min-w-[140px]': props.size === 'lg',
-      'border-indigo-500/40': isOpen.value,
+      'border-indigo-500/40 dark:border-gray-500/60': isOpen.value,
     }
   );
 });
 
-const optionClasses = 'px-4 py-2 transition-colors duration-150 cursor-pointer hover:bg-indigo-500/10 text-sm font-medium';
+const optionClasses = 'px-4 py-2 transition-colors duration-150 cursor-pointer hover:bg-indigo-500/10 dark:hover:bg-gray-700/50 text-sm font-medium text-gray-900 dark:text-gray-100';
 
 const updateDropdownPosition = () => {
   if (!triggerRef.value) return;
@@ -109,12 +108,9 @@ onUnmounted(() => {
       <span class="font-semibold">
         {{ selectedOption?.label || placeholder }}
       </span>
-      <n-icon
-        size="16"
-        :class="cn('transition-transform duration-200', { 'rotate-180': isOpen })"
-      >
-        <ChevronDownIcon />
-      </n-icon>
+      <ChevronDownIcon
+        :class="cn('w-4 h-4 transition-transform duration-200 flex-shrink-0', { 'rotate-180': isOpen })"
+      />
     </div>
 
     <Teleport to="body">
@@ -128,7 +124,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen"
-          class="select-dropdown fixed z-[9999] bg-white rounded-xl border border-indigo-500/20 shadow-[0_8px_24px_rgba(0,0,0,0.12)] overflow-hidden animate-[slideDown_0.2s_ease-out]"
+          class="select-dropdown fixed z-[9999] bg-white dark:bg-gray-800 rounded-xl border border-indigo-500/20 dark:border-gray-600/40 shadow-lg dark:shadow-black/50 overflow-hidden animate-[slideDown_0.2s_ease-out]"
           :style="{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -139,7 +135,7 @@ onUnmounted(() => {
             v-for="option in options"
             :key="option.value"
             :class="cn(optionClasses, {
-              'bg-indigo-500/15 text-indigo-600': option.value === modelValue,
+              'bg-indigo-500/15 text-indigo-600 dark:bg-gray-700/70 dark:text-gray-100': option.value === modelValue,
             })"
             @click.stop="handleSelect(option.value)"
           >

@@ -8,9 +8,7 @@
       <div class="w-5 h-5 border-2 border-white/30 border-t-current rounded-full animate-spin"></div>
     </div>
 
-    <n-icon v-if="icon && !loading" :size="iconSize" class="flex items-center justify-center">
-      <component :is="icon" />
-    </n-icon>
+    <component v-if="icon && !loading" :is="icon" :style="{ width: iconSize + 'px', height: iconSize + 'px' }" class="flex-shrink-0" />
 
     <span v-if="!iconOnly && !loading" class="font-inherit">
       <slot />
@@ -19,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { NIcon } from 'naive-ui';
 import { computed } from 'vue';
 import { cn } from '@/utils';
 
@@ -64,10 +61,10 @@ const sizeClasses = computed(() => {
 
 const variantClasses = computed(() => {
   const variants = {
-    primary: 'bg-gradient-to-br from-blue-500 to-blue-800 shadow-[0_4px_12px_rgba(59,130,246,0.3)] hover:shadow-[0_8px_25px_rgba(59,130,246,0.4)] hover:bg-gradient-to-br hover:from-blue-600 hover:to-blue-900',
-    secondary: 'bg-white/10 backdrop-blur-[10px] border border-white/20 hover:bg-white/15 hover:border-white/30',
-    ghost: 'bg-transparent text-slate-400 border border-slate-400/30 hover:bg-slate-400/10 hover:border-slate-400/50',
-    danger: 'bg-gradient-to-br from-red-500 to-red-600 shadow-[0_4px_12px_rgba(239,68,68,0.3)] hover:shadow-[0_8px_25px_rgba(239,68,68,0.4)] hover:bg-gradient-to-br hover:from-red-600 hover:to-red-700',
+    primary: 'bg-gradient-to-br from-blue-500 to-blue-800 dark:from-blue-600 dark:to-blue-900 shadow-lg dark:shadow-blue-900/50 hover:shadow-xl text-white',
+    secondary: 'bg-white/10 dark:bg-gray-700/30 backdrop-blur-[10px] border border-white/20 dark:border-gray-600/40 hover:bg-white/15 dark:hover:bg-gray-700/50 text-white dark:text-gray-100',
+    ghost: 'bg-transparent text-slate-400 dark:text-gray-400 border border-slate-400/30 dark:border-gray-600/40 hover:bg-slate-400/10 dark:hover:bg-gray-700/30 hover:border-slate-400/50 dark:hover:border-gray-500/60',
+    danger: 'bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 shadow-lg dark:shadow-red-900/50 hover:shadow-xl text-white',
   };
   return variants[props.variant];
 });

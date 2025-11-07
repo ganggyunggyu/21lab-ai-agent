@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NProgress } from 'naive-ui';
 import {
   Copy as CopyIcon,
   Download as DownloadIcon,
@@ -88,19 +87,19 @@ const messageBodyClasses = 'flex-1 min-w-0';
 const headerClasses = 'flex items-center gap-2 mb-1 md:gap-3 md:mb-2 xs:gap-2 xs:mb-1.5';
 
 const senderClasses = computed(() => {
-  return cn('text-base font-semibold opacity-70 text-black md:text-base xs:text-base');
+  return cn('text-base font-semibold opacity-70 text-gray-900 dark:text-gray-100 md:text-base xs:text-base');
 });
 
-const timeClasses = 'text-base opacity-50 text-black md:text-base xs:text-base';
+const timeClasses = 'text-base opacity-50 text-gray-900 dark:text-gray-100 md:text-base xs:text-base';
 
 const messageTextClasses = computed(() => {
-  const base = 'bg-white px-5 py-4 rounded-[18px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-black/6 relative transition-all duration-200 hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] before:content-[""] before:absolute before:top-3 before:w-0 before:h-0 before:border-t-8 before:border-t-transparent before:border-b-8 before:border-b-transparent md:px-5 md:py-4 md:rounded-2xl md:text-base xs:px-[18px] xs:py-3.5 xs:rounded-[14px]';
+  const base = 'bg-white dark:bg-gray-800 px-5 py-4 rounded-[18px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] border border-gray-200 dark:border-gray-600 relative transition-all duration-200 hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)] before:content-[""] before:absolute before:top-3 before:w-0 before:h-0 before:border-t-8 before:border-t-transparent before:border-b-8 before:border-b-transparent md:px-5 md:py-4 md:rounded-2xl md:text-base xs:px-[18px] xs:py-3.5 xs:rounded-[14px]';
 
   if (props.message.role === 'user') {
-    return cn(base, 'bg-gradient-to-br from-blue-500 to-blue-600 text-[#eeeeee] border-blue-500/30 before:-right-2 before:border-l-8 before:border-l-blue-500');
+    return cn(base, 'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-[#eeeeee] border-blue-500/30 dark:border-blue-600/40 before:-right-2 before:border-l-8 before:border-l-blue-500 dark:before:border-l-blue-600');
   }
 
-  return cn(base, 'bg-emerald-500/5 border-emerald-500/10 text-black before:-left-2 before:border-r-8 before:border-r-emerald-500/5');
+  return cn(base, 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20 text-gray-900 dark:text-gray-100 before:-left-2 before:border-r-8 before:border-r-emerald-500/5 dark:before:border-r-emerald-500/10');
 });
 
 const actionsClasses = 'mt-2 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex-wrap md:gap-1.5 md:mt-3 xs:mt-4';
@@ -152,14 +151,12 @@ const refStatusClasses = computed(() => {
             aria-label="AI 응답 생성 중"
           >
             <div class="flex flex-col gap-2 w-full max-w-[400px]">
-              <NProgress
-                type="line"
-                :percentage="message.loadingProgress || 0"
-                :show-indicator="false"
-                :height="8"
-                color="#6366f1"
-                rail-color="rgba(99, 102, 241, 0.1)"
-              />
+              <div class="w-full h-2 bg-indigo-500/10 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-indigo-500 transition-all duration-300 ease-out"
+                  :style="{ width: `${message.loadingProgress || 0}%` }"
+                ></div>
+              </div>
               <span class="text-sm text-indigo-500 font-semibold text-right">{{ message.loadingProgress || 0 }}%</span>
             </div>
           </section>
@@ -209,7 +206,7 @@ const refStatusClasses = computed(() => {
               size="sm"
               :icon="CopyIcon"
               @click="$emit('copy', message.content, message)"
-              class="text-base! px-3! py-2! h-auto! rounded-lg! md:text-base! md:px-3.5! md:py-2.5! md:min-h-11! md:min-w-20! xs:text-base! xs:px-4! xs:py-3! xs:min-h-12! xs:flex-1 xs:justify-center"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="메시지 내용 복사"
             >
               복사
@@ -220,7 +217,7 @@ const refStatusClasses = computed(() => {
               size="sm"
               :icon="DownloadIcon"
               @click="$emit('download', message)"
-              class="text-base! px-3! py-2! h-auto! rounded-lg! md:text-base! md:px-3.5! md:py-2.5! md:min-h-11! md:min-w-20! xs:text-base! xs:px-4! xs:py-3! xs:min-h-12! xs:flex-1 xs:justify-center"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="메시지 파일로 저장"
             >
               저장
@@ -231,7 +228,7 @@ const refStatusClasses = computed(() => {
               size="sm"
               :icon="RefreshIcon"
               @click="$emit('regenerate', message)"
-              class="text-base! px-3! py-2! h-auto! rounded-lg! md:text-base! md:px-3.5! md:py-2.5! md:min-h-11! md:min-w-20! xs:text-base! xs:px-4! xs:py-3! xs:min-h-12! xs:flex-1 xs:justify-center"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="AI 응답 재생성"
             >
               재생성
@@ -242,7 +239,7 @@ const refStatusClasses = computed(() => {
               size="sm"
               :icon="InfoIcon"
               @click="$emit('showDetail', message)"
-              class="text-base! px-3! py-2! h-auto! rounded-lg! md:text-base! md:px-3.5! md:py-2.5! md:min-h-11! md:min-w-20! xs:text-base! xs:px-4! xs:py-3! xs:min-h-12! xs:flex-1 xs:justify-center"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="메시지 상세정보 보기"
             >
               상세정보
@@ -253,7 +250,7 @@ const refStatusClasses = computed(() => {
               size="sm"
               :icon="OptionsIcon"
               @click="handleUserMessageClick(message)"
-              class="text-base! px-3! py-2! h-auto! rounded-lg! md:text-base! md:px-3.5! md:py-2.5! md:min-h-11! md:min-w-20! xs:text-base! xs:px-4! xs:py-3! xs:min-h-12! xs:flex-1 xs:justify-center"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="메시지 작업선택"
             >
               작업선택
@@ -266,7 +263,7 @@ const refStatusClasses = computed(() => {
             size="sm"
             :icon="CloseIcon"
             @click="$emit('delete', index)"
-            class="text-red-500! border-red-500/20! hover:bg-red-500/10! hover:border-red-500/30! text-base! px-3! py-2! h-auto! rounded-lg! md:text-base! md:px-3.5! md:py-2.5! md:min-h-11! md:min-w-20! xs:text-base! xs:px-4! xs:py-3! xs:min-h-12! xs:flex-1 xs:justify-center"
+            class="text-red-500 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/30 text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
             title="메시지 삭제"
             aria-label="이 메시지 삭제"
           >

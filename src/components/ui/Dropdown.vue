@@ -117,7 +117,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen"
-          class="dropdown-menu fixed w-48 bg-white rounded-xl border border-slate-200 shadow-[0_8px_24px_rgba(0,0,0,0.12)] overflow-hidden z-[9999]"
+          class="dropdown-menu fixed w-48 bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-600/40 shadow-lg dark:shadow-black/50 overflow-hidden z-[9999]"
           :style="{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -128,11 +128,11 @@ onUnmounted(() => {
             :key="index"
             :class="[
               option.type === 'divider'
-                ? 'h-px bg-slate-200 my-1'
-                : 'px-4 py-2.5 text-sm cursor-pointer transition-colors duration-150',
+                ? 'h-px bg-slate-200 dark:bg-gray-600 my-1'
+                : 'px-4 py-2.5 text-sm cursor-pointer transition-colors duration-150 text-gray-900 dark:text-gray-100',
               option.disabled
                 ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-slate-50',
+                : 'hover:bg-slate-50 dark:hover:bg-gray-700/50',
             ]"
             @click="handleSelect(option)"
           >

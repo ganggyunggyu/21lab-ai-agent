@@ -33,7 +33,7 @@ const handleBackdropClick = (e: MouseEvent) => {
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 dark:bg-black/70 backdrop-blur-sm"
       @click="handleBackdropClick"
     >
       <Transition
@@ -46,29 +46,29 @@ const handleBackdropClick = (e: MouseEvent) => {
       >
         <div
           v-if="show"
-          class="w-[400px] bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.2)] overflow-hidden"
+          class="w-[400px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/80 overflow-hidden"
           role="dialog"
           aria-modal="true"
         >
           <!-- Header -->
           <div
             v-if="title || $slots.header"
-            class="px-6 py-4 border-b border-slate-200 bg-slate-50/50"
+            class="px-6 py-4 border-b border-slate-200 dark:border-gray-600 bg-slate-50/50 dark:bg-gray-700/50"
           >
             <slot name="header">
-              <h2 class="text-lg font-semibold text-slate-900">{{ title }}</h2>
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-gray-100">{{ title }}</h2>
             </slot>
           </div>
 
           <!-- Body -->
-          <div class="px-6 py-5">
+          <div class="px-6 py-5 text-gray-900 dark:text-gray-100">
             <slot />
           </div>
 
           <!-- Footer -->
           <div
             v-if="$slots.footer"
-            class="px-6 py-4 border-t border-slate-200 bg-slate-50/30"
+            class="px-6 py-4 border-t border-slate-200 dark:border-gray-600 bg-slate-50/30 dark:bg-gray-700/30"
           >
             <slot name="footer" />
           </div>

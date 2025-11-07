@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
-import { NInput } from 'naive-ui';
+import { ref, watch, nextTick } from 'vue';
 
 interface Props {
   modelValue: string;
@@ -145,42 +144,55 @@ const handleBlur = (e: FocusEvent) => {
   emit('blur', e);
 };
 
-const handleClear = () => {
-  localValue.value = '';
-  emit('clear');
-};
-
-const inputProps = computed(() => ({
-  type: props.type,
-  placeholder: props.placeholder,
-  disabled: props.disabled,
-  readonly: props.readonly,
-  clearable: props.clearable,
-  showPasswordOn: props.showPasswordOn,
-  maxlength: props.maxlength,
-  minlength: props.minlength,
-  rows: props.rows,
-  autosize: props.autosize,
-  size: props.size,
-  round: props.round,
-  status: props.status,
-  loading: props.loading,
-}));
 </script>
 
 <template>
-  <n-input
-    v-model:value="localValue"
-    v-bind="inputProps"
-    :class="props.class"
+  <textarea
+    v-if="type === 'textarea'"
+    v-model="localValue"
+    :placeholder="placeholder"
+    :disabled="disabled"
+    :readonly="readonly"
+    :maxlength="maxlength"
+    :minlength="minlength"
+    :rows="rows"
+    :class="[
+      'w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors resize-none',
+      disabled && 'opacity-50 cursor-not-allowed',
+      props.class
+    ]"
     :style="props.style"
-    @input="handleInput"
+    @input="handleInput(($event.target as HTMLTextAreaElement).value)"
     @keydown="handleKeydown"
     @keyup="handleKeyup"
     @keypress="handleKeypress"
     @focus="handleFocus"
     @blur="handleBlur"
-    @clear="handleClear"
+    @compositionstart="handleCompositionStart"
+    @compositionupdate="handleCompositionUpdate"
+    @compositionend="handleCompositionEnd"
+  />
+  <input
+    v-else
+    v-model="localValue"
+    :type="type"
+    :placeholder="placeholder"
+    :disabled="disabled"
+    :readonly="readonly"
+    :maxlength="maxlength"
+    :minlength="minlength"
+    :class="[
+      'w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors',
+      disabled && 'opacity-50 cursor-not-allowed',
+      props.class
+    ]"
+    :style="props.style"
+    @input="handleInput(($event.target as HTMLInputElement).value)"
+    @keydown="handleKeydown"
+    @keyup="handleKeyup"
+    @keypress="handleKeypress"
+    @focus="handleFocus"
+    @blur="handleBlur"
     @compositionstart="handleCompositionStart"
     @compositionupdate="handleCompositionUpdate"
     @compositionend="handleCompositionEnd"
