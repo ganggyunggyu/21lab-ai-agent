@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, type Ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import { MessageBubble, MessageDetailModal, Button } from '@/components/ui';
@@ -33,7 +33,6 @@ const { copyMsg, handleDownloadClick } = useChatActions();
 const publishedStore = usePublishedStore();
 const { openDetailModal } = publishedStore;
 
-const scrollbarRef: Ref<HTMLDivElement | null> = ref(null);
 const scrollAnchorRef = ref<HTMLDivElement | null>(null);
 
 const showDetailModal = ref(false);
@@ -109,21 +108,10 @@ const handleToggleSelectAll = () => {
 };
 
 const handleScrollToBottom = () => {
-  try {
-    if (scrollbarRef.value) {
-      scrollbarRef.value.scrollTo({
-        top: scrollbarRef.value.scrollHeight,
-        behavior: 'smooth',
-      });
-    } else if (scrollAnchorRef.value) {
-      scrollAnchorRef.value.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
-    }
-  } catch (err) {
-    console.error('Scroll to bottom error:', err);
-  }
+  scrollAnchorRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'end',
+  });
 };
 
 watch(
@@ -158,7 +146,6 @@ onMounted(async () => {
         aria-label="메시지 목록"
       >
         <div
-          ref="scrollbarRef"
           class="flex-1 h-full overflow-y-auto"
           role="log"
           aria-live="polite"
