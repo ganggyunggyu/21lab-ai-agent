@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { NButton, NCard, NIcon, NProgress, NSelect, useMessage } from 'naive-ui';
+import { NButton, NCard, NIcon, NSelect, useMessage } from 'naive-ui';
 import {
   Add as AddIcon,
   Trash as TrashIcon,
@@ -26,8 +26,10 @@ const { batchRequests, batchStatuses, service } = storeToRefs(chatStore);
 const { addBatchRequest, removeBatchRequest, updateBatchRequest, handleBatchGenerate, clearBatchRequests } = chatStore;
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const txtInputRef = ref<HTMLInputElement | null>(null);
 const batchHistory = ref<BatchHistoryItem[]>(getBatchHistory());
 const showHistory = ref(false);
+const isDragging = ref(false);
 
 const validRequests = computed(() => {
   return batchRequests.value.filter((req) => req.keyword.trim());
@@ -43,16 +45,72 @@ const getStatusText = (status: 'pending' | 'loading' | 'success' | 'error') => {
   return map[status];
 };
 
-const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => {
-  return `status-${status}`;
-};
-
 const handleBack = () => {
   router.push('/');
 };
 
 const handleFileUploadClick = () => {
   fileInputRef.value?.click();
+};
+
+const handleTxtUploadClick = () => {
+  txtInputRef.value?.click();
+};
+
+const handleTxtFileChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const files = target.files;
+
+  if (!files || files.length === 0) return;
+
+  // TXT 파일만 필터링
+  const txtFiles = Array.from(files).filter(file => file.name.endsWith('.txt'));
+
+  if (txtFiles.length === 0) {
+    message.error('TXT 파일만 업로드 가능합니다');
+    return;
+  }
+
+  // 20개 제한 체크
+  if (batchRequests.value.length + txtFiles.length > 20) {
+    message.warning(`최대 20개까지만 추가할 수 있습니다. ${20 - batchRequests.value.length}개만 추가됩니다.`);
+  }
+
+  let addedCount = 0;
+
+  for (const file of txtFiles) {
+    // 20개 제한 체크
+    if (batchRequests.value.length >= 20) {
+      break;
+    }
+
+    try {
+      // 파일 내용 읽기
+      const content = await file.text();
+
+      // 파일명에서 확장자 제거하여 키워드로 사용
+      const keyword = file.name.replace(/\.txt$/i, '');
+
+      addBatchRequest();
+      const idx = batchRequests.value.length - 1;
+      updateBatchRequest(idx, {
+        keyword: keyword.trim(),
+        refMsg: content.trim()
+      });
+      addedCount++;
+    } catch (error) {
+      console.error(`파일 읽기 실패: ${file.name}`, error);
+    }
+  }
+
+  if (addedCount > 0) {
+    message.success(`${addedCount}개의 원고가 추가되었습니다`);
+  } else {
+    message.error('파일을 읽는 중 오류가 발생했습니다');
+  }
+
+  // 파일 인풋 초기화
+  if (target) target.value = '';
 };
 
 const handleFileChange = (event: Event) => {
@@ -148,13 +206,94 @@ const handleGenerate = async () => {
   await handleBatchGenerate();
   refreshHistory();
 };
+
+// 드래그 앤 드롭 핸들러
+const handleDragEnter = (e: DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  isDragging.value = true;
+};
+
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  isDragging.value = true;
+};
+
+const handleDragLeave = (e: DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  // 자식 요소로 이동할 때도 발생하므로 relatedTarget 체크
+  if (e.currentTarget === e.target) {
+    isDragging.value = false;
+  }
+};
+
+const handleDrop = async (e: DragEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  isDragging.value = false;
+
+  const files = e.dataTransfer?.files;
+  if (!files || files.length === 0) return;
+
+  // TXT 파일만 필터링
+  const txtFiles = Array.from(files).filter(file => file.name.endsWith('.txt'));
+
+  if (txtFiles.length === 0) {
+    message.error('TXT 파일만 업로드 가능합니다');
+    return;
+  }
+
+  // 20개 제한 체크
+  if (batchRequests.value.length + txtFiles.length > 20) {
+    message.warning(`최대 20개까지만 추가할 수 있습니다. ${20 - batchRequests.value.length}개만 추가됩니다.`);
+  }
+
+  let addedCount = 0;
+
+  for (const file of txtFiles) {
+    // 20개 제한 체크
+    if (batchRequests.value.length >= 20) {
+      break;
+    }
+
+    try {
+      // 파일 내용 읽기
+      const content = await file.text();
+
+      // 파일명에서 확장자 제거하여 키워드로 사용
+      const keyword = file.name.replace(/\.txt$/i, '');
+
+      addBatchRequest();
+      const idx = batchRequests.value.length - 1;
+      updateBatchRequest(idx, {
+        keyword: keyword.trim(),
+        refMsg: content.trim()
+      });
+      addedCount++;
+    } catch (error) {
+      console.error(`파일 읽기 실패: ${file.name}`, error);
+    }
+  }
+
+  if (addedCount > 0) {
+    message.success(`${addedCount}개의 원고가 추가되었습니다`);
+  } else {
+    message.error('파일을 읽는 중 오류가 발생했습니다');
+  }
+};
 </script>
 
 <template>
-  <div class="batch-page">
-    <header class="batch-header">
-      <div class="header-left">
-        <NButton text @click="handleBack" class="back-btn">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 dark:from-gray-950 dark:to-gray-900 p-6">
+    <header class="flex justify-between items-center mb-6 p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+      <div class="flex items-center gap-4">
+        <NButton
+          text
+          @click="handleBack"
+          class="text-lg text-slate-500 transition-all min-h-[40px] h-10 w-10 flex items-center justify-center rounded-xl hover:text-indigo-500 hover:bg-indigo-500/10"
+        >
           <template #icon>
             <NIcon :component="BackIcon" />
           </template>
@@ -163,16 +302,16 @@ const handleGenerate = async () => {
           v-model:value="service"
           :options="MODEL_OPTIONS"
           size="large"
-          class="service-selector"
+          class="w-[150px] [&_.n-base-selection]:bg-gradient-to-br [&_.n-base-selection]:from-white/95 [&_.n-base-selection]:to-slate-50/90 [&_.n-base-selection]:rounded-xl [&_.n-base-selection]:border [&_.n-base-selection]:border-indigo-500/20 [&_.n-base-selection]:transition-all [&_.n-base-selection]:shadow-[0_2px_8px_rgba(99,102,241,0.08)] [&_.n-base-selection]:min-h-[40px] [&_.n-base-selection]:h-10 [&_.n-base-selection:hover]:border-indigo-500/40 [&_.n-base-selection:hover]:bg-gradient-to-br [&_.n-base-selection:hover]:from-white [&_.n-base-selection:hover]:to-slate-50/95 [&_.n-base-selection:hover]:-translate-y-px [&_.n-base-selection:hover]:shadow-[0_4px_12px_rgba(99,102,241,0.15)] [&_.n-base-selection-label]:font-semibold [&_.n-base-selection-label]:text-sm [&_.n-base-selection-input__content]:font-semibold [&_.n-base-selection-input__content]:text-sm [&_.n-base-selection-input__content]:text-slate-800"
         />
       </div>
 
-      <div class="header-right">
+      <div class="flex items-center gap-3">
         <NButton
           secondary
           size="large"
           @click="showHistory = !showHistory"
-          class="history-btn-header"
+          class="min-h-[40px] h-10 font-semibold text-purple-600 bg-gradient-to-br from-purple-600/10 to-purple-600/5 border border-purple-600/30 transition-all hover:bg-gradient-to-br hover:from-purple-600/15 hover:to-purple-600/8 hover:border-purple-600/40 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(139,92,246,0.2)]"
         >
           <template #icon>
             <NIcon :component="HistoryIcon" />
@@ -184,7 +323,7 @@ const handleGenerate = async () => {
           secondary
           size="large"
           @click="handleFileUploadClick"
-          class="upload-btn-header"
+          class="min-h-[40px] h-10 font-semibold text-emerald-600 bg-gradient-to-br from-emerald-600/10 to-emerald-600/5 border border-emerald-600/30 transition-all hover:bg-gradient-to-br hover:from-emerald-600/15 hover:to-emerald-600/8 hover:border-emerald-600/40 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(16,185,129,0.2)]"
         >
           <template #icon>
             <NIcon :component="UploadIcon" />
@@ -193,11 +332,23 @@ const handleGenerate = async () => {
         </NButton>
 
         <NButton
+          secondary
+          size="large"
+          @click="handleTxtUploadClick"
+          class="min-h-[40px] h-10 font-semibold text-blue-600 bg-gradient-to-br from-blue-600/10 to-blue-600/5 border border-blue-600/30 transition-all hover:bg-gradient-to-br hover:from-blue-600/15 hover:to-blue-600/8 hover:border-blue-600/40 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(59,130,246,0.2)]"
+        >
+          <template #icon>
+            <NIcon :component="UploadIcon" />
+          </template>
+          TXT 업로드
+        </NButton>
+
+        <NButton
           dashed
           size="large"
           @click="addBatchRequest"
           :disabled="batchRequests.length >= 20"
-          class="add-row-btn-header"
+          class="min-h-[40px] h-10 font-semibold border-2 border-dashed border-slate-300 text-indigo-500 bg-indigo-500/5 transition-all hover:border-indigo-500 hover:bg-indigo-500/10 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           <template #icon>
             <NIcon :component="AddIcon" />
@@ -210,7 +361,7 @@ const handleGenerate = async () => {
           size="large"
           @click="handleGenerate"
           :disabled="validRequests.length === 0"
-          class="generate-btn"
+          class="min-h-[40px] h-10 font-bold bg-gradient-to-br from-indigo-500 to-purple-600 border-none shadow-[0_4px_16px_rgba(99,102,241,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(99,102,241,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           <template #icon>
             <NIcon :component="SendIcon" />
@@ -226,41 +377,71 @@ const handleGenerate = async () => {
       type="file"
       accept=".csv"
       @change="handleFileChange"
-      style="display: none"
+      class="hidden"
     />
 
-    <div class="batch-container">
-      <NCard class="batch-card">
-        <div class="table-wrapper">
-          <table class="batch-table">
-            <thead>
+    <!-- Hidden txt file input -->
+    <input
+      ref="txtInputRef"
+      type="file"
+      accept=".txt"
+      multiple
+      @change="handleTxtFileChange"
+      class="hidden"
+    />
+
+    <div
+      class="max-w-[1400px] mx-auto relative"
+      @dragenter="handleDragEnter"
+      @dragover="handleDragOver"
+      @dragleave="handleDragLeave"
+      @drop="handleDrop"
+    >
+      <!-- 드래그 오버레이 -->
+      <div
+        v-if="isDragging"
+        class="absolute inset-0 z-50 flex items-center justify-center bg-blue-500/10 border-4 border-dashed border-blue-500 rounded-2xl backdrop-blur-sm pointer-events-none"
+      >
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
+          <NIcon :component="UploadIcon" class="text-6xl text-blue-500 mb-4" />
+          <p class="text-xl font-bold text-blue-600 m-0">TXT 파일을 여기에 드롭하세요</p>
+          <p class="text-sm text-slate-500 mt-2 m-0">여러 파일을 동시에 추가할 수 있습니다</p>
+        </div>
+      </div>
+
+      <NCard class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead class="bg-gradient-to-br from-slate-50 to-slate-100 border-b-2 border-slate-200">
               <tr>
-                <th class="col-no">#</th>
-                <th class="col-keyword">키워드</th>
-                <th class="col-ref">참조원고</th>
-                <th class="col-status">상태</th>
-                <th class="col-action">액션</th>
+                <th class="w-[60px] text-center p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">#</th>
+                <th class="w-[35%] p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">키워드</th>
+                <th class="w-[40%] p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">참조원고</th>
+                <th class="w-[120px] p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">상태</th>
+                <th class="w-[80px] text-center p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">액션</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="(req, idx) in batchRequests"
                 :key="req.id"
-                class="batch-row"
+                class="transition-colors hover:bg-slate-50"
               >
-                <td class="col-no">
-                  <span class="row-number">{{ idx + 1 }}</span>
+                <td class="p-3 border-b border-slate-100 text-center">
+                  <span class="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-indigo-500/10 to-indigo-500/5 rounded-lg font-bold text-indigo-500">
+                    {{ idx + 1 }}
+                  </span>
                 </td>
-                <td class="col-keyword">
+                <td class="p-3 border-b border-slate-100">
                   <Input
                     :modelValue="req.keyword"
                     @update:modelValue="(val: string) => updateBatchRequest(idx as number, { keyword: val })"
                     placeholder="키워드를 입력하세요..."
                     type="text"
-                    class="table-input"
+                    class="w-full [&_.n-input]:bg-transparent [&_.n-input]:border [&_.n-input]:border-slate-200 [&_.n-input]:rounded-lg [&_.n-input]:transition-all [&_.n-input:hover]:border-slate-300 [&_.n-input:focus-within]:border-indigo-500 [&_.n-input:focus-within]:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]"
                   />
                 </td>
-                <td class="col-ref">
+                <td class="p-3 border-b border-slate-100">
                   <Input
                     :modelValue="req.refMsg || ''"
                     @update:modelValue="(val: string) => updateBatchRequest(idx as number, { refMsg: val })"
@@ -268,24 +449,32 @@ const handleGenerate = async () => {
                     type="textarea"
                     :rows="1"
                     :autosize="{ minRows: 1, maxRows: 3 }"
-                    class="table-input"
+                    class="w-full [&_.n-input]:bg-transparent [&_.n-input]:border [&_.n-input]:border-slate-200 [&_.n-input]:rounded-lg [&_.n-input]:transition-all [&_.n-input:hover]:border-slate-300 [&_.n-input:focus-within]:border-indigo-500 [&_.n-input:focus-within]:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]"
                   />
                 </td>
-                <td class="col-status">
+                <td class="p-3 border-b border-slate-100">
                   <span
                     v-if="batchStatuses[req.id]"
-                    :class="['status-badge', getStatusClass(batchStatuses[req.id])]"
+                    :class="[
+                      'inline-block px-3 py-1.5 rounded-lg text-[13px] font-semibold',
+                      batchStatuses[req.id] === 'pending' && 'bg-slate-500/10 text-slate-600',
+                      batchStatuses[req.id] === 'loading' && 'bg-amber-500/10 text-amber-600 animate-pulse',
+                      batchStatuses[req.id] === 'success' && 'bg-emerald-500/10 text-emerald-600',
+                      batchStatuses[req.id] === 'error' && 'bg-red-500/10 text-red-600'
+                    ]"
                   >
                     {{ getStatusText(batchStatuses[req.id]) }}
                   </span>
-                  <span v-else class="status-badge status-pending">대기</span>
+                  <span v-else class="inline-block px-3 py-1.5 rounded-lg text-[13px] font-semibold bg-slate-500/10 text-slate-600">
+                    대기
+                  </span>
                 </td>
-                <td class="col-action">
+                <td class="p-3 border-b border-slate-100 text-center">
                   <NButton
                     text
                     type="error"
                     @click="removeBatchRequest(idx)"
-                    class="delete-btn"
+                    class="text-lg text-slate-400 transition-all hover:text-red-500 hover:scale-110"
                   >
                     <template #icon>
                       <NIcon :component="TrashIcon" />
@@ -295,11 +484,18 @@ const handleGenerate = async () => {
               </tr>
 
               <!-- 빈 행 표시 -->
-              <tr v-if="batchRequests.length === 0" class="empty-row">
-                <td colspan="5">
-                  <div class="empty-state">
-                    <p>아직 추가된 원고가 없습니다.</p>
-                    <p class="empty-hint">"+ 원고 추가" 버튼을 눌러 시작하세요</p>
+              <tr v-if="batchRequests.length === 0">
+                <td colspan="5" class="py-[60px] px-5">
+                  <div class="text-center text-slate-400 dark:text-slate-500">
+                    <NIcon :component="UploadIcon" class="text-6xl text-slate-300 dark:text-slate-600 mb-4" />
+                    <p class="m-0 text-lg font-bold text-slate-600 dark:text-slate-400">아직 추가된 원고가 없습니다</p>
+                    <p class="mt-3 m-0 text-sm text-slate-400 dark:text-slate-500">
+                      <strong class="text-blue-500 dark:text-blue-400">TXT 파일을 드래그 앤 드롭</strong>하거나
+                      <strong class="text-emerald-500 dark:text-emerald-400">CSV 업로드</strong> 버튼을 눌러 시작하세요
+                    </p>
+                    <p class="mt-2 m-0 text-xs text-slate-300 dark:text-slate-600">
+                      💡 TXT 파일: 파일명 → 키워드, 파일 내용 → 참조원고
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -309,45 +505,53 @@ const handleGenerate = async () => {
       </NCard>
 
       <!-- 진행률 표시 -->
-      <div v-if="Object.keys(batchStatuses).length > 0" class="progress-section">
-        <NCard class="progress-card">
-          <h3>생성 진행 상황</h3>
-          <div class="progress-info">
-            <span>완료: {{ Object.values(batchStatuses).filter(s => s === 'success').length }}</span>
-            <span>진행중: {{ Object.values(batchStatuses).filter(s => s === 'loading').length }}</span>
-            <span>실패: {{ Object.values(batchStatuses).filter(s => s === 'error').length }}</span>
+      <div v-if="Object.keys(batchStatuses).length > 0" class="mt-6">
+        <NCard class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <h3 class="m-0 mb-4 text-base font-bold text-slate-800">생성 진행 상황</h3>
+          <div class="flex gap-6 text-sm font-semibold">
+            <span class="px-4 py-2 bg-slate-50 rounded-lg">
+              완료: {{ Object.values(batchStatuses).filter(s => s === 'success').length }}
+            </span>
+            <span class="px-4 py-2 bg-slate-50 rounded-lg">
+              진행중: {{ Object.values(batchStatuses).filter(s => s === 'loading').length }}
+            </span>
+            <span class="px-4 py-2 bg-slate-50 rounded-lg">
+              실패: {{ Object.values(batchStatuses).filter(s => s === 'error').length }}
+            </span>
           </div>
         </NCard>
       </div>
 
       <!-- 히스토리 섹션 -->
-      <div v-if="showHistory" class="history-section">
-        <NCard class="history-card">
-          <div class="history-header">
-            <h3>배치 생성 히스토리</h3>
-            <NButton text @click="showHistory = false">닫기</NButton>
+      <div v-if="showHistory" class="mt-6">
+        <NCard class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="m-0 text-base font-bold text-slate-800">배치 생성 히스토리</h3>
+            <NButton text @click="showHistory = false" class="text-slate-600 hover:text-slate-800">
+              닫기
+            </NButton>
           </div>
 
-          <div v-if="batchHistory.length === 0" class="empty-history">
+          <div v-if="batchHistory.length === 0" class="text-center py-10 px-5 text-slate-400">
             <p>저장된 히스토리가 없습니다</p>
           </div>
 
-          <div v-else class="history-list">
+          <div v-else class="flex flex-col gap-3">
             <div
               v-for="item in batchHistory"
               :key="item.id"
-              class="history-item"
+              class="p-4 bg-slate-50 rounded-xl border border-slate-200 transition-all hover:bg-slate-100 hover:border-slate-300"
             >
-              <div class="history-item-header">
-                <div class="history-title">
-                  <strong>{{ item.title }}</strong>
-                  <span class="history-meta">
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex flex-col gap-1">
+                  <strong class="text-sm text-slate-800">{{ item.title }}</strong>
+                  <span class="text-xs text-slate-500">
                     {{ new Date(item.timestamp).toLocaleString('ko-KR') }} ·
                     {{ item.totalCount }}개 원고 ·
                     서비스: {{ item.service.toUpperCase() }}
                   </span>
                 </div>
-                <div class="history-actions">
+                <div class="flex gap-2">
                   <NButton
                     size="small"
                     type="primary"
@@ -370,11 +574,18 @@ const handleGenerate = async () => {
                   </NButton>
                 </div>
               </div>
-              <div class="history-preview">
-                <span v-for="(req, idx) in item.requests.slice(0, 3)" :key="idx" class="preview-keyword">
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="(req, idx) in item.requests.slice(0, 3)"
+                  :key="idx"
+                  class="px-2.5 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-700"
+                >
                   {{ req.keyword }}
                 </span>
-                <span v-if="item.requests.length > 3" class="preview-more">
+                <span
+                  v-if="item.requests.length > 3"
+                  class="px-2.5 py-1 text-xs text-slate-400 font-semibold"
+                >
                   외 {{ item.requests.length - 3 }}개
                 </span>
               </div>
@@ -386,499 +597,3 @@ const handleGenerate = async () => {
   </div>
 </template>
 
-<style scoped>
-.batch-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 24px;
-}
-
-.batch-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding: 20px 24px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.back-btn {
-  font-size: 18px;
-  color: #64748b;
-  transition: all 0.2s;
-  min-height: 40px;
-  height: 40px;
-  width: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-}
-
-.back-btn:hover {
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
-}
-
-.service-selector {
-  width: 150px;
-}
-
-.service-selector :deep(.n-base-selection) {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
-  border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
-  min-height: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-}
-
-.service-selector :deep(.n-base-selection:hover) {
-  border-color: rgba(99, 102, 241, 0.4);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 0.95));
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-}
-
-.service-selector :deep(.n-base-selection-label) {
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-.service-selector :deep(.n-base-selection-input) {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-.service-selector :deep(.n-base-selection-input__content) {
-  font-weight: 600;
-  font-size: 14px;
-  color: #1e293b;
-  line-height: 1;
-}
-
-.service-selector :deep(.n-base-suffix) {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-right :deep(.n-button) {
-  min-height: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-}
-
-.upload-btn-header {
-  font-weight: 600;
-  color: #10b981;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  transition: all 0.3s;
-}
-
-.upload-btn-header:hover {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
-  border-color: rgba(16, 185, 129, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
-}
-
-.add-row-btn-header {
-  font-weight: 600;
-  border: 2px dashed #cbd5e1;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
-  transition: all 0.3s;
-}
-
-.add-row-btn-header:hover:not(:disabled) {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
-  transform: translateY(-2px);
-}
-
-.generate-btn {
-  font-weight: 700;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
-  transition: all 0.3s;
-}
-
-.generate-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
-}
-
-.batch-container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.batch-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.batch-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.batch-table thead {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.batch-table th {
-  padding: 16px;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.batch-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.batch-row {
-  transition: background 0.2s;
-}
-
-.batch-row:hover {
-  background: #f8fafc;
-}
-
-.col-no {
-  width: 60px;
-  text-align: center;
-}
-
-.col-keyword {
-  width: 35%;
-}
-
-.col-ref {
-  width: 40%;
-}
-
-.col-status {
-  width: 120px;
-}
-
-.col-action {
-  width: 80px;
-  text-align: center;
-}
-
-.row-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
-  border-radius: 8px;
-  font-weight: 700;
-  color: #6366f1;
-}
-
-.table-input {
-  width: 100%;
-}
-
-.table-input :deep(.n-input) {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.table-input :deep(.n-input:hover) {
-  border-color: #cbd5e1;
-}
-
-.table-input :deep(.n-input:focus-within) {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.status-pending {
-  background: rgba(148, 163, 184, 0.1);
-  color: #64748b;
-}
-
-.status-loading {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.status-success {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.status-error {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.delete-btn {
-  font-size: 18px;
-  color: #94a3b8;
-  transition: all 0.2s;
-}
-
-.delete-btn:hover {
-  color: #ef4444;
-  transform: scale(1.1);
-}
-
-.empty-row td {
-  padding: 60px 20px;
-}
-
-.empty-state {
-  text-align: center;
-  color: #94a3b8;
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 16px;
-}
-
-.empty-hint {
-  margin-top: 8px;
-  font-size: 14px;
-  color: #cbd5e1;
-}
-
-.progress-section {
-  margin-top: 24px;
-}
-
-.progress-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.progress-card h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.progress-info {
-  display: flex;
-  gap: 24px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.progress-info span {
-  padding: 8px 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-}
-
-.history-section {
-  margin-top: 24px;
-}
-
-.history-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.history-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.empty-history {
-  text-align: center;
-  padding: 40px 20px;
-  color: #94a3b8;
-}
-
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.history-item {
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s;
-}
-
-.history-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.history-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.history-title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.history-title strong {
-  font-size: 14px;
-  color: #1e293b;
-}
-
-.history-meta {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.history-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.history-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.preview-keyword {
-  padding: 4px 10px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #475569;
-}
-
-.preview-more {
-  padding: 4px 10px;
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 600;
-}
-
-.history-btn-header {
-  font-weight: 600;
-  color: #8b5cf6;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  transition: all 0.3s;
-}
-
-.history-btn-header:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
-  border-color: rgba(139, 92, 246, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-@media (max-width: 768px) {
-  .batch-page {
-    padding: 16px;
-  }
-
-  .batch-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-
-  .header-right {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .page-title {
-    font-size: 20px;
-  }
-
-  .batch-table {
-    font-size: 13px;
-  }
-
-  .col-keyword {
-    width: 30%;
-  }
-
-  .col-ref {
-    width: 35%;
-  }
-}
-</style>

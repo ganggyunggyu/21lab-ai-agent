@@ -14,13 +14,9 @@ export const useThemeStore = defineStore(
     const applyTheme = () => {
       if (typeof document === 'undefined') return;
       const root = document.documentElement;
-      const body = document.body;
       const isDarkTheme = theme.value === 'dark';
 
-      root.classList.toggle('dark-theme', isDarkTheme);
-      root.classList.toggle('light-theme', !isDarkTheme);
-      body.classList.toggle('dark-theme', isDarkTheme);
-      body.classList.toggle('light-theme', !isDarkTheme);
+      root.classList.toggle('dark', isDarkTheme);
       root.setAttribute('data-theme', theme.value);
     };
 
@@ -93,7 +89,7 @@ export const useThemeStore = defineStore(
   {
     persist: {
       key: 'theme-store',
-      storage: localStorage,
+      paths: ['theme'],
     },
   }
 );

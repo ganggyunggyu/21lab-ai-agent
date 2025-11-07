@@ -2,6 +2,7 @@ import { createDiscreteApi } from 'naive-ui';
 import { copyToClipboard } from '../utils/_clipboard';
 import { downloadText } from '../utils/_downloadText';
 import { sanitizeFileName } from '../utils/_sanitizeFileName';
+import { extractKeywordDisplay } from '../utils/_extractKeyword';
 import {
   MSG_COPY_SUCCESS,
   MSG_COPY_FAIL,
@@ -37,7 +38,11 @@ export const useChatActions = () => {
 
   const handleDownloadClick = (msg: Message) => {
     try {
-      const safeKeyword = sanitizeFileName(msg.keyword || 'message');
+      const rawKeyword = msg.keyword || '';
+      const keyword = rawKeyword.length > 50
+        ? extractKeywordDisplay(rawKeyword)
+        : rawKeyword;
+      const safeKeyword = sanitizeFileName(keyword || 'message');
       const fileName = `${safeKeyword}-${
         msg.content.replace(/\s/g, '').length
       }`;

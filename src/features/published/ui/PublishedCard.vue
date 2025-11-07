@@ -155,7 +155,7 @@ const getServiceColor = (service?: string) => {
       <div class="item-content compact">
         <div class="keyword-line">
           <div class="keyword-section">
-            <span class="keyword">{{ extractKeywordDisplay(item.keyword) }}</span>
+            <span class="keyword">{{ item.keyword.length > 50 ? extractKeywordDisplay(item.keyword) : item.keyword }}</span>
             <Button
               variant="ghost"
               size="sm"
@@ -228,11 +228,21 @@ const getServiceColor = (service?: string) => {
   border: 1px solid rgba(59, 130, 246, 0.14);
 }
 
+:global(.dark) .published-item-card {
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
 .published-item-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(59, 130, 246, 0.18),
     0 6px 14px rgba(16, 185, 129, 0.12);
   border-color: rgba(16, 185, 129, 0.28);
+}
+
+:global(.dark) .published-item-card:hover {
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.25),
+    0 6px 14px rgba(236, 72, 153, 0.15);
+  border-color: rgba(168, 85, 247, 0.4);
 }
 
 /* 비활성화된 카드 스타일 */
@@ -293,7 +303,7 @@ const getServiceColor = (service?: string) => {
 }
 
 :global(.dark) .item-title {
-  color: #f9fafb;
+  color: #e5e5e5;
 }
 
 .group-version-badge {
@@ -385,6 +395,18 @@ const getServiceColor = (service?: string) => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+:global(.dark) .keyword {
+  color: #d1d5db;
+}
+
+.published-badge-icon {
+  color: #10b981;
+}
+
+:global(.dark) .published-badge-icon {
+  color: #a855f7;
 }
 
 .copy-keyword-btn {
@@ -530,12 +552,20 @@ const getServiceColor = (service?: string) => {
   padding-top: 8px;
 }
 
+:global(.dark) .item-footer {
+  border-top-color: rgba(168, 85, 247, 0.15);
+}
+
 .created-date {
   font-size: 12px;
   color: #888;
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+:global(.dark) .created-date {
+  color: #9ca3af;
 }
 
 .date-icon {

@@ -1,11 +1,11 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css');
 @import 'tailwindcss';
 
-@keyframes liquidGradient {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply bg-gradient-to-br from-slate-50 via-white to-slate-100;
+  @apply dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-900 dark:to-black;
+  @apply transition-colors duration-200;
+  min-height: 100vh;
 }

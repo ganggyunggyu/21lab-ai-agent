@@ -1,17 +1,13 @@
 <template>
-  <n-config-provider :locale="koKR" :date-locale="dateKoKR">
-    <n-global-style />
-    <n-message-provider>
-      <router-view />
-    </n-message-provider>
-  </n-config-provider>
+  <n-message-provider>
+    <router-view />
+  </n-message-provider>
 </template>
 
 <script setup lang="ts">
 import './style.css';
 import { onMounted } from 'vue';
-import { NConfigProvider, NMessageProvider, NGlobalStyle } from 'naive-ui';
-import { koKR, dateKoKR } from 'naive-ui';
+import { NMessageProvider } from 'naive-ui';
 import { useThemeStore } from '@/stores/_theme';
 
 const themeStore = useThemeStore();
