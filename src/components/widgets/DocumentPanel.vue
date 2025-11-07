@@ -65,6 +65,58 @@ const completedMessages = computed(() => {
   });
 });
 
+// 날짜별로 그룹화된 메시지
+const messagesByDate = computed(() => {
+  const grouped: Record<string, Message[]> = {};
+  const today = new Date();
+  const todayStr = formatDateKey(today);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDateKey(yesterday);
+
+  completedMessages.value.forEach((msg) => {
+    const date = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    const dateKey = formatDateKey(date);
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = [];
+    }
+    grouped[dateKey].push(msg);
+  });
+
+  // 날짜별 정렬 (최신 날짜가 위로)
+  const sortedDates = Object.keys(grouped).sort((a, b) => {
+    const [yearA, monthA, dayA] = a.split('-').map(Number);
+    const [yearB, monthB, dayB] = b.split('-').map(Number);
+    const dateA = new Date(yearA, monthA - 1, dayA).getTime();
+    const dateB = new Date(yearB, monthB - 1, dayB).getTime();
+    return dateB - dateA;
+  });
+
+  return sortedDates.map(dateKey => ({
+    dateKey,
+    displayDate: formatDisplayDate(dateKey, todayStr, yesterdayStr),
+    messages: grouped[dateKey],
+  }));
+});
+
+// 날짜를 YYYY-MM-DD 형식으로 변환
+const formatDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// 표시용 날짜 포맷
+const formatDisplayDate = (dateKey: string, todayStr: string, yesterdayStr: string): string => {
+  if (dateKey === todayStr) return '오늘';
+  if (dateKey === yesterdayStr) return '어제';
+
+  const [year, month, day] = dateKey.split('-');
+  return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
+};
+
 const togglePanel = () => {
   isOpen.value = !isOpen.value;
 };
@@ -361,41 +413,48 @@ const getMessageTitle = (msg: Message) => {
       </section>
 
       <!-- 완료된 원고 -->
-      <section v-if="completedMessages.length > 0" class="flex flex-col gap-3">
+      <section v-if="completedMessages.length > 0" class="flex flex-col gap-6">
         <h3
           class="text-[13px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide m-0"
         >
           완료됨 ({{ completedMessages.length }})
         </h3>
-        <div class="flex flex-col gap-2 w-full max-w-full">
-          <div
-            v-for="msg in completedMessages"
-            :key="msg.id"
-            class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col gap-1.5 transition-all duration-200 w-full max-w-full box-border cursor-pointer hover:border-indigo-500 dark:hover:border-blue-500 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_2px_8px_rgba(59,130,246,0.2)] hover:-translate-y-px hover:bg-indigo-500/5 dark:hover:bg-blue-500/10"
-            :class="{
-              'flex-row items-center gap-2.5': isSelectionMode,
-              'border-indigo-500 dark:border-blue-500 bg-indigo-500/10 dark:bg-blue-500/15': isMessageSelected(msg.id),
-            }"
-            @click="handleDocumentClick(msg)"
-          >
-            <!-- Checkbox for selection mode -->
+
+        <!-- 날짜별 그룹 -->
+        <div v-for="dateGroup in messagesByDate" :key="dateGroup.dateKey" class="flex flex-col gap-3">
+          <h4 class="text-[12px] font-bold text-gray-500 dark:text-gray-400 m-0 px-2">
+            {{ dateGroup.displayDate }}
+          </h4>
+          <div class="flex flex-col gap-2 w-full max-w-full">
             <div
-              v-if="isSelectionMode"
-              class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded flex items-center justify-center shrink-0 transition-all duration-200"
+              v-for="msg in dateGroup.messages"
+              :key="msg.id"
+              class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col gap-1.5 transition-all duration-200 w-full max-w-full box-border cursor-pointer hover:border-indigo-500 dark:hover:border-blue-500 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_2px_8px_rgba(59,130,246,0.2)] hover:-translate-y-px hover:bg-indigo-500/5 dark:hover:bg-blue-500/10"
               :class="{
-                'bg-indigo-500 dark:bg-blue-500 border-indigo-500 dark:border-blue-500': isMessageSelected(msg.id),
+                'flex-row items-center gap-2.5': isSelectionMode,
+                'border-indigo-500 dark:border-blue-500 bg-indigo-500/10 dark:bg-blue-500/15': isMessageSelected(msg.id),
               }"
+              @click="handleDocumentClick(msg)"
             >
-              <component
-                v-if="isMessageSelected(msg.id)"
-                :is="CheckmarkIcon"
-                class="w-3.5 h-3.5 text-white font-bold"
-              />
-            </div>
-            <div
-              class="text-[13px] font-semibold text-gray-900 dark:text-gray-100 leading-snug overflow-hidden text-ellipsis whitespace-nowrap flex-1 min-w-0 max-w-full"
-            >
-              {{ getMessageTitle(msg) }}
+              <!-- Checkbox for selection mode -->
+              <div
+                v-if="isSelectionMode"
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded flex items-center justify-center shrink-0 transition-all duration-200"
+                :class="{
+                  'bg-indigo-500 dark:bg-blue-500 border-indigo-500 dark:border-blue-500': isMessageSelected(msg.id),
+                }"
+              >
+                <component
+                  v-if="isMessageSelected(msg.id)"
+                  :is="CheckmarkIcon"
+                  class="w-3.5 h-3.5 text-white font-bold"
+                />
+              </div>
+              <div
+                class="text-[13px] font-semibold text-gray-900 dark:text-gray-100 leading-snug overflow-hidden text-ellipsis whitespace-nowrap flex-1 min-w-0 max-w-full"
+              >
+                {{ getMessageTitle(msg) }}
+              </div>
             </div>
           </div>
         </div>
