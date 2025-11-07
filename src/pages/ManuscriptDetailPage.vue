@@ -12,9 +12,8 @@ const message = useMessage();
 // URL params에서 ID 가져오기
 const manuscriptId = ref(route.params.id as string);
 
-// history.state에서 category 가져오기 (있으면)
-const routeState = history.state as { category?: string };
-const category = ref(routeState?.category);
+// URL query에서 category 가져오기
+const category = ref(route.query.category as string | undefined);
 
 // API로 원고 데이터 가져오기
 const { manuscript, isLoading, isError, error } = useManuscriptDetail(manuscriptId, category);
