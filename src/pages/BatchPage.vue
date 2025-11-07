@@ -71,18 +71,9 @@ const handleTxtFileChange = async (event: Event) => {
     return;
   }
 
-  // 20개 제한 체크
-  if (batchRequests.value.length + txtFiles.length > 20) {
-    message.warning(`최대 20개까지만 추가할 수 있습니다. ${20 - batchRequests.value.length}개만 추가됩니다.`);
-  }
-
   let addedCount = 0;
 
   for (const file of txtFiles) {
-    // 20개 제한 체크
-    if (batchRequests.value.length >= 20) {
-      break;
-    }
 
     try {
       // 파일 내용 읽기
@@ -136,11 +127,6 @@ const handleFileChange = (event: Event) => {
         let addedCount = 0;
 
         results.data.forEach((row: any) => {
-          // 20개 제한 체크
-          if (batchRequests.value.length >= 20) {
-            return;
-          }
-
           const keyword = row['키워드'] || row['keyword'] || row['Keyword'] || '';
           const refMsg = row['참조원고'] || row['refMsg'] || row['reference'] || '';
 
@@ -181,8 +167,6 @@ const loadHistoryItem = (item: BatchHistoryItem) => {
   clearBatchRequests();
 
   item.requests.forEach((req) => {
-    if (batchRequests.value.length >= 20) return;
-
     addBatchRequest();
     const idx = batchRequests.value.length - 1;
     updateBatchRequest(idx, {
@@ -245,18 +229,9 @@ const handleDrop = async (e: DragEvent) => {
     return;
   }
 
-  // 20개 제한 체크
-  if (batchRequests.value.length + txtFiles.length > 20) {
-    message.warning(`최대 20개까지만 추가할 수 있습니다. ${20 - batchRequests.value.length}개만 추가됩니다.`);
-  }
-
   let addedCount = 0;
 
   for (const file of txtFiles) {
-    // 20개 제한 체크
-    if (batchRequests.value.length >= 20) {
-      break;
-    }
 
     try {
       // 파일 내용 읽기
@@ -347,13 +322,12 @@ const handleDrop = async (e: DragEvent) => {
           dashed
           size="large"
           @click="addBatchRequest"
-          :disabled="batchRequests.length >= 20"
-          class="min-h-[40px] h-10 font-semibold border-2 border-dashed border-slate-300 text-indigo-500 bg-indigo-500/5 transition-all hover:border-indigo-500 hover:bg-indigo-500/10 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          class="min-h-[40px] h-10 font-semibold border-2 border-dashed border-slate-300 text-indigo-500 bg-indigo-500/5 transition-all hover:border-indigo-500 hover:bg-indigo-500/10 hover:-translate-y-0.5"
         >
           <template #icon>
             <NIcon :component="AddIcon" />
           </template>
-          원고 추가 ({{ batchRequests.length }}/20)
+          원고 추가 ({{ batchRequests.length }})
         </NButton>
 
         <NButton
@@ -412,36 +386,35 @@ const handleDrop = async (e: DragEvent) => {
       <NCard class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full border-collapse">
-            <thead class="bg-gradient-to-br from-slate-50 to-slate-100 border-b-2 border-slate-200">
+            <thead class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-700 dark:to-gray-800 border-b-2 border-slate-200 dark:border-gray-600">
               <tr>
-                <th class="w-[60px] text-center p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">#</th>
-                <th class="w-[35%] p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">키워드</th>
-                <th class="w-[40%] p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">참조원고</th>
-                <th class="w-[120px] p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">상태</th>
-                <th class="w-[80px] text-center p-4 text-left text-[13px] font-bold text-slate-500 uppercase tracking-wide">액션</th>
+                <th class="w-[60px] text-center p-4 text-left text-[13px] font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wide">#</th>
+                <th class="w-[35%] p-4 text-left text-[13px] font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wide">키워드</th>
+                <th class="w-[40%] p-4 text-left text-[13px] font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wide">참조원고</th>
+                <th class="w-[120px] p-4 text-left text-[13px] font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wide">상태</th>
+                <th class="w-[80px] text-center p-4 text-left text-[13px] font-bold text-slate-500 dark:text-gray-300 uppercase tracking-wide">액션</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="(req, idx) in batchRequests"
                 :key="req.id"
-                class="transition-colors hover:bg-slate-50"
+                class="transition-colors hover:bg-slate-50 dark:hover:bg-gray-700/50"
               >
-                <td class="p-3 border-b border-slate-100 text-center">
-                  <span class="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-indigo-500/10 to-indigo-500/5 rounded-lg font-bold text-indigo-500">
+                <td class="p-3 border-b border-slate-100 dark:border-gray-700 text-center">
+                  <span class="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-indigo-500/10 to-indigo-500/5 dark:from-indigo-500/20 dark:to-indigo-500/10 rounded-lg font-bold text-indigo-500 dark:text-indigo-400">
                     {{ idx + 1 }}
                   </span>
                 </td>
-                <td class="p-3 border-b border-slate-100">
+                <td class="p-3 border-b border-slate-100 dark:border-gray-700">
                   <Input
                     :modelValue="req.keyword"
                     @update:modelValue="(val: string) => updateBatchRequest(idx as number, { keyword: val })"
                     placeholder="키워드를 입력하세요..."
                     type="text"
-                    class="w-full [&_.n-input]:bg-transparent [&_.n-input]:border [&_.n-input]:border-slate-200 [&_.n-input]:rounded-lg [&_.n-input]:transition-all [&_.n-input:hover]:border-slate-300 [&_.n-input:focus-within]:border-indigo-500 [&_.n-input:focus-within]:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]"
                   />
                 </td>
-                <td class="p-3 border-b border-slate-100">
+                <td class="p-3 border-b border-slate-100 dark:border-gray-700">
                   <Input
                     :modelValue="req.refMsg || ''"
                     @update:modelValue="(val: string) => updateBatchRequest(idx as number, { refMsg: val })"
@@ -449,10 +422,9 @@ const handleDrop = async (e: DragEvent) => {
                     type="textarea"
                     :rows="1"
                     :autosize="{ minRows: 1, maxRows: 3 }"
-                    class="w-full [&_.n-input]:bg-transparent [&_.n-input]:border [&_.n-input]:border-slate-200 [&_.n-input]:rounded-lg [&_.n-input]:transition-all [&_.n-input:hover]:border-slate-300 [&_.n-input:focus-within]:border-indigo-500 [&_.n-input:focus-within]:shadow-[0_0_0_3px_rgba(99,102,241,0.1)]"
                   />
                 </td>
-                <td class="p-3 border-b border-slate-100">
+                <td class="p-3 border-b border-slate-100 dark:border-gray-700">
                   <span
                     v-if="batchStatuses[req.id]"
                     :class="[
@@ -506,16 +478,16 @@ const handleDrop = async (e: DragEvent) => {
 
       <!-- 진행률 표시 -->
       <div v-if="Object.keys(batchStatuses).length > 0" class="mt-6">
-        <NCard class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-          <h3 class="m-0 mb-4 text-base font-bold text-slate-800">생성 진행 상황</h3>
+        <NCard class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+          <h3 class="m-0 mb-4 text-base font-bold text-slate-800 dark:text-gray-100">생성 진행 상황</h3>
           <div class="flex gap-6 text-sm font-semibold">
-            <span class="px-4 py-2 bg-slate-50 rounded-lg">
+            <span class="px-4 py-2 bg-slate-50 dark:bg-gray-700 rounded-lg text-slate-700 dark:text-gray-200">
               완료: {{ Object.values(batchStatuses).filter(s => s === 'success').length }}
             </span>
-            <span class="px-4 py-2 bg-slate-50 rounded-lg">
+            <span class="px-4 py-2 bg-slate-50 dark:bg-gray-700 rounded-lg text-slate-700 dark:text-gray-200">
               진행중: {{ Object.values(batchStatuses).filter(s => s === 'loading').length }}
             </span>
-            <span class="px-4 py-2 bg-slate-50 rounded-lg">
+            <span class="px-4 py-2 bg-slate-50 dark:bg-gray-700 rounded-lg text-slate-700 dark:text-gray-200">
               실패: {{ Object.values(batchStatuses).filter(s => s === 'error').length }}
             </span>
           </div>
@@ -524,15 +496,15 @@ const handleDrop = async (e: DragEvent) => {
 
       <!-- 히스토리 섹션 -->
       <div v-if="showHistory" class="mt-6">
-        <NCard class="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+        <NCard class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
           <div class="flex justify-between items-center mb-4">
-            <h3 class="m-0 text-base font-bold text-slate-800">배치 생성 히스토리</h3>
-            <NButton text @click="showHistory = false" class="text-slate-600 hover:text-slate-800">
+            <h3 class="m-0 text-base font-bold text-slate-800 dark:text-gray-100">배치 생성 히스토리</h3>
+            <NButton text @click="showHistory = false" class="text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-gray-100">
               닫기
             </NButton>
           </div>
 
-          <div v-if="batchHistory.length === 0" class="text-center py-10 px-5 text-slate-400">
+          <div v-if="batchHistory.length === 0" class="text-center py-10 px-5 text-slate-400 dark:text-gray-500">
             <p>저장된 히스토리가 없습니다</p>
           </div>
 
@@ -540,12 +512,12 @@ const handleDrop = async (e: DragEvent) => {
             <div
               v-for="item in batchHistory"
               :key="item.id"
-              class="p-4 bg-slate-50 rounded-xl border border-slate-200 transition-all hover:bg-slate-100 hover:border-slate-300"
+              class="p-4 bg-slate-50 dark:bg-gray-700 rounded-xl border border-slate-200 dark:border-gray-600 transition-all hover:bg-slate-100 dark:hover:bg-gray-600 hover:border-slate-300 dark:hover:border-gray-500"
             >
               <div class="flex justify-between items-start mb-3">
                 <div class="flex flex-col gap-1">
-                  <strong class="text-sm text-slate-800">{{ item.title }}</strong>
-                  <span class="text-xs text-slate-500">
+                  <strong class="text-sm text-slate-800 dark:text-gray-100">{{ item.title }}</strong>
+                  <span class="text-xs text-slate-500 dark:text-gray-400">
                     {{ new Date(item.timestamp).toLocaleString('ko-KR') }} ·
                     {{ item.totalCount }}개 원고 ·
                     서비스: {{ item.service.toUpperCase() }}
@@ -578,13 +550,13 @@ const handleDrop = async (e: DragEvent) => {
                 <span
                   v-for="(req, idx) in item.requests.slice(0, 3)"
                   :key="idx"
-                  class="px-2.5 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-700"
+                  class="px-2.5 py-1 bg-white dark:bg-gray-600 border border-slate-300 dark:border-gray-500 rounded-md text-xs text-slate-700 dark:text-gray-200"
                 >
                   {{ req.keyword }}
                 </span>
                 <span
                   v-if="item.requests.length > 3"
-                  class="px-2.5 py-1 text-xs text-slate-400 font-semibold"
+                  class="px-2.5 py-1 text-xs text-slate-400 dark:text-gray-500 font-semibold"
                 >
                   외 {{ item.requests.length - 3 }}개
                 </span>

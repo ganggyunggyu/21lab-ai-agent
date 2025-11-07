@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { NButton, NSpace } from 'naive-ui';
 import { Input } from '@/components/ui';
 import type { BatchRequest } from '@/types';
@@ -8,7 +7,6 @@ import { Trash as TrashIcon } from '@vicons/ionicons5';
 const props = defineProps<{
   requests: BatchRequest[];
   statuses: Record<string, 'pending' | 'loading' | 'success' | 'error'>;
-  maxCount?: number;
 }>();
 
 const emit = defineEmits<{
@@ -16,8 +14,6 @@ const emit = defineEmits<{
   'remove': [index: number];
   'update': [index: number, updates: Partial<BatchRequest>];
 }>();
-
-const maxCountValue = computed(() => props.maxCount || 10);
 
 const handleAddRequest = () => {
   emit('add');
@@ -110,13 +106,12 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
 
     <n-button
       @click="handleAddRequest"
-      :disabled="requests.length >= maxCountValue"
       dashed
       block
       size="large"
-      class="mt-2 border-2 border-dashed border-indigo-500/30 text-indigo-500 font-semibold transition-all duration-200 hover:border-indigo-500/50 hover:bg-indigo-500/5 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="mt-2 border-2 border-dashed border-indigo-500/30 text-indigo-500 font-semibold transition-all duration-200 hover:border-indigo-500/50 hover:bg-indigo-500/5"
     >
-      + 원고 추가 ({{ requests.length }}/{{ maxCountValue }})
+      + 원고 추가 ({{ requests.length }})
     </n-button>
   </div>
 </template>
