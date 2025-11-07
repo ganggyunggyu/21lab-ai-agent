@@ -5,6 +5,8 @@ import ChatPage from './_ChatPage.vue';
 import PublishedListPage from './_PublishedListPage.vue';
 import BatchPage from '../pages/BatchPage.vue';
 import ComponentsPage from '../pages/ComponentsPage.vue';
+import SearchPage from '../pages/SearchPage.vue';
+import ManuscriptDetailPage from '../pages/ManuscriptDetailPage.vue';
 
 const routes = [
   {
@@ -45,6 +47,22 @@ const routes = [
     component: BatchPage,
     meta: {
       title: '배치 원고 생성',
+    },
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: SearchPage,
+    meta: {
+      title: '원고 검색',
+    },
+  },
+  {
+    path: '/search/:id',
+    name: 'ManuscriptDetail',
+    component: ManuscriptDetailPage,
+    meta: {
+      title: '원고 상세',
     },
   },
   {
