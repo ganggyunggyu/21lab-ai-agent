@@ -76,7 +76,10 @@ const handleCardClick = (doc: SearchDocument) => {
   router.push({
     name: 'ManuscriptDetail',
     params: { id: doc._id },
-    state: { document: doc },
+    state: {
+      document: doc,
+      category: category.value,
+    },
   });
 };
 </script>

@@ -1,27 +1,23 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NIcon, useMessage } from 'naive-ui';
 import { ArrowBackOutline as BackIcon, CopyOutline as CopyIcon } from '@vicons/ionicons5';
-import type { SearchDocument } from '@/entities/search';
+import { useManuscriptDetail } from '@/entities/search';
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 
-const document = ref<SearchDocument | null>(null);
+// URL params에서 ID 가져오기
+const manuscriptId = ref(route.params.id as string);
 
-onMounted(() => {
-  // 라우터 state에서 document 가져오기
-  const routeState = history.state as { document?: SearchDocument };
-  if (routeState?.document) {
-    document.value = routeState.document;
-  } else {
-    // document가 없으면 검색 페이지로 리다이렉트
-    message.error('원고 정보를 찾을 수 없습니다.');
-    router.push({ name: 'Search' });
-  }
-});
+// history.state에서 category 가져오기 (있으면)
+const routeState = history.state as { category?: string };
+const category = ref(routeState?.category);
+
+// API로 원고 데이터 가져오기
+const { manuscript, isLoading, isError, error } = useManuscriptDetail(manuscriptId, category);
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp * 1000);
@@ -35,10 +31,10 @@ const formatDate = (timestamp: number) => {
 };
 
 const handleCopy = async () => {
-  if (!document.value) return;
+  if (!manuscript.value) return;
 
   try {
-    await navigator.clipboard.writeText(document.value.content);
+    await navigator.clipboard.writeText(manuscript.value.content);
     message.success('원고가 복사되었습니다.');
   } catch (err) {
     message.error('복사에 실패했습니다.');
@@ -51,7 +47,7 @@ const handleBack = () => {
 </script>
 
 <template>
-  <div v-if="document" class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 dark:from-gray-950 dark:to-gray-900 p-6">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 dark:from-gray-950 dark:to-gray-900 p-6">
     <div class="max-w-[900px] mx-auto">
       <!-- Header -->
       <header class="mb-6 flex items-center gap-4">
@@ -68,27 +64,47 @@ const handleBack = () => {
         </NButton>
       </header>
 
+      <!-- Loading State -->
+      <div v-if="isLoading" class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] p-8">
+        <div class="animate-pulse space-y-6">
+          <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          <div class="space-y-2">
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="isError" class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] p-8 text-center">
+        <p class="text-red-600 dark:text-red-400 font-semibold text-lg">
+          {{ error?.message || '원고를 불러오는 중 오류가 발생했습니다.' }}
+        </p>
+      </div>
+
       <!-- Main Card -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] p-8">
+      <div v-else-if="manuscript" class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] p-8">
         <!-- Title & Actions -->
         <div class="flex items-start justify-between mb-6">
           <div class="flex-1">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-              {{ document.keyword }}
+              {{ manuscript.keyword }}
             </h1>
             <div class="flex items-center gap-3 flex-wrap">
               <span
-                v-if="document.category"
+                v-if="manuscript.category"
                 class="px-3 py-1.5 text-sm font-semibold bg-indigo-500/10 dark:bg-blue-500/20 text-indigo-600 dark:text-blue-400 rounded-lg"
               >
-                {{ document.category }}
+                {{ manuscript.category }}
               </span>
               <span class="text-sm text-gray-600 dark:text-gray-400">
-                {{ document.engine }}
+                {{ manuscript.engine }}
               </span>
               <span class="text-sm text-gray-400 dark:text-gray-500">•</span>
               <span class="text-sm text-gray-600 dark:text-gray-400">
-                {{ formatDate(document.timestamp) }}
+                {{ formatDate(manuscript.timestamp) }}
               </span>
             </div>
           </div>
@@ -110,15 +126,15 @@ const handleBack = () => {
 
         <!-- Content -->
         <div class="prose prose-slate dark:prose-invert max-w-none">
-          <pre class="whitespace-pre-wrap text-base leading-relaxed text-gray-700 dark:text-gray-300 font-sans">{{ document.content }}</pre>
+          <pre class="whitespace-pre-wrap text-base leading-relaxed text-gray-700 dark:text-gray-300 font-sans">{{ manuscript.content }}</pre>
         </div>
 
         <!-- Reference (if exists) -->
-        <div v-if="document.ref" class="mt-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div v-if="manuscript.ref" class="mt-8 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
           <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
             참조 원고
           </h3>
-          <pre class="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400 font-sans">{{ document.ref }}</pre>
+          <pre class="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400 font-sans">{{ manuscript.ref }}</pre>
         </div>
 
         <!-- Metadata -->
@@ -128,7 +144,7 @@ const handleBack = () => {
               서비스
             </div>
             <div class="text-base font-bold text-gray-900 dark:text-gray-100">
-              {{ document.service || 'N/A' }}
+              {{ manuscript.service || 'N/A' }}
             </div>
           </div>
           <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
@@ -136,7 +152,7 @@ const handleBack = () => {
               작업 시작일
             </div>
             <div class="text-base font-bold text-gray-900 dark:text-gray-100">
-              {{ document.work_start_date || 'N/A' }}
+              {{ manuscript.work_start_date || 'N/A' }}
             </div>
           </div>
           <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
@@ -144,7 +160,7 @@ const handleBack = () => {
               테스트 모드
             </div>
             <div class="text-base font-bold text-gray-900 dark:text-gray-100">
-              {{ document.test_mode ? 'Yes' : 'No' }}
+              {{ manuscript.test_mode ? 'Yes' : 'No' }}
             </div>
           </div>
         </div>
