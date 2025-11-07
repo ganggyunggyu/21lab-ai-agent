@@ -38,43 +38,22 @@ export const useThemeStore = defineStore(
       const stored = window.localStorage.getItem('theme-store');
       if (stored) {
         try {
-          const parsed = JSON.parse(stored) as { state?: { theme?: Theme } };
-          if (parsed?.state?.theme) {
-            return parsed.state.theme;
+          const parsed = JSON.parse(stored) as { theme?: Theme };
+          if (parsed?.theme) {
+            return parsed.theme;
           }
         } catch (error) {
           window.localStorage.removeItem('theme-store');
         }
       }
 
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-    };
-
-    const handleSystemThemeChange = (event: MediaQueryListEvent) => {
-      const stored = typeof window !== 'undefined'
-        ? window.localStorage.getItem('theme-store')
-        : null;
-
-      if (!stored) {
-        theme.value = event.matches ? 'dark' : 'light';
-        applyTheme();
-      }
+      // 기본값은 항상 light
+      return 'light';
     };
 
     const initTheme = () => {
       theme.value = resolveInitialTheme();
       applyTheme();
-
-      if (typeof window !== 'undefined') {
-        const matcher = window.matchMedia('(prefers-color-scheme: dark)');
-        if (typeof matcher.addEventListener === 'function') {
-          matcher.addEventListener('change', handleSystemThemeChange);
-        } else if (typeof matcher.addListener === 'function') {
-          matcher.addListener(handleSystemThemeChange);
-        }
-      }
     };
 
     return {
