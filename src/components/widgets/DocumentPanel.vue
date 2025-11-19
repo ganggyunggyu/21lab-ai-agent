@@ -93,7 +93,7 @@ const messagesByDate = computed(() => {
     return dateB - dateA;
   });
 
-  return sortedDates.map(dateKey => ({
+  return sortedDates.map((dateKey) => ({
     dateKey,
     displayDate: formatDisplayDate(dateKey, todayStr, yesterdayStr),
     messages: grouped[dateKey],
@@ -109,7 +109,11 @@ const formatDateKey = (date: Date): string => {
 };
 
 // 표시용 날짜 포맷
-const formatDisplayDate = (dateKey: string, todayStr: string, yesterdayStr: string): string => {
+const formatDisplayDate = (
+  dateKey: string,
+  todayStr: string,
+  yesterdayStr: string
+): string => {
   if (dateKey === todayStr) return '오늘';
   if (dateKey === yesterdayStr) return '어제';
 
@@ -141,9 +145,10 @@ const handleDownloadSelected = async () => {
 
   const files = packages.map((pkg) => {
     const rawKeyword = pkg.userMessage.keyword || '';
-    const keyword = rawKeyword.length > 50
-      ? extractKeywordDisplay(rawKeyword)
-      : rawKeyword || '원고';
+    const keyword =
+      rawKeyword.length > 50
+        ? extractKeywordDisplay(rawKeyword)
+        : rawKeyword || '원고';
     const sanitizedKeyword = keyword
       .slice(0, 30)
       .replace(/[/\\?%*:|"<>]/g, '_');
@@ -195,9 +200,10 @@ const handleDownload = () => {
   if (botResponses.length === 0) return;
 
   const rawKeyword = userMsg.keyword || '';
-  const keyword = rawKeyword.length > 50
-    ? extractKeywordDisplay(rawKeyword)
-    : rawKeyword || '원고';
+  const keyword =
+    rawKeyword.length > 50
+      ? extractKeywordDisplay(rawKeyword)
+      : rawKeyword || '원고';
   const sanitizedKeyword = keyword.slice(0, 30).replace(/[/\\?%*:|"<>]/g, '_');
   const content = botResponses.map((r) => r.content).join('\n\n---\n\n');
 
@@ -214,8 +220,6 @@ const handleCopy = async () => {
   const botResponses = getBotResponses(selectedDocument.value);
   if (botResponses.length === 0) return;
 
-  const content = botResponses.map((r) => r.content).join('\n\n---\n\n');
-  const success = await copyText(content);
   closeOverlay();
 };
 
@@ -396,7 +400,9 @@ const getMessageTitle = (msg: Message) => {
               </button>
             </div>
             <div class="flex items-center gap-2">
-              <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+              >
                 <div
                   class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 rounded-full transition-all duration-300"
                   :style="{ width: `${msg.loadingProgress || 0}%` }"
@@ -421,8 +427,14 @@ const getMessageTitle = (msg: Message) => {
         </h3>
 
         <!-- 날짜별 그룹 -->
-        <div v-for="dateGroup in messagesByDate" :key="dateGroup.dateKey" class="flex flex-col gap-3">
-          <h4 class="text-[12px] font-bold text-gray-500 dark:text-gray-400 m-0 px-2">
+        <div
+          v-for="dateGroup in messagesByDate"
+          :key="dateGroup.dateKey"
+          class="flex flex-col gap-3"
+        >
+          <h4
+            class="text-[12px] font-bold text-gray-500 dark:text-gray-400 m-0 px-2"
+          >
             {{ dateGroup.displayDate }}
           </h4>
           <div class="flex flex-col gap-2 w-full max-w-full">
@@ -432,7 +444,8 @@ const getMessageTitle = (msg: Message) => {
               class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col gap-1.5 transition-all duration-200 w-full max-w-full box-border cursor-pointer hover:border-indigo-500 dark:hover:border-blue-500 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_2px_8px_rgba(59,130,246,0.2)] hover:-translate-y-px hover:bg-indigo-500/5 dark:hover:bg-blue-500/10"
               :class="{
                 'flex-row items-center gap-2.5': isSelectionMode,
-                'border-indigo-500 dark:border-blue-500 bg-indigo-500/10 dark:bg-blue-500/15': isMessageSelected(msg.id),
+                'border-indigo-500 dark:border-blue-500 bg-indigo-500/10 dark:bg-blue-500/15':
+                  isMessageSelected(msg.id),
               }"
               @click="handleDocumentClick(msg)"
             >
@@ -441,7 +454,8 @@ const getMessageTitle = (msg: Message) => {
                 v-if="isSelectionMode"
                 class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded flex items-center justify-center shrink-0 transition-all duration-200"
                 :class="{
-                  'bg-indigo-500 dark:bg-blue-500 border-indigo-500 dark:border-blue-500': isMessageSelected(msg.id),
+                  'bg-indigo-500 dark:bg-blue-500 border-indigo-500 dark:border-blue-500':
+                    isMessageSelected(msg.id),
                 }"
               >
                 <component
@@ -484,7 +498,9 @@ const getMessageTitle = (msg: Message) => {
           <div
             class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-slate-50 to-slate-200 dark:from-gray-700 dark:to-gray-800"
           >
-            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 m-0">작업 선택</h3>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 m-0">
+              작업 선택
+            </h3>
             <button
               class="w-8 h-8 rounded-lg border-none bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-lg cursor-pointer flex items-center justify-center transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105"
               @click="closeOverlay"
@@ -520,7 +536,8 @@ const getMessageTitle = (msg: Message) => {
               @click="handleCopy"
             >
               <span class="text-xl shrink-0">📋</span>
-              <span class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
+              <span
+                class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
                 >원고 복사</span
               >
             </button>
@@ -531,7 +548,8 @@ const getMessageTitle = (msg: Message) => {
               :disabled="!selectedDocument?.keyword"
             >
               <span class="text-xl shrink-0">🏷️</span>
-              <span class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
+              <span
+                class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
                 >키워드 복사</span
               >
             </button>
@@ -542,7 +560,8 @@ const getMessageTitle = (msg: Message) => {
               :disabled="!selectedDocument?.ref"
             >
               <span class="text-xl shrink-0">📝</span>
-              <span class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
+              <span
+                class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
                 >참조원고 복사</span
               >
             </button>
@@ -552,7 +571,8 @@ const getMessageTitle = (msg: Message) => {
               @click="handleDownload"
             >
               <span class="text-xl shrink-0">💾</span>
-              <span class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
+              <span
+                class="text-[15px] font-semibold text-gray-900 dark:text-gray-100 flex-1"
                 >다운로드</span
               >
             </button>
@@ -562,7 +582,8 @@ const getMessageTitle = (msg: Message) => {
               @click="handleDelete"
             >
               <span class="text-xl shrink-0">🗑️</span>
-              <span class="text-[15px] font-semibold text-red-500 dark:text-red-400 flex-1"
+              <span
+                class="text-[15px] font-semibold text-red-500 dark:text-red-400 flex-1"
                 >삭제하기</span
               >
             </button>
