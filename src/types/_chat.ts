@@ -10,7 +10,13 @@ export interface Message {
   loadingProgress?: number;
 }
 
-export type ChatService = 'gpt-5-v2' | 'test' | 'restaurant' | 'grok';
+export type ChatService =
+  | 'gpt-5-v2'
+  | 'gpt-4-v3'
+  | 'test'
+  | 'restaurant'
+  | 'grok'
+  | 'restaurant-oai-4';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
