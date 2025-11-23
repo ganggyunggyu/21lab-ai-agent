@@ -7,4 +7,8 @@ export const EXPECTED_RESPONSE_TIME: Record<ChatService, number> = {
   test: 45,
   restaurant: 70,
   grok: 25,
+  'gpt-4-v3': 50,
+  'gemini-3-pro': 100,
+  'restaurant-gpt5': 120,
+  'restaurant-oai-4': 90,
 };
