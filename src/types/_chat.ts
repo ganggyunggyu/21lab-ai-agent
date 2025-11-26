@@ -18,7 +18,9 @@ export type ChatService =
   | 'grok'
   | 'restaurant-oai-4'
   | 'gemini-3-pro'
-  | 'restaurant-gpt5';
+  | 'restaurant-gpt5'
+  | 'claude'
+  | 'restaurant-claude';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
