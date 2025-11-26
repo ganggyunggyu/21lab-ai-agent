@@ -10,5 +10,6 @@ export const MODEL_OPTIONS: { label: string; value: ChatService }[] = [
   { label: 'GPT5.1_맛집', value: 'restaurant-gpt5' },
   { label: 'GPT4O_맛집', value: 'restaurant-oai-4' },
   { label: 'GEM_맛집', value: 'restaurant' },
+  { label: 'GROK_맛집', value: 'restaurant-grok' },
   { label: 'CLAUDE_맛집', value: 'restaurant-claude' },
 ];

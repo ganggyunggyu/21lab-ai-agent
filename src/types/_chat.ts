@@ -20,7 +20,8 @@ export type ChatService =
   | 'gemini-3-pro'
   | 'restaurant-gpt5'
   | 'claude'
-  | 'restaurant-claude';
+  | 'restaurant-claude'
+  | 'restaurant-grok';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
