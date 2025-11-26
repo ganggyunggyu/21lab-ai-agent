@@ -41,9 +41,9 @@ const selectClasses = computed(() => {
     'hover:border-indigo-500/40 dark:hover:border-gray-500/60 hover:-translate-y-px',
     'cursor-pointer select-none text-gray-900 dark:text-gray-100',
     {
-      'text-sm min-w-[100px]': props.size === 'sm',
-      'text-base min-w-[120px]': props.size === 'md',
-      'text-lg min-w-[140px]': props.size === 'lg',
+      'text-sm min-w-[130px]': props.size === 'sm',
+      'text-base min-w-[150px]': props.size === 'md',
+      'text-lg min-w-[170px]': props.size === 'lg',
       'border-indigo-500/40 dark:border-gray-500/60': isOpen.value,
     }
   );
@@ -105,7 +105,7 @@ onUnmounted(() => {
 <template>
   <div class="select-wrapper relative" ref="triggerRef" @click.stop="toggleDropdown">
     <div :class="selectClasses">
-      <span class="font-semibold">
+      <span class="font-semibold whitespace-nowrap">
         {{ selectedOption?.label || placeholder }}
       </span>
       <ChevronDownIcon

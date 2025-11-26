@@ -181,7 +181,7 @@ watch(service, (newService) => {
             배치생성
           </Button>
 
-          <section class="min-w-[110px]" aria-label="AI 모델 선택">
+          <section class="min-w-[150px]" aria-label="AI 모델 선택">
             <Select
               v-model="service"
               :options="MODEL_OPTIONS"
