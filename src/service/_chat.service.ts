@@ -1,5 +1,6 @@
-import { axios } from '../app';
-import type { ChatService } from '../types/_chat';
+import { axios } from '@/app';
+import { isAxiosError } from 'axios';
+import type { ChatService } from '@/types';
 
 type GenerationRequest = {
   service: ChatService;
@@ -19,8 +20,8 @@ export const generateText = async (params: GenerationRequest) => {
       params
     );
     return response.data;
-  } catch (error: any) {
-    if (error.response && error.response.status === 429) {
+  } catch (error: unknown) {
+    if (isAxiosError(error) && error.response?.status === 429) {
       throw new Error(
         'API 요청 할당량을 초과했습니다. 잠시 후 다시 시도해주세요.'
       );

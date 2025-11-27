@@ -1,4 +1,4 @@
-import type { ChatService } from '@/types/_chat';
+import type { ChatService } from '@/types';
 
 export const AUTO_SCROLL_DELAY = 300;
 

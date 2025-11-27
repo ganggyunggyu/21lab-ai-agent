@@ -2,11 +2,10 @@
 import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { useChatStore } from '@/stores';
+import { useChatStore, useThemeStore } from '@/stores';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useLayoutManager } from '@/hooks/useLayoutManager';
-import { MODEL_OPTIONS } from '@/constants/_models';
-import { useThemeStore } from '@/stores/_theme';
+import { MODEL_OPTIONS } from '@/constants';
 
 import { Button, Select, Input, Dropdown, Modal } from '@/components/ui';
 import type { ChatService } from '@/types';
@@ -34,8 +33,6 @@ const { toggleTheme } = themeStore;
 
 const showClearModal = ref(false);
 const naverSearchQuery = ref('');
-
-const isComposing = ref(false);
 
 const menuOptions = computed(() => [
   {
@@ -155,8 +152,6 @@ watch(service, (newService) => {
             type="text"
             class="w-[180px] min-w-[140px] bg-white/90 rounded-[10px] md:w-[100px] md:min-w-[90px]"
             @keydown="handleSearchKeydown"
-            @compositionstart="isComposing = true"
-            @compositionend="isComposing = false"
           />
           <Button
             variant="ghost"
