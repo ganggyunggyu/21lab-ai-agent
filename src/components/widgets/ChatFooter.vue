@@ -41,12 +41,8 @@ const {
   handleGenerate,
 } = chatStore;
 
-const handleEnterPress = (value: string) => {
+const handleEnterPress = () => {
   handleGenerate();
-};
-
-const handleShiftEnterPress = (value: string) => {
-  // Shift+Enter는 줄바꿈으로 처리 (기본 동작)
 };
 
 const frequentKeywords = ref<FrequentKeyword[]>([]);
@@ -210,7 +206,6 @@ watch(refMsg, (newVal) => {
               :placeholder="getKeywordPlaceholder(service)"
               class="flex-1"
               :onEnter="handleEnterPress"
-              :onShiftEnter="handleShiftEnterPress"
               @focus="showRefInput = true"
               @blur="showRefInput = false"
               aria-label="키워드 입력"
