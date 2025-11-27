@@ -1,2 +1,2 @@
-export * from './_axios.instancce';
+export * from './_axios.instance';
 export * from './_env';

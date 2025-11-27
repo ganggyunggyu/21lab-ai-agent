@@ -1,6 +1,4 @@
-import type { ChatService } from '../types';
-
-export const MODEL_OPTIONS: { label: string; value: ChatService }[] = [
+export const MODEL_OPTIONS = [
   { label: 'TEST', value: 'test' },
   { label: 'GPT5', value: 'gpt-5-v2' },
   { label: 'GPT4O', value: 'gpt-4-v3' },
@@ -12,4 +10,7 @@ export const MODEL_OPTIONS: { label: string; value: ChatService }[] = [
   { label: 'GEM_맛집', value: 'restaurant' },
   { label: 'GROK_맛집', value: 'restaurant-grok' },
   { label: 'CLAUDE_맛집', value: 'restaurant-claude' },
-];
+] as const;
+
+// MODEL_OPTIONS에서 ChatService 타입 자동 추출
+export type ChatService = (typeof MODEL_OPTIONS)[number]['value'];

@@ -10,18 +10,8 @@ export interface Message {
   loadingProgress?: number;
 }
 
-export type ChatService =
-  | 'gpt-5-v2'
-  | 'gpt-4-v3'
-  | 'test'
-  | 'restaurant'
-  | 'grok'
-  | 'restaurant-oai-4'
-  | 'gemini-3-pro'
-  | 'restaurant-gpt5'
-  | 'claude'
-  | 'restaurant-claude'
-  | 'restaurant-grok';
+// ChatService 타입은 constants/_models.ts에서 자동 추출됨
+export type { ChatService } from '@/constants/_models';
 
 export interface SelectedMessagePackage {
   userMessage: Message;
