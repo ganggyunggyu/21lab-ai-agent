@@ -1,13 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref, computed, reactive } from 'vue';
-import { generateText } from '../service/_chat.service';
-import { MODEL_OPTIONS } from '../constants/_models';
-import type { ChatService } from '../types/_chat';
-import { INTRO_MARKDOWN } from '../constants/_texts';
-import { PART_SEPARATOR } from '../constants/_regex';
-import { EXPECTED_RESPONSE_TIME } from '../constants/_timings';
-import { getSelectedService, setSelectedService, addBatchHistory } from '../utils/_localStorage';
-import type { Message, SelectedMessagePackage, BatchRequest } from '../types/_chat';
+import { generateText } from '@/service/_chat.service';
+import { MODEL_OPTIONS, INTRO_MARKDOWN, PART_SEPARATOR, EXPECTED_RESPONSE_TIME } from '@/constants';
+import { getSelectedService, setSelectedService, addBatchHistory } from '@/utils';
+import type { ChatService, Message, SelectedMessagePackage, BatchRequest } from '@/types';
 
 export const useChatStore = defineStore(
   'chat',
@@ -34,7 +30,7 @@ export const useChatStore = defineStore(
     const activeRequests = reactive(new Map<string, AbortController>());
 
     const showActionModal = ref(false);
-    const selectedUserMessage = ref<any>(null);
+    const selectedUserMessage = ref<Message | null>(null);
 
     // 메시지 선택 상태 관리
     const selectedMessageIds = ref<Set<string>>(new Set());
@@ -60,7 +56,7 @@ export const useChatStore = defineStore(
     const selectableMessagesCount = computed(() => userMessages.value.length);
     const hasSelectedMessages = computed(() => selectedMessagesCount.value > 0);
 
-    const openActionModal = (userMsg: any) => {
+    const openActionModal = (userMsg: Message) => {
       selectedUserMessage.value = userMsg;
       showActionModal.value = true;
     };
@@ -244,8 +240,7 @@ export const useChatStore = defineStore(
         if (loadingIndex !== -1) {
           messages.value.splice(loadingIndex, 1);
         }
-
-        isLoading.value = false;
+        // pendingMessages.delete()가 호출되면 isLoading computed가 자동으로 false가 됨
       }
     };
 
