@@ -282,7 +282,7 @@ const getMessageTitle = (msg: Message) => {
 
 <template>
   <div
-    class="fixed top-1/2 right-0 h-[calc(100vh-var(--header-h,84px)-var(--footer-h,140px))] max-h-[calc(100vh-var(--header-h,84px)-140px)] bg-white/95 dark:bg-gray-900/95 backdrop-blur-[20px] border-l border-gray-200 dark:border-gray-700 rounded-l-2xl shadow-[-2px_0_10px_rgba(0,0,0,0.05)] dark:shadow-[-2px_0_10px_rgba(0,0,0,0.3)] flex flex-col transition-all duration-300 overflow-hidden z-50 -translate-y-1/2"
+    class="fixed top-1/2 right-0 h-[calc(100vh-var(--header-h,84px)-var(--footer-h,140px))] max-h-[calc(100vh-var(--header-h,84px)-140px)] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 rounded-l-2xl shadow-lg dark:shadow-black/30 flex flex-col transition-all duration-300 overflow-hidden z-50 -translate-y-1/2"
     :class="isOpen ? 'w-[280px] min-w-[280px]' : 'w-14 min-w-14'"
   >
     <!-- Header -->
@@ -296,7 +296,7 @@ const getMessageTitle = (msg: Message) => {
       <!-- Toggle button when closed -->
       <button
         v-if="!isOpen"
-        class="w-9 h-9 rounded-[10px] border-none bg-indigo-500/10 text-indigo-500 text-lg cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-indigo-500/20 hover:scale-110 hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-95"
+        class="w-9 h-9 rounded-xl border-none bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-lg cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700"
         @click="togglePanel"
         aria-label="패널 펼치기"
       >
@@ -321,7 +321,7 @@ const getMessageTitle = (msg: Message) => {
           <!-- 선택 모드가 아닐 때 -->
           <button
             v-if="!isSelectionMode && completedMessages.length > 0"
-            class="w-8 h-8 rounded-lg border-none bg-indigo-500/10 text-indigo-500 text-base cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-indigo-500/20 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-8 h-8 rounded-lg border-none bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             @click="toggleSelectionMode"
             title="원고 선택"
           >
@@ -331,14 +331,14 @@ const getMessageTitle = (msg: Message) => {
           <!-- 선택 모드일 때 -->
           <template v-if="isSelectionMode">
             <button
-              class="w-8 h-8 rounded-lg border-none bg-indigo-500/10 text-indigo-500 text-base cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-indigo-500/20 hover:scale-105"
+              class="w-8 h-8 rounded-lg border-none bg-brand/10 text-brand cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-brand/20"
               @click="selectAllMessages"
               title="모두 선택"
             >
               <component :is="CheckmarkIcon" class="w-4 h-4" />
             </button>
             <button
-              class="w-8 h-8 rounded-lg border-none bg-indigo-500/10 text-indigo-500 text-base cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-indigo-500/20 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-8 h-8 rounded-lg border-none bg-brand/10 text-brand cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
               @click="handleDownloadSelected"
               :disabled="selectedMessageIds.size === 0"
               title="다운로드"
@@ -346,7 +346,7 @@ const getMessageTitle = (msg: Message) => {
               <component :is="DownloadIcon" class="w-4 h-4" />
             </button>
             <button
-              class="w-8 h-8 rounded-lg border-none bg-indigo-500/10 text-indigo-500 text-base cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-indigo-500/20 hover:scale-105"
+              class="w-8 h-8 rounded-lg border-none bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700"
               @click="toggleSelectionMode"
               title="취소"
             >
@@ -357,7 +357,7 @@ const getMessageTitle = (msg: Message) => {
           <!-- 패널 닫기 -->
           <button
             v-if="!isSelectionMode"
-            class="w-9 h-9 rounded-[10px] border-none bg-indigo-500/10 text-indigo-500 text-lg cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-indigo-500/20 hover:scale-110 hover:shadow-[0_2px_8px_rgba(99,102,241,0.2)] active:scale-95"
+            class="w-9 h-9 rounded-xl border-none bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-gray-200 dark:hover:bg-gray-700"
             @click="togglePanel"
             aria-label="패널 접기"
           >
@@ -383,7 +383,7 @@ const getMessageTitle = (msg: Message) => {
           <div
             v-for="msg in generatingMessages"
             :key="msg.id"
-            class="p-2.5 rounded-lg border border-emerald-500/30 dark:border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10 flex flex-col gap-1.5 transition-all duration-200 w-full max-w-full box-border"
+            class="p-2.5 rounded-xl border border-brand/30 bg-brand/5 flex flex-col gap-1.5 transition-colors duration-200 w-full max-w-full box-border"
           >
             <div class="flex items-center justify-between gap-2">
               <div
@@ -392,7 +392,7 @@ const getMessageTitle = (msg: Message) => {
                 {{ getMessageTitle(msg) }}
               </div>
               <button
-                class="w-5 h-5 rounded border-none bg-red-500/10 dark:bg-red-500/20 text-red-500 dark:text-red-400 text-xs cursor-pointer flex items-center justify-center transition-all duration-200 shrink-0 hover:bg-red-500/20 dark:hover:bg-red-500/30 hover:scale-110"
+                class="w-5 h-5 rounded border-none bg-red-500/10 text-red-500 text-xs cursor-pointer flex items-center justify-center transition-colors duration-200 shrink-0 hover:bg-red-500/20"
                 @click="cancelCurrentRequest"
                 aria-label="생성 취소"
               >
@@ -404,12 +404,12 @@ const getMessageTitle = (msg: Message) => {
                 class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
               >
                 <div
-                  class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 rounded-full transition-all duration-300"
+                  class="h-full bg-brand rounded-full transition-all duration-300"
                   :style="{ width: `${msg.loadingProgress || 0}%` }"
                 ></div>
               </div>
               <span
-                class="text-[11px] font-semibold text-emerald-500 dark:text-emerald-400 min-w-[35px] text-right"
+                class="text-[11px] font-semibold text-brand min-w-[35px] text-right"
               >
                 {{ msg.loadingProgress || 0 }}%
               </span>
@@ -441,10 +441,10 @@ const getMessageTitle = (msg: Message) => {
             <div
               v-for="msg in dateGroup.messages"
               :key="msg.id"
-              class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col gap-1.5 transition-all duration-200 w-full max-w-full box-border cursor-pointer hover:border-indigo-500 dark:hover:border-blue-500 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_2px_8px_rgba(59,130,246,0.2)] hover:-translate-y-px hover:bg-indigo-500/5 dark:hover:bg-blue-500/10"
+              class="p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col gap-1.5 transition-colors duration-200 w-full max-w-full box-border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750"
               :class="{
                 'flex-row items-center gap-2.5': isSelectionMode,
-                'border-indigo-500 dark:border-blue-500 bg-indigo-500/10 dark:bg-blue-500/15':
+                'border-brand bg-brand/10':
                   isMessageSelected(msg.id),
               }"
               @click="handleDocumentClick(msg)"
@@ -452,9 +452,9 @@ const getMessageTitle = (msg: Message) => {
               <!-- Checkbox for selection mode -->
               <div
                 v-if="isSelectionMode"
-                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded flex items-center justify-center shrink-0 transition-all duration-200"
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded flex items-center justify-center shrink-0 transition-colors duration-200"
                 :class="{
-                  'bg-indigo-500 dark:bg-blue-500 border-indigo-500 dark:border-blue-500':
+                  'bg-brand border-brand':
                     isMessageSelected(msg.id),
                 }"
               >
@@ -496,7 +496,7 @@ const getMessageTitle = (msg: Message) => {
         >
           <!-- Modal Header -->
           <div
-            class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-slate-50 to-slate-200 dark:from-gray-700 dark:to-gray-800"
+            class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
           >
             <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 m-0">
               작업 선택
@@ -519,7 +519,7 @@ const getMessageTitle = (msg: Message) => {
             </div>
             <div class="flex items-center gap-2">
               <span
-                class="text-xs px-2 py-1 rounded-md bg-indigo-500/10 dark:bg-blue-500/20 text-indigo-600 dark:text-blue-400 font-medium"
+                class="text-xs px-2 py-1 rounded-lg bg-brand/10 text-brand font-medium"
               >
                 {{ selectedDocument?.service }}
               </span>
@@ -532,7 +532,7 @@ const getMessageTitle = (msg: Message) => {
           <!-- Action List -->
           <div class="p-3 flex flex-col gap-2">
             <button
-              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-all duration-200 text-left hover:bg-indigo-500/10 dark:hover:bg-blue-500/20 hover:translate-x-1"
+              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-colors duration-200 text-left hover:bg-gray-200 dark:hover:bg-gray-600"
               @click="handleCopy"
             >
               <span class="text-xl shrink-0">📋</span>
@@ -543,7 +543,7 @@ const getMessageTitle = (msg: Message) => {
             </button>
 
             <button
-              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-all duration-200 text-left hover:bg-indigo-500/10 dark:hover:bg-blue-500/20 hover:translate-x-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 disabled:hover:translate-x-0"
+              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-colors duration-200 text-left hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               @click="handleCopyKeyword"
               :disabled="!selectedDocument?.keyword"
             >
@@ -555,7 +555,7 @@ const getMessageTitle = (msg: Message) => {
             </button>
 
             <button
-              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-all duration-200 text-left hover:bg-indigo-500/10 dark:hover:bg-blue-500/20 hover:translate-x-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 disabled:hover:translate-x-0"
+              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-colors duration-200 text-left hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               @click="handleCopyRef"
               :disabled="!selectedDocument?.ref"
             >
@@ -567,7 +567,7 @@ const getMessageTitle = (msg: Message) => {
             </button>
 
             <button
-              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-all duration-200 text-left hover:bg-indigo-500/10 dark:hover:bg-blue-500/20 hover:translate-x-1"
+              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-colors duration-200 text-left hover:bg-gray-200 dark:hover:bg-gray-600"
               @click="handleDownload"
             >
               <span class="text-xl shrink-0">💾</span>
@@ -578,12 +578,12 @@ const getMessageTitle = (msg: Message) => {
             </button>
 
             <button
-              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-all duration-200 text-left hover:bg-red-500/10 dark:hover:bg-red-500/20"
+              class="flex items-center gap-3 px-4 py-3.5 rounded-xl border-none bg-gray-100 dark:bg-gray-700 cursor-pointer transition-colors duration-200 text-left hover:bg-red-500/10"
               @click="handleDelete"
             >
               <span class="text-xl shrink-0">🗑️</span>
               <span
-                class="text-[15px] font-semibold text-red-500 dark:text-red-400 flex-1"
+                class="text-[15px] font-semibold text-red-500 flex-1"
                 >삭제하기</span
               >
             </button>

@@ -137,9 +137,9 @@ onMounted(() => {
 }
 
 .filter-button.active {
-  background: rgba(16, 185, 129, 0.1) !important;
-  color: #10b981 !important;
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(0, 196, 113, 0.1) !important;
+  color: var(--color-success) !important;
+  border-color: rgba(0, 196, 113, 0.3);
 }
 
 .filter-button:not(.active):hover {
@@ -156,7 +156,7 @@ onMounted(() => {
 .title-icon {
   width: 24px !important;
   height: 24px !important;
-  color: #3b82f6;
+  color: var(--color-primary);
   flex-shrink: 0;
   min-width: 24px;
   min-height: 24px;
@@ -168,23 +168,15 @@ onMounted(() => {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text-primary);
   line-height: 1.2;
-}
-
-:global(.dark) .page-title {
-  color: #f9fafb;
 }
 
 .page-subtitle {
   margin: 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-weight: 500;
-}
-
-:global(.dark) .page-subtitle {
-  color: #9ca3af;
 }
 
 /* Responsive */

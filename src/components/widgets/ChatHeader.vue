@@ -135,7 +135,7 @@ watch(service, (newService) => {
     class="fixed top-5 left-1/2 -translate-x-1/2 z-100 w-screen max-w-[90vw] md:max-w-[calc(100vw-32px)] md:top-3"
   >
     <section
-      class="flex items-center justify-center px-6 py-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-gray-700/50 shadow-lg dark:shadow-black/50 transition-all"
+      class="flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-black/30 transition-colors duration-200"
     >
       <nav
         class="flex items-center gap-5 flex-nowrap whitespace-nowrap w-full justify-between"
@@ -143,14 +143,14 @@ watch(service, (newService) => {
       >
         <!-- 왼쪽: 검색 -->
         <section
-          class="flex items-center gap-2 bg-gradient-to-br from-[#06d6a0]/12 to-[#06d6a0]/8 rounded-[14px] px-3 py-1.5 border border-[#06d6a0]/25 transition-all duration-300 flex-[0_1_auto] max-w-80 relative hover:bg-gradient-to-br hover:from-[#06d6a0]/18 hover:to-[#06d6a0]/12 hover:border-[#06d6a0]/40 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(6,214,160,0.2)] after:absolute after:-right-2.5 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-6 after:bg-gradient-to-b after:from-transparent after:via-black/10 after:to-transparent md:after:hidden"
+          class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-1.5 border border-gray-200 dark:border-gray-700 transition-colors duration-200 flex-[0_1_auto] max-w-80"
           aria-label="네이버 검색"
         >
           <Input
             v-model="naverSearchQuery"
             placeholder="검색어..."
             type="text"
-            class="w-[180px] min-w-[140px] bg-white/90 rounded-[10px] md:w-[100px] md:min-w-[90px]"
+            class="w-[180px] min-w-[140px] !border-0 !bg-transparent !shadow-none !ring-0 md:w-[100px] md:min-w-[90px]"
             @keydown="handleSearchKeydown"
           />
           <Button
@@ -158,7 +158,7 @@ watch(service, (newService) => {
             size="sm"
             @click="() => handleDirectNaverSearch()"
             title="네이버 검색 실행 (Enter)"
-            class="text-[#06d6a0] font-bold whitespace-nowrap bg-transparent border-none px-2 py-1 hover:bg-[#06d6a0]/15 hover:scale-105"
+            class="text-brand font-semibold whitespace-nowrap"
           >
             검색
           </Button>
@@ -167,11 +167,11 @@ watch(service, (newService) => {
         <!-- 오른쪽 그룹: 액션 & 설정 -->
         <div class="flex items-center gap-2.5 shrink-0">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             @click="handleBatchPage"
             title="배치 원고 생성"
-            class="text-sm px-4 py-2 min-w-0 whitespace-nowrap font-semibold rounded-xl transition-all duration-300 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 text-amber-500 hover:-translate-y-0.5 hover:bg-gradient-to-br hover:from-amber-500/15 hover:to-amber-500/8 hover:border-amber-500/30 hover:shadow-[0_8px_24px_rgba(245,158,11,0.15)] md:text-[13px] md:px-3 md:py-1.5"
+            class="text-sm whitespace-nowrap font-semibold md:text-[13px]"
           >
             배치생성
           </Button>
@@ -189,7 +189,8 @@ watch(service, (newService) => {
             size="sm"
             @click="toggleTheme"
             :title="isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
-            class="w-10 h-10 p-0 flex items-center justify-center rounded-xl transition-all duration-300 bg-white/60 border border-black/8 hover:-translate-y-0.5 hover:bg-white hover:border-indigo-500/20 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] md:w-9 md:h-9"
+            icon-only
+            class="w-10 h-10 md:w-9 md:h-9"
           >
             <component :is="isDark ? LightIcon : DarkIcon" class="w-[18px] h-[18px]" />
           </Button>
@@ -203,7 +204,8 @@ watch(service, (newService) => {
               variant="ghost"
               size="sm"
               title="더보기 메뉴"
-              class="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 bg-white/60 border border-black/8 hover:bg-white hover:border-indigo-500/20 hover:-translate-y-0.5 hover:rotate-90 hover:shadow-[0_8px_24px_rgba(99,102,241,0.12)] md:w-9 md:h-9"
+              icon-only
+              class="w-10 h-10 md:w-9 md:h-9"
             >
               <MenuIcon class="w-4 h-4" />
             </Button>
@@ -214,7 +216,7 @@ watch(service, (newService) => {
 
     <Modal v-model:show="showClearModal" title="초기화 확인">
       <p>채팅 내역을 초기화하시겠습니까?</p>
-      <p class="text-slate-500 text-sm mt-2">
+      <p class="text-[var(--color-text-tertiary)] text-sm mt-2">
         이 작업은 되돌릴 수 없습니다.
       </p>
       <template #footer>
@@ -223,10 +225,9 @@ watch(service, (newService) => {
             취소
           </Button>
           <Button
-            variant="primary"
+            variant="danger"
             size="sm"
             @click="confirmClearChat"
-            class="bg-red-500 hover:bg-red-600 text-white border-red-500"
           >
             초기화
           </Button>

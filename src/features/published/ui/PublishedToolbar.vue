@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { NSelect, NSwitch } from 'naive-ui';
-import { Card } from '@/components/ui';
+import { Card, Select, Switch } from '@/components/ui';
 import { usePublishedStore } from '@/features';
 
 // storeToRefs로 반응성 유지
@@ -20,10 +19,10 @@ const sortOptions = [
       <div class="compact-toolbar-content">
         <!-- 정렬 선택 -->
         <div class="toolbar-section">
-          <n-select
-            v-model:value="sortBy"
+          <Select
+            v-model="sortBy"
             :options="sortOptions"
-            size="medium"
+            size="sm"
             class="compact-select"
           />
         </div>
@@ -33,17 +32,11 @@ const sortOptions = [
           <span class="filter-group-label">필터:</span>
           <div class="switch-group">
             <div class="compact-switch" title="참조원고 있는 항목만">
-              <n-switch
-                v-model:value="isOnlyWithRef"
-                size="medium"
-              />
+              <Switch v-model="isOnlyWithRef" size="sm" />
               <span class="compact-switch-label">참조</span>
             </div>
             <div class="compact-switch" title="블로그 ID 있는 항목만">
-              <n-switch
-                v-model:value="isOnlyWithBlogId"
-                size="medium"
-              />
+              <Switch v-model="isOnlyWithBlogId" size="sm" />
               <span class="compact-switch-label">ID</span>
             </div>
           </div>
@@ -99,12 +92,8 @@ const sortOptions = [
 .filter-group-label {
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-right: 8px;
-}
-
-:global(.dark) .filter-group-label {
-  color: #9ca3af;
 }
 
 .switch-group {
@@ -122,12 +111,8 @@ const sortOptions = [
 .compact-switch-label {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   white-space: nowrap;
-}
-
-:global(.dark) .compact-switch-label {
-  color: #9ca3af;
 }
 
 /* Responsive */

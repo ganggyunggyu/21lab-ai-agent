@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton } from 'naive-ui';
+import { Button } from '@/components/ui';
 import {
   CopyOutline as CopyIcon,
   DownloadOutline as DownloadIcon,
@@ -48,36 +48,29 @@ const onDownload = () => emit('download', props.msg);
           />
         </template>
       </div>
-      <template
+      <div
         v-if="msg.role === 'bot' && msg.content !== 'loading' && !isIntro"
+        class="action-buttons"
       >
-        <n-button
+        <Button
           class="copy-btn"
-          size="tiny"
-          tertiary
-          quaternary
-          style="margin-left: auto"
+          size="sm"
+          variant="ghost"
+          :icon="CopyIcon"
           @click="onCopy"
         >
-          <template #icon>
-            <copy-icon />
-          </template>
           복사
-        </n-button>
-        <n-button
+        </Button>
+        <Button
           class="download-btn"
-          size="tiny"
-          tertiary
-          quaternary
-          style="margin-left: 8px; color: white"
+          size="sm"
+          variant="ghost"
+          :icon="DownloadIcon"
           @click="onDownload"
         >
-          <template #icon>
-            <download-icon />
-          </template>
           다운로드
-        </n-button>
-      </template>
+        </Button>
+      </div>
     </div>
   </div>
 </template>
@@ -118,11 +111,19 @@ const onDownload = () => emit('download', props.msg);
   white-space: pre-wrap;
 }
 
-.copy-btn {
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.copy-btn,
+.download-btn {
   color: #93c5fd;
   transition: all 0.3s ease;
 }
-.copy-btn:hover {
+.copy-btn:hover,
+.download-btn:hover {
   color: white;
   transform: scale(1.05);
 }

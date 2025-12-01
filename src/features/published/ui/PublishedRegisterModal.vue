@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { NModal, NForm, NFormItem, NButton, NSpace, NSwitch } from 'naive-ui';
-import { Save as SaveIcon, Close as CloseIcon } from '@vicons/ionicons5';
-import { Input } from '@/components/ui';
+import { Save as SaveIcon } from '@vicons/ionicons5';
+import { Input, Button, Modal, Switch } from '@/components/ui';
 import type { FavoriteSearch } from '@/entities';
 import { PublishedApi } from '@/entities';
 
@@ -114,13 +113,10 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
 </script>
 
 <template>
-  <n-modal
+  <Modal
     v-model:show="localShow"
-    preset="card"
-    class="register-modal"
     title="발행원고 등록"
-    @mask-click="handleClose"
-    @esc="handleClose"
+    class="register-modal"
   >
     <template #header>
       <header class="modal-header">
@@ -130,71 +126,69 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
     </template>
 
     <main class="modal-content">
-      <n-form
-        :model="formData"
-        label-placement="top"
-        label-width="auto"
-        require-mark-placement="right-hanging"
-      >
-        <n-form-item label="제목" required>
+      <form @submit.prevent="handleRegister">
+        <div class="form-item">
+          <label class="form-label">제목 <span class="required">*</span></label>
           <Input
             v-model="formData.title"
             placeholder="발행원고 제목을 입력해주세요"
             @keydown="handleCtrlEnterPress"
           />
-        </n-form-item>
+        </div>
 
-        <n-form-item label="블로그 ID">
+        <div class="form-item">
+          <label class="form-label">블로그 ID</label>
           <Input
             v-model="formData.blogId"
             placeholder="블로그 포스트 ID를 입력해주세요 (선택사항)"
             @keydown="handleCtrlEnterPress"
           />
-          <template #feedback>
-            <span class="form-hint">네이버 블로그, 티스토리 등의 포스트 ID</span>
-          </template>
-        </n-form-item>
+          <span class="form-hint">네이버 블로그, 티스토리 등의 포스트 ID</span>
+        </div>
 
-        <n-form-item label="메모">
+        <div class="form-item">
+          <label class="form-label">메모</label>
           <Input
             v-model="formData.memo"
             type="textarea"
             placeholder="메모를 입력해주세요 (선택사항)"
             :autosize="{ minRows: 2, maxRows: 4 }"
           />
-        </n-form-item>
+        </div>
 
-        <n-form-item label="설정">
+        <div class="form-item">
+          <label class="form-label">설정</label>
           <div class="switch-group">
             <div class="switch-item">
-              <n-switch v-model:value="formData.isActive" />
+              <Switch v-model="formData.isActive" />
               <span class="switch-label">활성화</span>
             </div>
             <div class="switch-item">
-              <n-switch v-model:value="formData.isVisible" />
+              <Switch v-model="formData.isVisible" />
               <span class="switch-label">노출</span>
             </div>
           </div>
-        </n-form-item>
-      </n-form>
+        </div>
+      </form>
     </main>
 
-    <template #action>
-      <n-space justify="end">
-        <n-button @click="handleClose">
+    <template #footer>
+      <div class="modal-actions">
+        <Button variant="ghost" size="sm" @click="handleClose">
           취소
-        </n-button>
-        <n-button
-          type="primary"
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
           :loading="isLoading"
           :disabled="!canSubmit"
           @click="handleRegister"
         >
           등록하기
-        </n-button>
-      </n-space>
+        </Button>
+      </div>
     </template>
-  </n-modal>
+  </Modal>
 </template>
 
 <style scoped>
@@ -213,13 +207,13 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .modal-badge-icon {
   width: 18px;
   height: 18px;
-  color: #10b981;
+  color: var(--color-success);
   flex-shrink: 0;
 }
 
@@ -227,9 +221,26 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
   padding: 8px 0;
 }
 
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.form-label .required {
+  color: var(--color-urgent);
+}
+
 .form-hint {
+  display: block;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
@@ -246,15 +257,12 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
 
 .switch-label {
   font-size: 14px;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
-:global(.dark) .modal-header h2,
-:global(.dark) .switch-label {
-  color: #d1d5db;
-}
-
-:global(.dark) .form-hint {
-  color: #9ca3af;
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>

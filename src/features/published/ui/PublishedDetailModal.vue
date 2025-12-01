@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { NModal, NButton, NSpace, NInputNumber } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import {
   Code as MarkdownIcon,
   CheckmarkCircle as CheckIcon,
 } from '@vicons/ionicons5';
-import { Input } from '@/components/ui';
+import { Input, Button, Modal } from '@/components/ui';
 import { usePublishedStore, usePublishedModal, usePublishedList } from '@/features';
 
 // 직접 store에서 reactive data 가져오기
@@ -90,7 +89,7 @@ const handleCopyResultWithMessage = (item: any) => {
 </script>
 
 <template>
-  <n-modal v-model:show="detailModal.open" preset="card" class="modal-size">
+  <Modal v-model:show="detailModal.open" class="modal-size">
     <template #header>
       <header class="modal-header">
         <CheckIcon class="modal-badge-icon" />
@@ -102,13 +101,14 @@ const handleCopyResultWithMessage = (item: any) => {
       <section class="modal-section" aria-label="키워드 정보">
         <header class="modal-item-header">
           <h3>키워드:</h3>
-          <n-button
-            size="tiny"
+          <Button
+            variant="secondary"
+            size="sm"
             @click="handleCopyKeywordWithMessage(detailModal.selectedItem!)"
             aria-label="키워드 복사"
           >
             복사
-          </n-button>
+          </Button>
         </header>
         <p class="modal-text">{{ detailModal.selectedItem.keyword }}</p>
       </section>
@@ -116,13 +116,14 @@ const handleCopyResultWithMessage = (item: any) => {
       <section v-if="detailModal.selectedItem.refMsg" class="modal-section" aria-label="참조원고">
         <header class="modal-item-header">
           <h3>참조원고:</h3>
-          <n-button
-            size="tiny"
+          <Button
+            variant="secondary"
+            size="sm"
             @click="handleCopyRefWithMessage(detailModal.selectedItem!)"
             aria-label="참조원고 복사"
           >
             복사
-          </n-button>
+          </Button>
         </header>
         <article class="preview-container">
           {{ detailModal.selectedItem.refMsg }}
@@ -132,13 +133,14 @@ const handleCopyResultWithMessage = (item: any) => {
       <section class="modal-section" v-if="detailModal.selectedItem.botContent" aria-label="결과원고">
         <header class="modal-item-header">
           <h3>결과원고:</h3>
-          <n-button
-            size="tiny"
+          <Button
+            variant="secondary"
+            size="sm"
             @click="handleCopyResultWithMessage(detailModal.selectedItem!)"
             aria-label="결과원고 복사"
           >
             복사
-          </n-button>
+          </Button>
         </header>
         <article class="preview-container">
           {{ detailModal.selectedItem.botContent }}
@@ -150,40 +152,41 @@ const handleCopyResultWithMessage = (item: any) => {
           <h3>메모:</h3>
           <nav
             v-if="editing.memo !== detailModal.selectedItem.id"
+            class="action-buttons"
             aria-label="메모 편집 액션"
           >
-            <n-space size="small">
-              <n-button
-                size="tiny"
-                @click="handleStartEditMemo(detailModal.selectedItem!)"
-                aria-label="메모 편집"
-              >
-                편집
-              </n-button>
-              <n-button
-                size="tiny"
-                class="markdown-button"
-                @click="handleOpenMarkdownEditor(detailModal.selectedItem!)"
-                title="마크다운으로 수정하기"
-                aria-label="마크다운 에디터로 편집"
-              >
-                <MarkdownIcon class="markdown-icon" />
-                MD
-              </n-button>
-            </n-space>
+            <Button
+              variant="secondary"
+              size="sm"
+              @click="handleStartEditMemo(detailModal.selectedItem!)"
+              aria-label="메모 편집"
+            >
+              편집
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              class="markdown-button"
+              @click="handleOpenMarkdownEditor(detailModal.selectedItem!)"
+              title="마크다운으로 수정하기"
+              aria-label="마크다운 에디터로 편집"
+            >
+              <MarkdownIcon class="markdown-icon" />
+              MD
+            </Button>
           </nav>
-          <nav v-else aria-label="메모 저장 액션">
-            <n-space size="small">
-              <n-button
-                size="tiny"
-                type="primary"
-                @click="handleSaveMemo(detailModal.selectedItem!)"
-                aria-label="메모 저장"
-              >
-                저장
-              </n-button>
-              <n-button size="tiny" @click="cancelEditMemo" aria-label="편집 취소"> 취소 </n-button>
-            </n-space>
+          <nav v-else class="action-buttons" aria-label="메모 저장 액션">
+            <Button
+              variant="primary"
+              size="sm"
+              @click="handleSaveMemo(detailModal.selectedItem!)"
+              aria-label="메모 저장"
+            >
+              저장
+            </Button>
+            <Button variant="ghost" size="sm" @click="cancelEditMemo" aria-label="편집 취소">
+              취소
+            </Button>
           </nav>
         </header>
         <div
@@ -209,30 +212,30 @@ const handleCopyResultWithMessage = (item: any) => {
           <h3>블로그 ID:</h3>
           <nav
             v-if="editing.blogId !== detailModal.selectedItem.id"
+            class="action-buttons"
             aria-label="블로그 ID 편집 액션"
           >
-            <n-space size="small">
-              <n-button
-                size="tiny"
-                @click="handleStartEditBlogId(detailModal.selectedItem!)"
-                aria-label="블로그 ID 편집"
-              >
-                편집
-              </n-button>
-            </n-space>
+            <Button
+              variant="secondary"
+              size="sm"
+              @click="handleStartEditBlogId(detailModal.selectedItem!)"
+              aria-label="블로그 ID 편집"
+            >
+              편집
+            </Button>
           </nav>
-          <nav v-else aria-label="블로그 ID 저장 액션">
-            <n-space size="small">
-              <n-button
-                size="tiny"
-                type="primary"
-                @click="handleSaveBlogId(detailModal.selectedItem!)"
-                aria-label="블로그 ID 저장"
-              >
-                저장
-              </n-button>
-              <n-button size="tiny" @click="cancelEditBlogId" aria-label="편집 취소"> 취소 </n-button>
-            </n-space>
+          <nav v-else class="action-buttons" aria-label="블로그 ID 저장 액션">
+            <Button
+              variant="primary"
+              size="sm"
+              @click="handleSaveBlogId(detailModal.selectedItem!)"
+              aria-label="블로그 ID 저장"
+            >
+              저장
+            </Button>
+            <Button variant="ghost" size="sm" @click="cancelEditBlogId" aria-label="편집 취소">
+              취소
+            </Button>
           </nav>
         </header>
         <div
@@ -254,18 +257,14 @@ const handleCopyResultWithMessage = (item: any) => {
       <section class="modal-section" aria-label="활성화 설정">
         <header class="modal-item-header">
           <h3>활성화 설정:</h3>
-          <n-button
-            size="tiny"
-            :type="
-              detailModal.selectedItem.isActive ?? true ? 'success' : 'error'
-            "
+          <Button
+            :variant="detailModal.selectedItem.isActive ?? true ? 'primary' : 'danger'"
+            size="sm"
             @click="handleToggleActive(detailModal.selectedItem!)"
             :aria-label="detailModal.selectedItem.isActive ?? true ? '활성화 상태 - 클릭하여 비활성화' : '비활성화 상태 - 클릭하여 활성화'"
           >
-            {{
-              detailModal.selectedItem.isActive ?? true ? '활성화' : '비활성화'
-            }}
-          </n-button>
+            {{ detailModal.selectedItem.isActive ?? true ? '활성화' : '비활성화' }}
+          </Button>
         </header>
         <p class="setting-description">
           {{
@@ -279,52 +278,48 @@ const handleCopyResultWithMessage = (item: any) => {
       <section class="modal-section" aria-label="노출 및 관리 설정">
         <header class="modal-item-header">
           <h3>노출 설정:</h3>
-          <nav aria-label="발행원고 관리 액션">
-            <n-space size="small">
-              <n-button
-                size="tiny"
-                :type="detailModal.selectedItem.isVisible ? 'success' : 'default'"
-                @click="handleToggleVisibility(detailModal.selectedItem!)"
-                :aria-label="detailModal.selectedItem.isVisible ? '노출중 - 클릭하여 숨김' : '미노출 - 클릭하여 노출'"
-              >
-                {{ detailModal.selectedItem.isVisible ? '노출중' : '미노출' }}
-              </n-button>
-              <n-button
-                size="tiny"
-                type="error"
-                @click="handleDelete(detailModal.selectedItem!)"
-                aria-label="발행원고 삭제"
-              >
-                삭제
-              </n-button>
-              <n-button
-                size="tiny"
-                type="primary"
-                @click="handleUseTemplate(detailModal.selectedItem!)"
-                aria-label="이 발행원고로 새 원고 작성"
-              >
-                원고 발행
-              </n-button>
-            </n-space>
+          <nav class="action-buttons" aria-label="발행원고 관리 액션">
+            <Button
+              :variant="detailModal.selectedItem.isVisible ? 'primary' : 'secondary'"
+              size="sm"
+              @click="handleToggleVisibility(detailModal.selectedItem!)"
+              :aria-label="detailModal.selectedItem.isVisible ? '노출중 - 클릭하여 숨김' : '미노출 - 클릭하여 노출'"
+            >
+              {{ detailModal.selectedItem.isVisible ? '노출중' : '미노출' }}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              @click="handleDelete(detailModal.selectedItem!)"
+              aria-label="발행원고 삭제"
+            >
+              삭제
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              @click="handleUseTemplate(detailModal.selectedItem!)"
+              aria-label="이 발행원고로 새 원고 작성"
+            >
+              원고 발행
+            </Button>
           </nav>
         </header>
         <div v-if="detailModal.selectedItem.isVisible" class="rank-setting" role="group" aria-label="노출 순위 설정">
           <label for="exposure-rank">노출 순위:</label>
-          <n-input-number
+          <Input
             id="exposure-rank"
-            :value="detailModal.selectedItem.exposureRank"
-            @update:value="
-              handleUpdateExposureRank(detailModal.selectedItem!, $event)
-            "
+            type="number"
+            :modelValue="String(detailModal.selectedItem.exposureRank || 0)"
+            @update:modelValue="handleUpdateExposureRank(detailModal.selectedItem!, Number($event))"
             placeholder="순위"
-            size="small"
             class="rank-input"
             aria-label="노출 순위 숫자 입력"
           />
         </div>
       </section>
     </main>
-  </n-modal>
+  </Modal>
 </template>
 
 <style scoped>
@@ -343,13 +338,13 @@ const handleCopyResultWithMessage = (item: any) => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .modal-badge-icon {
   width: 18px;
   height: 18px;
-  color: #10b981;
+  color: var(--color-success);
   flex-shrink: 0;
 }
 
@@ -374,17 +369,13 @@ const handleCopyResultWithMessage = (item: any) => {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .modal-text {
   margin: 0;
-  color: #374151;
+  color: var(--color-text-primary);
   line-height: 1.5;
-}
-
-:global(.dark) .modal-text {
-  color: #d1d5db;
 }
 
 .preview-container {
@@ -428,7 +419,7 @@ const handleCopyResultWithMessage = (item: any) => {
 }
 
 .markdown-button {
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .markdown-icon {
@@ -446,17 +437,19 @@ const handleCopyResultWithMessage = (item: any) => {
 
 .setting-description {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin: 4px 0 0 0;
   font-style: italic;
-}
-
-:global(.dark) .setting-description {
-  color: #9ca3af;
 }
 
 .rank-input {
   width: 100px;
   margin-left: 8px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 </style>

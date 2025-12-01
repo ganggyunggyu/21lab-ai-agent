@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NButton, NIcon, useMessage } from 'naive-ui';
 import { ArrowBackOutline as BackIcon, CopyOutline as CopyIcon } from '@vicons/ionicons5';
+import { Button } from '@/components/ui';
+import { toast } from '@/utils/_toast';
 import { useManuscriptDetail } from '@/entities/search';
 
 const route = useRoute();
 const router = useRouter();
-const message = useMessage();
 
 // URL params에서 ID 가져오기
 const manuscriptId = ref(route.params.id as string);
@@ -34,9 +34,9 @@ const handleCopy = async () => {
 
   try {
     await navigator.clipboard.writeText(manuscript.value.content);
-    message.success('원고가 복사되었습니다.');
+    toast.success('원고가 복사되었습니다.');
   } catch (err) {
-    message.error('복사에 실패했습니다.');
+    toast.error('복사에 실패했습니다.');
   }
 };
 
@@ -50,17 +50,15 @@ const handleBack = () => {
     <div class="max-w-[900px] mx-auto">
       <!-- Header -->
       <header class="mb-6 flex items-center gap-4">
-        <NButton
-          text
-          size="large"
+        <Button
+          variant="ghost"
+          size="lg"
+          :icon="BackIcon"
           @click="handleBack"
           class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
         >
-          <template #icon>
-            <NIcon :component="BackIcon" />
-          </template>
           뒤로가기
-        </NButton>
+        </Button>
       </header>
 
       <!-- Loading State -->
@@ -107,17 +105,15 @@ const handleBack = () => {
               </span>
             </div>
           </div>
-          <NButton
-            type="primary"
-            size="large"
+          <Button
+            variant="primary"
+            size="lg"
+            :icon="CopyIcon"
             @click="handleCopy"
-            class="ml-4 font-bold bg-gradient-to-br from-indigo-500 to-purple-600 border-none shadow-[0_4px_16px_rgba(99,102,241,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(99,102,241,0.4)]"
+            class="ml-4 font-bold bg-gradient-to-br from-brand to-accent border-none shadow-[0_4px_16px_rgba(98,194,176,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(98,194,176,0.4)]"
           >
-            <template #icon>
-              <NIcon :component="CopyIcon" />
-            </template>
             복사
-          </NButton>
+          </Button>
         </div>
 
         <!-- Divider -->

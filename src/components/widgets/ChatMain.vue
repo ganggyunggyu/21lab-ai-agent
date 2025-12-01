@@ -183,7 +183,7 @@ onMounted(async () => {
             icon-only
             :icon="ChevronDownIcon"
             @click="handleScrollToBottom"
-            class="w-12 h-12 rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.12),0_8px_32px_rgba(59,130,246,0.2)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_8px_32px_rgba(0,0,0,0.16),0_12px_48px_rgba(59,130,246,0.3)] active:translate-y-0 active:scale-95"
+            class="w-12 h-12 rounded-full shadow-lg"
             title="맨 아래로 스크롤"
             aria-label="채팅 맨 아래로 이동"
           />

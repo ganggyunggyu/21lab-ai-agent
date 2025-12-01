@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { NButton, NIcon, NSelect, useMessage } from 'naive-ui';
 import { SearchOutline as SearchIcon } from '@vicons/ionicons5';
-import { Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 import { useSearchManuscripts } from '@/entities/search';
 import { ManuscriptCard } from '@/features/search';
 import type { SearchRequest, SearchDocument } from '@/entities/search';
 
 const router = useRouter();
-const message = useMessage();
 
 const query = ref('');
-const category = ref<string | undefined>(undefined);
+const category = ref('');
 const page = ref(1);
 const limit = ref(20);
 
 const categoryOptions = [
-  { label: '전체 카테고리', value: undefined },
+  { label: '전체 카테고리', value: '' },
   { label: '위고비', value: '위고비' },
   { label: '마운자로', value: '마운자로' },
   { label: '다이어트', value: '다이어트' },
@@ -29,12 +27,21 @@ const categoryOptions = [
   { label: '미용학원', value: '미용학원' },
 ];
 
+const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
+  const toast = document.createElement('div');
+  const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-amber-500';
+  toast.className = `fixed top-4 left-1/2 -translate-x-1/2 ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg z-[9999] animate-[slideDown_0.3s_ease-out]`;
+  toast.textContent = text;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+};
+
 const searchRequest = computed<SearchRequest | null>(() => {
   if (!query.value.trim()) return null;
 
   return {
     query: query.value.trim(),
-    category: category.value,
+    category: category.value || undefined,
     page: page.value,
     limit: limit.value,
   };
@@ -44,7 +51,7 @@ const { data, isLoading, isError, error, refetch, totalPages } = useSearchManusc
 
 const handleSearch = () => {
   if (!query.value.trim()) {
-    message.warning('검색어를 입력해주세요.');
+    showToast('검색어를 입력해주세요.', 'warning');
     return;
   }
 
@@ -84,7 +91,7 @@ const handleCardClick = (doc: SearchDocument) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 dark:from-gray-950 dark:to-gray-900 p-6">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
     <div class="max-w-[1200px] mx-auto">
       <!-- Header -->
       <header class="mb-6">
@@ -97,7 +104,7 @@ const handleCardClick = (doc: SearchDocument) => {
       </header>
 
       <!-- Search Bar -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] mb-6 p-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700 mb-6 p-6">
         <div class="flex flex-col md:flex-row gap-3">
           <!-- Search Input -->
           <div class="flex-1">
@@ -112,28 +119,25 @@ const handleCardClick = (doc: SearchDocument) => {
 
           <!-- Category Select -->
           <div class="w-full md:w-[200px]">
-            <NSelect
-              v-model:value="category"
+            <Select
+              v-model="category"
               :options="categoryOptions"
               placeholder="카테고리"
-              class="w-full"
+              size="md"
             />
           </div>
 
           <!-- Search Button -->
-          <NButton
-            type="primary"
-            size="large"
+          <Button
+            variant="primary"
+            size="md"
             @click="handleSearch"
-            :loading="isLoading"
-            :disabled="!query.trim()"
-            class="w-full md:w-auto min-w-[120px] h-[44px] font-bold bg-gradient-to-br from-indigo-500 to-purple-600 border-none shadow-[0_4px_16px_rgba(99,102,241,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(99,102,241,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!query.trim() || isLoading"
+            class="w-full md:w-auto min-w-[120px]"
           >
-            <template #icon>
-              <NIcon :component="SearchIcon" />
-            </template>
-            검색
-          </NButton>
+            <SearchIcon class="w-5 h-5" />
+            {{ isLoading ? '검색중...' : '검색' }}
+          </Button>
         </div>
       </div>
 
@@ -184,7 +188,7 @@ const handleCardClick = (doc: SearchDocument) => {
       <!-- Empty State -->
       <div
         v-if="data && data.documents.length === 0"
-        class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+        class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700"
       >
         <p class="text-gray-600 dark:text-gray-400 text-lg">
           검색 결과가 없습니다.
@@ -196,14 +200,15 @@ const handleCardClick = (doc: SearchDocument) => {
         v-if="data && data.documents.length > 0 && totalPages > 1"
         class="mt-6 flex items-center justify-center gap-3"
       >
-        <NButton
+        <Button
+          variant="secondary"
+          size="md"
           @click="handlePageChange(page - 1)"
           :disabled="page === 1 || isLoading"
-          size="large"
           class="min-w-[100px]"
         >
           이전
-        </NButton>
+        </Button>
 
         <div class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -211,22 +216,23 @@ const handleCardClick = (doc: SearchDocument) => {
           </span>
         </div>
 
-        <NButton
+        <Button
+          variant="secondary"
+          size="md"
           @click="handlePageChange(page + 1)"
           :disabled="page === totalPages || isLoading"
-          size="large"
           class="min-w-[100px]"
         >
           다음
-        </NButton>
+        </Button>
       </div>
 
       <!-- Initial State -->
       <div
         v-if="!searchRequest && !isLoading"
-        class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+        class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700"
       >
-        <NIcon :component="SearchIcon" class="text-6xl text-gray-300 dark:text-gray-600 mb-4" />
+        <SearchIcon class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
         <p class="text-gray-600 dark:text-gray-400 text-lg">
           검색어를 입력하고 검색 버튼을 눌러주세요
         </p>
@@ -234,3 +240,16 @@ const handleCardClick = (doc: SearchDocument) => {
     </div>
   </div>
 </template>
+
+<style>
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+</style>

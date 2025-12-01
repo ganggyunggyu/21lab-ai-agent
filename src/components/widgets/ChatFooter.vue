@@ -1,20 +1,15 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import {
-  NText,
-  NPopover,
-  NCard,
-  NButton,
-  NSpace,
-} from 'naive-ui';
-import {
   Document as DocumentIcon,
   Send as SendIcon,
   StarOutline as StarOutlineIcon,
+  Close as CloseIcon,
 } from '@vicons/ionicons5';
 import { Button, Card, Input } from '@/components/ui';
 import { useChatStore } from '@/stores';
-import { computed, watch, ref, onMounted } from 'vue';
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   getFrequentKeywords,
   addKeywordToFrequent,
@@ -29,6 +24,7 @@ import {
 } from '@/utils';
 
 const chatStore = useChatStore();
+const router = useRouter();
 
 const {
   keyword,
@@ -49,6 +45,7 @@ const frequentKeywords = ref<FrequentKeyword[]>([]);
 
 const favoriteSearches = ref<FavoriteSearch[]>([]);
 const showFavorites = ref(false);
+const favoritesRef = ref<HTMLElement | null>(null);
 
 const searchHistory = ref<SearchHistory[]>([]);
 
@@ -120,6 +117,10 @@ const handleRemoveFavorite = (id: string, event: Event) => {
   loadFavoriteSearches();
 };
 
+const handlePublishedList = () => {
+  showFavorites.value = false;
+  router.push('/published');
+};
 
 const cleanText = (text: string) => {
   return text
@@ -140,10 +141,22 @@ const handleGenerateWithKeyword = () => {
   handleGenerate();
 };
 
+const handleClickOutside = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  if (favoritesRef.value && !favoritesRef.value.contains(target)) {
+    showFavorites.value = false;
+  }
+};
+
 onMounted(() => {
   loadFrequentKeywords();
   loadFavoriteSearches();
   loadSearchHistory();
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
 });
 
 watch(refMsg, (newVal) => {
@@ -156,45 +169,45 @@ watch(refMsg, (newVal) => {
 </script>
 <template>
   <footer
-    class="fixed bottom-0 left-1/2 -translate-x-1/2 w-screen max-w-[90vw] md:max-w-[calc(100vw-32px)] max-md:max-w-full z-[100]"
+    class="footer-container"
     ref="footerRef"
     role="contentinfo"
     aria-label="채팅 입력 영역"
   >
-    <section class="relative" aria-label="메시지 입력 컨테이너">
-      <div class="p-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-[30px] backdrop-saturate-[200%] rounded-t-[32px] border border-white/40 dark:border-gray-600/40 shadow-lg dark:shadow-black/50 relative overflow-hidden transition-all duration-300 flex flex-col gap-[5px] hover:-translate-y-1">
-          <transition
-            enter-active-class="transition-[max-height,opacity,transform,filter] duration-[260ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-            leave-active-class="transition-[max-height,opacity,transform,filter] duration-[260ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
-            enter-from-class="max-h-0 opacity-0 -translate-y-[6px] blur-[1px]"
-            leave-to-class="max-h-0 opacity-0 -translate-y-[6px] blur-[1px]"
-            enter-to-class="max-h-[180px] opacity-100 translate-y-0 blur-0"
-            leave-from-class="max-h-[180px] opacity-100 translate-y-0 blur-0"
+    <section class="footer-content" aria-label="메시지 입력 컨테이너">
+      <div class="footer-inner">
+        <transition
+          enter-active-class="ref-enter-active"
+          leave-active-class="ref-leave-active"
+          enter-from-class="ref-enter-from"
+          leave-to-class="ref-enter-from"
+          enter-to-class="ref-enter-to"
+          leave-from-class="ref-enter-to"
+        >
+          <section
+            v-show="showRefInput"
+            class="ref-section"
+            aria-label="참조 원고 입력 영역"
           >
-            <section
-              v-show="showRefInput"
-              class="pt-4 px-5 pb-0 relative overflow-hidden"
-              aria-label="참조 원고 입력 영역"
-            >
-              <div class="mt-[5px] text-gray-900 dark:text-gray-100 flex items-end gap-2 bg-gradient-to-br from-slate-50/90 to-slate-100/80 dark:from-gray-800/90 dark:to-gray-700/80 border border-slate-200 dark:border-gray-600 rounded-3xl p-4 px-5 transition-all shadow-lg dark:shadow-black/30 relative overflow-hidden focus-within:border-indigo-400/40 dark:focus-within:border-blue-500/40 focus-within:shadow-xl dark:focus-within:shadow-blue-900/50" role="group" aria-label="참조 원고 입력">
-                <Input
-                  v-model="refMsg"
-                  type="textarea"
-                  :rows="1"
-                  :autosize="{ minRows: 1, maxRows: 4 }"
-                  :placeholder="refPlaceholder"
-                  class="flex-1"
-                  @focus="showRefInput = true"
-                  @blur="showRefInput = false"
-                  aria-label="참조 원고 텍스트 영역"
-                />
-              </div>
-            </section>
-          </transition>
+            <div class="input-wrapper" role="group" aria-label="참조 원고 입력">
+              <Input
+                v-model="refMsg"
+                type="textarea"
+                :rows="1"
+                :autosize="{ minRows: 1, maxRows: 4 }"
+                :placeholder="refPlaceholder"
+                class="input-transparent"
+                @focus="showRefInput = true"
+                @blur="showRefInput = false"
+                aria-label="참조 원고 텍스트 영역"
+              />
+            </div>
+          </section>
+        </transition>
 
-          <section aria-label="메인 입력 영역">
+        <section aria-label="메인 입력 영역">
           <div
-            class="mt-[5px] text-gray-900 dark:text-gray-100 flex items-end gap-2 bg-gradient-to-br from-slate-50/90 to-slate-100/80 dark:from-gray-800/90 dark:to-gray-700/80 border border-slate-200 dark:border-gray-600 rounded-3xl p-4 px-5 transition-all shadow-lg dark:shadow-black/30 relative overflow-hidden focus-within:border-indigo-400/40 dark:focus-within:border-blue-500/40 focus-within:shadow-xl dark:focus-within:shadow-blue-900/50"
+            class="input-wrapper"
             role="group"
             aria-label="키워드 입력 및 액션"
           >
@@ -204,134 +217,105 @@ watch(refMsg, (newVal) => {
               :rows="1"
               :autosize="{ minRows: 1, maxRows: 4 }"
               :placeholder="getKeywordPlaceholder(service)"
-              class="flex-1"
+              class="input-transparent"
               :onEnter="handleEnterPress"
               @focus="showRefInput = true"
               @blur="showRefInput = false"
               aria-label="키워드 입력"
             />
 
-            <nav class="flex items-center gap-[6px]" aria-label="입력 관련 액션">
+            <nav class="action-buttons" aria-label="입력 관련 액션">
               <Button
                 variant="ghost"
                 size="sm"
                 icon-only
                 :icon="DocumentIcon"
                 @click="showRefInput = !showRefInput"
-                :class="showRefInput ? 'opacity-100' : 'opacity-60 hover:opacity-100'"
+                :class="['action-btn', showRefInput ? 'action-btn-active' : 'action-btn-inactive']"
                 aria-label="참조 입력 토글"
               />
 
-              <n-popover
-                trigger="click"
-                v-model:show="showFavorites"
-                placement="top"
-              >
-                <template #trigger>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon-only
-                    :icon="StarOutlineIcon"
-                    class="opacity-60 hover:opacity-100"
-                    aria-label="즐겨찾기"
-                  />
-                </template>
+              <div class="favorites-wrapper" ref="favoritesRef">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon-only
+                  :icon="StarOutlineIcon"
+                  @click.stop="showFavorites = !showFavorites"
+                  class="action-btn action-btn-inactive"
+                  aria-label="즐겨찾기"
+                />
 
-                <n-card
-                  class="max-w-[300px] max-h-[400px] overflow-y-auto !bg-white dark:!bg-gray-800 !border-gray-200 dark:!border-gray-600"
-                  size="small"
-                  role="dialog"
-                  aria-label="즐겨찾기 관리"
+                <Transition
+                  enter-active-class="popover-enter-active"
+                  leave-active-class="popover-leave-active"
+                  enter-from-class="popover-enter-from"
+                  leave-to-class="popover-enter-from"
                 >
-                  <template #header>
-                    <header class="flex justify-between items-center mb-2">
-                      <h3 class="m-0 text-sm font-semibold text-gray-700 dark:text-gray-200">즐겨찾기 검색</h3>
-                      <nav aria-label="즐겨찾기 액션">
-                        <n-space size="small">
-                          <n-button
-                            size="small"
-                            type="success"
-                            @click="
-                              () => {
-                                showFavorites = false;
-                                $router.push('/published');
-                              }
-                            "
-                            class="text-[11px]"
-                            aria-label="발행원고 목록으로 이동"
-                          >
-                            📝 발행원고 목록
-                          </n-button>
-                          <n-button
-                            v-if="keyword.trim()"
-                            size="small"
-                            type="primary"
-                            @click="handleAddFavorite"
-                            aria-label="현재 검색을 즐겨찾기에 추가"
-                          >
-                            추가
-                          </n-button>
-                        </n-space>
-                      </nav>
+                  <div
+                    v-if="showFavorites"
+                    class="favorites-popover"
+                    role="dialog"
+                    aria-label="즐겨찾기 관리"
+                  >
+                    <header class="favorites-header">
+                      <h3 class="favorites-title">즐겨찾기 검색</h3>
+                      <div class="favorites-actions">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          @click="handlePublishedList"
+                        >
+                          발행원고 목록
+                        </Button>
+                        <Button
+                          v-if="keyword.trim()"
+                          variant="primary"
+                          size="sm"
+                          @click="handleAddFavorite"
+                        >
+                          추가
+                        </Button>
+                      </div>
                     </header>
-                  </template>
 
-                  <section
-                    v-if="favoriteSearches.length === 0"
-                    aria-label="즐겨찾기 없음"
-                  >
-                    <p class="text-center text-gray-500 dark:text-gray-400 p-5">
-                      저장된 즐겨찾기가 없습니다
-                    </p>
-                  </section>
+                    <section v-if="favoriteSearches.length === 0" class="favorites-empty">
+                      <p>저장된 즐겨찾기가 없습니다</p>
+                    </section>
 
-                  <section
-                    v-else
-                    aria-label="즐겨찾기 목록"
-                  >
-                    <n-space vertical size="small" role="list">
+                    <section v-else class="favorites-list" role="list">
                       <article
                         v-for="favorite in favoriteSearches"
                         :key="favorite.id"
-                        class="flex items-start p-2 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer transition-all duration-200 hover:bg-indigo-500/5 dark:hover:bg-blue-500/10 hover:border-indigo-500/20 dark:hover:border-blue-500/30"
-                        :class="favorite.isPublished ? 'bg-gradient-to-br from-emerald-500/[0.08] to-emerald-500/[0.04] dark:from-emerald-500/[0.12] dark:to-emerald-500/[0.08] border-emerald-500/30 dark:border-emerald-500/40 hover:from-emerald-500/[0.12] hover:to-emerald-500/[0.06] dark:hover:from-emerald-500/[0.16] dark:hover:to-emerald-500/[0.10] hover:border-emerald-500/40 dark:hover:border-emerald-500/50' : ''"
+                        :class="['favorite-item', favorite.isPublished && 'favorite-item-published']"
                         @click="handleFavoriteClick(favorite)"
                         role="listitem"
                         tabindex="0"
                         :aria-label="`즐겨찾기: ${favorite.title}`"
                       >
-                        <div class="flex-1">
-                          <h4 class="font-semibold text-sm text-gray-900 dark:text-gray-100 m-0 mb-1">
-                            <span
-                              v-if="favorite.isPublished"
-                              class="inline-block w-4 h-4 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-500 text-white rounded-full text-center leading-4 text-[10px] font-bold mr-[6px] shadow-[0_2px_4px_rgba(16,185,129,0.3)] dark:shadow-[0_2px_4px_rgba(16,185,129,0.5)]"
-                              aria-label="발행됨"
-                              >✓</span
-                            >
+                        <div class="favorite-content">
+                          <h4 class="favorite-title">
+                            <span v-if="favorite.isPublished" class="published-badge">✓</span>
                             {{ favorite.title }}
                           </h4>
-                          <p class="text-xs text-gray-600 dark:text-gray-400 m-0 mb-[2px]">
-                            {{ favorite.keyword }}
-                          </p>
-                          <p v-if="favorite.refMsg" class="text-[11px] text-gray-500 dark:text-gray-500 m-0">
+                          <p class="favorite-keyword">{{ favorite.keyword }}</p>
+                          <p v-if="favorite.refMsg" class="favorite-ref">
                             참조: {{ favorite.refMsg.slice(0, 50) }}...
                           </p>
                         </div>
-                        <n-button
-                          size="tiny"
-                          type="error"
+                        <Button
+                          variant="danger"
+                          size="sm"
                           @click="handleRemoveFavorite(favorite.id, $event)"
-                          class="ml-auto"
                           :aria-label="`${favorite.title} 삭제`"
                         >
                           삭제
-                        </n-button>
+                        </Button>
                       </article>
-                    </n-space>
-                  </section>
-                </n-card>
-              </n-popover>
+                    </section>
+                  </div>
+                </Transition>
+              </div>
 
               <Button
                 v-if="keyword"
@@ -346,17 +330,260 @@ watch(refMsg, (newVal) => {
           </div>
         </section>
 
-        <footer class="flex items-center justify-between mt-2 pt-2 border-t border-black/[0.04]" aria-label="입력 정보">
-          <div
-            class="text-xs"
-            v-if="keyword.length > 0"
-            aria-label="문자 수"
-          >
-            <n-text depth="3">{{ keyword.length }}/1000</n-text>
+        <footer class="footer-info" aria-label="입력 정보">
+          <div v-if="keyword.length > 0" class="char-count">
+            {{ keyword.length }}/1000
           </div>
         </footer>
       </div>
     </section>
-
   </footer>
 </template>
+
+<style scoped>
+.footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  max-width: 90vw;
+  z-index: 100;
+}
+
+@media (min-width: 768px) {
+  .footer-container {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+@media (max-width: 767px) {
+  .footer-container {
+    max-width: 100%;
+  }
+}
+
+.footer-content {
+  position: relative;
+}
+
+.footer-inner {
+  padding: var(--space-4);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-top: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ref-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  transition: border-color var(--transition-fast);
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--color-primary);
+}
+
+.input-transparent {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn {
+  transition: opacity var(--transition-fast);
+}
+
+.action-btn-active {
+  opacity: 1;
+}
+
+.action-btn-inactive {
+  opacity: 0.6;
+}
+
+.action-btn-inactive:hover {
+  opacity: 1;
+}
+
+.favorites-wrapper {
+  position: relative;
+}
+
+.favorites-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.favorites-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.favorites-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.favorites-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.favorites-empty {
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.favorites-empty p {
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.favorites-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.favorite-item {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  margin-bottom: var(--space-2);
+}
+
+.favorite-item:last-child {
+  margin-bottom: 0;
+}
+
+.favorite-item:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.favorite-item-published {
+  background-color: rgba(0, 196, 113, 0.05);
+  border-color: rgba(0, 196, 113, 0.3);
+}
+
+.favorite-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.favorite-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1) 0;
+  display: flex;
+  align-items: center;
+}
+
+.published-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background-color: var(--color-success);
+  color: white;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: var(--font-bold);
+  margin-right: 6px;
+}
+
+.favorite-keyword {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin: 0 0 2px 0;
+}
+
+.favorite-ref {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.char-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-disabled);
+}
+
+/* Reference Section Transitions */
+.ref-enter-active,
+.ref-leave-active {
+  transition: max-height 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              opacity 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ref-enter-from {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.ref-enter-to {
+  max-height: 180px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Popover Transitions */
+.popover-enter-active,
+.popover-leave-active {
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.popover-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+</style>

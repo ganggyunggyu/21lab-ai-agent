@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { NButton, NSpace } from 'naive-ui';
-import { Input } from '@/components/ui';
+import { Input, Button } from '@/components/ui';
 import type { BatchRequest } from '@/types';
 import { Trash as TrashIcon } from '@vicons/ionicons5';
 
@@ -58,20 +57,16 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
           <span class="font-bold text-base text-indigo-500 bg-indigo-500/10 w-8 h-8 rounded-full flex items-center justify-center">
             {{ idx + 1 }}
           </span>
-          <n-button
-            size="tiny"
-            type="error"
+          <Button
+            size="sm"
+            variant="danger"
             @click="handleRemoveRequest(idx)"
-            :quaternary="true"
             aria-label="삭제"
-          >
-            <template #icon>
-              <component :is="TrashIcon" />
-            </template>
-          </n-button>
+            :icon="TrashIcon"
+          />
         </header>
 
-        <n-space vertical :size="12">
+        <div class="flex flex-col gap-3">
           <Input
             :value="req.keyword"
             @update:value="(val) => handleKeywordUpdate(idx, val)"
@@ -100,19 +95,18 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
               {{ getStatusText(statuses[req.id]) }}
             </span>
           </div>
-        </n-space>
+        </div>
       </article>
     </TransitionGroup>
 
-    <n-button
+    <Button
       @click="handleAddRequest"
-      dashed
-      block
-      size="large"
-      class="mt-2 border-2 border-dashed border-indigo-500/30 text-indigo-500 font-semibold transition-all duration-200 hover:border-indigo-500/50 hover:bg-indigo-500/5"
+      variant="secondary"
+      size="lg"
+      class="mt-2 w-full border-2 border-dashed border-brand/30 text-brand font-semibold transition-all duration-200 hover:border-brand/50 hover:bg-brand/5"
     >
       + 원고 추가 ({{ requests.length }})
-    </n-button>
+    </Button>
   </div>
 </template>
 

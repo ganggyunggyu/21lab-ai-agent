@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { NModal, NButton, NSpace, NText } from 'naive-ui';
 import { Code as MarkdownIcon, Eye as PreviewIcon } from '@vicons/ionicons5';
 import { storeToRefs } from 'pinia';
+import { Modal, Button } from '@/components/ui';
 import { usePublishedStore, usePublishedModal } from '@/features';
 
 // 직접 store에서 reactive data 가져오기
@@ -42,13 +42,9 @@ const handleCloseMarkdownModal = () => {
 </script>
 
 <template>
-  <n-modal
+  <Modal
     v-model:show="markdownModal.open"
-    preset="card"
     class="markdown-editor-modal"
-    role="dialog"
-    aria-modal="true"
-    aria-label="마크다운 에디터"
   >
     <template #header>
       <header class="modal-header-content">
@@ -60,17 +56,17 @@ const handleCloseMarkdownModal = () => {
     <main class="markdown-editor-container" role="main" aria-label="마크다운 에디터 메인 영역">
       <!-- 에디터 헤더 -->
       <header class="editor-header">
-        <n-space align="center" justify="space-between">
+        <div class="editor-header-content">
           <h3 class="editor-title">실시간 마크다운 에디터</h3>
           <aside class="editor-hint-container" aria-label="사용법 안내">
-            <n-text depth="3" class="editor-syntax-hint">
+            <span class="editor-syntax-hint">
               **굵게**, *기울임*, `코드`, # 제목, - 리스트, [링크](url)
-            </n-text>
-            <n-text depth="3" class="editor-save-hint">
+            </span>
+            <span class="editor-save-hint">
               💾 Shift + Enter로 저장
-            </n-text>
+            </span>
           </aside>
-        </n-space>
+        </div>
       </header>
 
       <!-- 분할 에디터 -->
@@ -119,14 +115,16 @@ const handleCloseMarkdownModal = () => {
     </main>
 
     <template #footer>
-      <nav aria-label="에디터 액션">
-        <n-space justify="end">
-          <n-button @click="handleCloseMarkdownModal" aria-label="에디터 닫기">취소</n-button>
-          <n-button type="primary" @click="handleSaveMarkdownMemo" aria-label="마크다운 저장">저장</n-button>
-        </n-space>
+      <nav class="modal-actions" aria-label="에디터 액션">
+        <Button variant="ghost" size="sm" @click="handleCloseMarkdownModal" aria-label="에디터 닫기">
+          취소
+        </Button>
+        <Button variant="primary" size="sm" @click="handleSaveMarkdownMemo" aria-label="마크다운 저장">
+          저장
+        </Button>
       </nav>
     </template>
-  </n-modal>
+  </Modal>
 </template>
 
 <style scoped>
@@ -144,13 +142,13 @@ const handleCloseMarkdownModal = () => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .modal-header-icon {
   width: 20px;
   height: 20px;
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .markdown-editor-container {
@@ -165,8 +163,20 @@ const handleCloseMarkdownModal = () => {
   margin-bottom: 16px;
 }
 
+.editor-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .editor-title {
-  color: #6366f1;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 14px;
   margin: 0;
@@ -185,7 +195,7 @@ const handleCloseMarkdownModal = () => {
 
 .editor-save-hint {
   font-size: 11px;
-  color: #10b981;
+  color: var(--color-success);
   font-weight: 500;
 }
 
@@ -230,7 +240,7 @@ const handleCloseMarkdownModal = () => {
   border: none;
   outline: none;
   background: transparent;
-  color: #374151;
+  color: var(--color-text-primary);
   font-size: 14px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   line-height: 1.6;
@@ -261,7 +271,6 @@ const handleCloseMarkdownModal = () => {
 }
 
 :global(.dark) .markdown-textarea {
-  color: #d1d5db;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
@@ -278,7 +287,7 @@ const handleCloseMarkdownModal = () => {
   bottom: 8px;
   right: 12px;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   background: rgba(255, 255, 255, 0.8);
   padding: 2px 6px;
   border-radius: 4px;
@@ -286,7 +295,6 @@ const handleCloseMarkdownModal = () => {
 }
 
 :global(.dark) .character-count {
-  color: #6b7280;
   background: rgba(0, 0, 0, 0.3);
 }
 
@@ -296,7 +304,7 @@ const handleCloseMarkdownModal = () => {
   gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
   margin-bottom: 8px;
   padding: 6px 0;
 }
@@ -305,17 +313,13 @@ const handleCloseMarkdownModal = () => {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .panel-header-icon {
   width: 14px;
   height: 14px;
   margin-right: 4px;
-}
-
-:global(.dark) .panel-header {
-  color: #d1d5db;
 }
 
 .live-preview {

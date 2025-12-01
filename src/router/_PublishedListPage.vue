@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { NEmpty, NGrid, NGridItem } from 'naive-ui';
 import { DocumentText as DocumentIcon } from '@vicons/ionicons5';
 
 import {
@@ -35,28 +34,22 @@ onMounted(() => {
 
     <PublishedToolbar />
     <section class="list-container" aria-label="발행원고 목록">
-      <n-empty
+      <div
         v-if="displayList?.length === 0"
-        description="아직 등록된 발행원고가 없습니다"
-        style="margin: 60px 0"
+        class="empty-state"
         role="status"
         aria-label="빈 목록"
       >
-        <template #icon>
-          <component :is="DocumentIcon" style="font-size: 48px; color: #ccc" aria-hidden="true" />
-        </template>
-        <template #extra>
-          <n-text depth="3">
-            채팅에서 원고를 생성한 후 "발행원고 등록" 기능을 사용해보세요!
-          </n-text>
-        </template>
-      </n-empty>
+        <DocumentIcon class="empty-icon" aria-hidden="true" />
+        <p class="empty-description">아직 등록된 발행원고가 없습니다</p>
+        <p class="empty-hint">채팅에서 원고를 생성한 후 "발행원고 등록" 기능을 사용해보세요!</p>
+      </div>
 
-      <n-grid v-else :cols="1" :x-gap="16" :y-gap="16" class="published-grid" role="list" aria-label="발행원고 그리드">
-        <n-grid-item v-for="item in displayList" :key="item.id" role="listitem">
+      <div v-else class="published-grid" role="list" aria-label="발행원고 그리드">
+        <div v-for="item in displayList" :key="item.id" role="listitem">
           <PublishedCard :item="item" :groupInfo="getItemGroupInfo(item)" />
-        </n-grid-item>
-      </n-grid>
+        </div>
+      </div>
     </section>
 
     <PublishedDetailModal />
@@ -250,6 +243,40 @@ onMounted(() => {
 .list-container {
   max-width: 960px;
   margin: 0 auto;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 60px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.empty-description {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.published-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 .published-item-card {
   cursor: pointer;
