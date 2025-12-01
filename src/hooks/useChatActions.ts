@@ -1,8 +1,8 @@
-import { createDiscreteApi } from 'naive-ui';
 import { copyToClipboard } from '../utils/_clipboard';
 import { downloadText } from '../utils/_downloadText';
 import { sanitizeFileName } from '../utils/_sanitizeFileName';
 import { extractKeywordDisplay } from '../utils/_extractKeyword';
+import { toast } from '../utils/_toast';
 import {
   MSG_COPY_SUCCESS,
   MSG_COPY_FAIL,
@@ -17,7 +17,7 @@ export interface MultipleFileItem {
 }
 
 export const useChatActions = () => {
-  const { message } = createDiscreteApi(['message']);
+  const message = toast;
 
   const copyMsg = async (text: string, msgObj?: any) => {
     try {

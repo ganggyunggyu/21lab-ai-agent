@@ -9,3 +9,4 @@ export * from './_localStorage';
 export * from './_markdown';
 export * from './_messageToPublished';
 export * from './_sanitizeFileName';
+export * from './_toast';

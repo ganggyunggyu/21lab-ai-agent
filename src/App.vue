@@ -1,13 +1,10 @@
 <template>
-  <n-message-provider>
-    <router-view />
-  </n-message-provider>
+  <router-view />
 </template>
 
 <script setup lang="ts">
 import './style.css';
 import { onMounted } from 'vue';
-import { NMessageProvider } from 'naive-ui';
 import { useThemeStore } from '@/stores/_theme';
 
 const themeStore = useThemeStore();
