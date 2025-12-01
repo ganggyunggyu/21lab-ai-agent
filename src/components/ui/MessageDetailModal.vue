@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue';
-import { NModal, NButton, NSpace } from 'naive-ui';
-import {
-  Information as InfoIcon,
-  Copy as CopyIcon,
-  Close as CloseIcon,
-} from '@vicons/ionicons5';
+import { Information as InfoIcon } from '@vicons/ionicons5';
+import Modal from './Modal.vue';
+import Button from './Button.vue';
 import type { Message } from '@/types/_chat';
 import { MODEL_OPTIONS } from '@/constants/_models';
 import { copyText } from '@/utils/_copyText';
@@ -78,12 +75,9 @@ const handleCopyContent = async () => {
 </script>
 
 <template>
-  <n-modal
+  <Modal
     v-model:show="localShow"
-    preset="card"
     class="message-detail-modal"
-    @mask-click="handleClose"
-    @esc="handleClose"
   >
     <template #header>
       <header class="modal-header">
@@ -105,13 +99,14 @@ const handleCopyContent = async () => {
       <section v-if="message.keyword" class="modal-section">
         <header class="modal-item-header">
           <h3>키워드:</h3>
-          <n-button
-            size="tiny"
+          <Button
+            size="sm"
+            variant="secondary"
             @click="handleCopyKeyword"
             aria-label="키워드 복사"
           >
             복사
-          </n-button>
+          </Button>
         </header>
         <p class="modal-text">{{ message.keyword }}</p>
       </section>
@@ -126,13 +121,14 @@ const handleCopyContent = async () => {
       <section v-if="message.ref" class="modal-section">
         <header class="modal-item-header">
           <h3>참조원고:</h3>
-          <n-button
-            size="tiny"
+          <Button
+            size="sm"
+            variant="secondary"
             @click="handleCopyRef"
             aria-label="참조원고 복사"
           >
             복사
-          </n-button>
+          </Button>
         </header>
         <article class="preview-container">
           {{ message.ref }}
@@ -142,13 +138,14 @@ const handleCopyContent = async () => {
       <section class="modal-section">
         <header class="modal-item-header">
           <h3>메시지 내용:</h3>
-          <n-button
-            size="tiny"
+          <Button
+            size="sm"
+            variant="secondary"
             @click="handleCopyContent"
             aria-label="메시지 내용 복사"
           >
             복사
-          </n-button>
+          </Button>
         </header>
         <article class="preview-container">
           {{ message.content }}
@@ -170,14 +167,14 @@ const handleCopyContent = async () => {
       </section>
     </main>
 
-    <template #action>
-      <n-space justify="end">
-        <n-button @click="handleClose" type="primary">
+    <template #footer>
+      <div class="modal-actions">
+        <Button variant="primary" size="sm" @click="handleClose">
           닫기
-        </n-button>
-      </n-space>
+        </Button>
+      </div>
     </template>
-  </n-modal>
+  </Modal>
 </template>
 
 <style scoped>
@@ -259,5 +256,11 @@ const handleCopyContent = async () => {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
   color: #d1d5db;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>

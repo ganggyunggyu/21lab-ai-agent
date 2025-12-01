@@ -5,14 +5,15 @@
     @click="handleClick"
   >
     <div v-if="loading" :class="spinnerClasses">
-      <div class="w-5 h-5 border-2 border-white/30 border-t-current rounded-full animate-spin"></div>
+      <div class="spinner"></div>
     </div>
 
     <component v-if="icon && !loading" :is="icon" :style="{ width: iconSize + 'px', height: iconSize + 'px' }" class="flex-shrink-0" />
 
-    <span v-if="!iconOnly && !loading" class="font-inherit">
+    <span v-if="!loading && !iconOnly" class="slot-content">
       <slot />
     </span>
+    <slot v-else-if="!loading && iconOnly" />
   </button>
 </template>
 
@@ -48,35 +49,32 @@ const iconSize = computed(() => {
   return sizes[props.size];
 });
 
-const baseClasses = 'relative inline-flex items-center justify-center gap-2 border-none font-semibold cursor-pointer transition-all duration-200 ease-in-out font-inherit overflow-hidden whitespace-nowrap focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 before:content-[""] before:absolute before:top-1/2 before:left-1/2 before:w-0 before:h-0 before:rounded-full before:bg-white/20 before:-translate-x-1/2 before:-translate-y-1/2 before:transition-all before:duration-300 active:before:w-[300px] active:before:h-[300px]';
+const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold cursor-pointer whitespace-nowrap btn-base';
 
 const sizeClasses = computed(() => {
   const sizes = {
-    sm: 'h-9 px-4 text-sm rounded-lg',
-    md: 'h-11 px-5 text-base rounded-xl',
-    lg: 'h-13 px-6 text-lg rounded-2xl',
+    sm: 'btn-sm',
+    md: 'btn-md',
+    lg: 'btn-lg',
   };
   return sizes[props.size];
 });
 
 const variantClasses = computed(() => {
   const variants = {
-    primary: 'bg-gradient-to-br from-blue-500 to-blue-800 dark:from-blue-600 dark:to-blue-900 shadow-lg dark:shadow-blue-900/50 hover:shadow-xl text-white',
-    secondary: 'bg-white/10 dark:bg-gray-700/30 backdrop-blur-[10px] border border-white/20 dark:border-gray-600/40 hover:bg-white/15 dark:hover:bg-gray-700/50 text-white dark:text-gray-100',
-    ghost: 'bg-transparent text-slate-400 dark:text-gray-400 border border-slate-400/30 dark:border-gray-600/40 hover:bg-slate-400/10 dark:hover:bg-gray-700/30 hover:border-slate-400/50 dark:hover:border-gray-500/60',
-    danger: 'bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 shadow-lg dark:shadow-red-900/50 hover:shadow-xl text-white',
+    primary: 'btn-primary',
+    secondary: 'btn-secondary',
+    ghost: 'btn-ghost',
+    danger: 'btn-danger',
   };
   return variants[props.variant];
 });
 
 const stateClasses = computed(() => {
   return cn({
-    'opacity-50 cursor-not-allowed transform-none! shadow-none!': props.disabled,
-    'cursor-not-allowed text-transparent': props.loading,
-    'aspect-square p-0': props.iconOnly,
-    'hover:-translate-y-0.5': !props.disabled && !props.loading && (props.variant === 'primary' || props.variant === 'danger'),
-    'hover:-translate-y-px': !props.disabled && !props.loading && props.variant === 'secondary',
-    'active:translate-y-0 active:scale-[0.98]': !props.disabled && !props.loading,
+    'btn-disabled': props.disabled,
+    'btn-loading': props.loading,
+    'btn-icon-only': props.iconOnly,
   });
 });
 
@@ -92,3 +90,161 @@ const handleClick = (event: MouseEvent) => {
   }
 };
 </script>
+
+<style scoped>
+.btn-base {
+  transition: background-color var(--transition-fast),
+              border-color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              transform var(--transition-fast);
+}
+
+.btn-base:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Sizes */
+.btn-sm {
+  height: 36px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+
+.btn-md {
+  height: 44px;
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+  border-radius: var(--radius-md);
+}
+
+.btn-lg {
+  height: 52px;
+  padding: 0 var(--space-6);
+  font-size: var(--text-lg);
+  border-radius: var(--radius-lg);
+}
+
+/* Variants */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: 1px solid var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-primary), var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  background-color: var(--color-primary-active);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active:not(:disabled) {
+  background-color: var(--color-bg-tertiary);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-ghost:active:not(:disabled) {
+  background-color: var(--color-border-primary);
+}
+
+.btn-danger {
+  background-color: var(--color-urgent);
+  color: var(--color-text-inverse);
+  border: 1px solid var(--color-urgent);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--color-urgent-hover);
+  border-color: var(--color-urgent-hover);
+  box-shadow: var(--shadow-urgent), var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-danger:active:not(:disabled) {
+  background-color: var(--color-urgent-active);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* States */
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-loading {
+  cursor: not-allowed;
+  color: transparent;
+}
+
+.btn-icon-only {
+  aspect-ratio: 1;
+  padding: 0;
+}
+
+.slot-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  opacity: 0.3;
+}
+
+.btn-loading .spinner {
+  color: var(--color-text-inverse);
+  opacity: 1;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>

@@ -8,12 +8,11 @@ import {
   Information as InfoIcon,
   Options as OptionsIcon,
 } from '@vicons/ionicons5';
-import { renderMarkdown } from '../../utils/_markdown';
-import type { Message } from '../../types/_chat';
-import { MODEL_OPTIONS } from '../../constants/_models';
-import Button from '../ui/Button.vue';
+import { renderMarkdown, cn, extractKeywordDisplay } from '@/utils';
+import type { Message } from '@/types';
+import { MODEL_OPTIONS } from '@/constants';
+import { Button } from '@/components/ui';
 import { useChatStore } from '@/stores';
-import { cn, extractKeywordDisplay } from '@/utils';
 
 interface Props {
   message: Message;
@@ -93,13 +92,13 @@ const senderClasses = computed(() => {
 const timeClasses = 'text-base opacity-50 text-gray-900 dark:text-gray-100 md:text-base xs:text-base';
 
 const messageTextClasses = computed(() => {
-  const base = 'bg-white dark:bg-gray-800 px-5 py-4 rounded-[18px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] border border-gray-200 dark:border-gray-600 relative transition-all duration-200 hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)] before:content-[""] before:absolute before:top-3 before:w-0 before:h-0 before:border-t-8 before:border-t-transparent before:border-b-8 before:border-b-transparent md:px-5 md:py-4 md:rounded-2xl md:text-base xs:px-[18px] xs:py-3.5 xs:rounded-[14px]';
+  const base = 'px-5 py-4 rounded-2xl relative transition-colors duration-200';
 
   if (props.message.role === 'user') {
-    return cn(base, 'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-[#eeeeee] border-blue-500/30 dark:border-blue-600/40 before:-right-2 before:border-l-8 before:border-l-blue-500 dark:before:border-l-blue-600');
+    return cn(base, 'bg-brand text-white');
   }
 
-  return cn(base, 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20 text-gray-900 dark:text-gray-100 before:-left-2 before:border-r-8 before:border-r-emerald-500/5 dark:before:border-r-emerald-500/10');
+  return cn(base, 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100');
 });
 
 const actionsClasses = 'mt-2 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex-wrap md:gap-1.5 md:mt-3 xs:mt-4';
@@ -112,10 +111,10 @@ const generationInfoClasses = 'flex flex-wrap gap-3 items-center max-h-[calc(1.6
 
 const refStatusClasses = computed(() => {
   return cn(
-    'px-1.5 py-0.5 rounded text-base font-medium md:text-base md:px-2 md:py-1 xs:text-base',
+    'px-2 py-1 rounded-lg text-sm font-medium',
     {
-      'bg-emerald-600 text-white': props.message.ref,
-      'bg-red-600 text-white': !props.message.ref,
+      'bg-success text-white': props.message.ref,
+      'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400': !props.message.ref,
     }
   );
 });
@@ -151,13 +150,13 @@ const refStatusClasses = computed(() => {
             aria-label="AI 응답 생성 중"
           >
             <div class="flex flex-col gap-2 w-full max-w-[400px]">
-              <div class="w-full h-2 bg-indigo-500/10 rounded-full overflow-hidden">
+              <div class="w-full h-2 bg-brand/10 rounded-full overflow-hidden">
                 <div
-                  class="h-full bg-indigo-500 transition-all duration-300 ease-out"
+                  class="h-full bg-brand transition-all duration-300 ease-out"
                   :style="{ width: `${message.loadingProgress || 0}%` }"
                 ></div>
               </div>
-              <span class="text-sm text-indigo-500 font-semibold text-right">{{ message.loadingProgress || 0 }}%</span>
+              <span class="text-sm text-brand font-semibold text-right">{{ message.loadingProgress || 0 }}%</span>
             </div>
           </section>
 
@@ -298,12 +297,12 @@ const refStatusClasses = computed(() => {
 .message-content-wrapper :deep(h3) {
   margin: 16px 0 8px 0;
   font-weight: 600;
-  color: #000000;
+  color: var(--color-text-primary);
 }
 
 .message-content-wrapper :deep(p) {
   margin: 8px 0;
-  color: #000000;
+  color: var(--color-text-primary);
 }
 
 .message-content-wrapper :deep(ul),
@@ -314,7 +313,7 @@ const refStatusClasses = computed(() => {
 
 .message-content-wrapper :deep(li) {
   margin: 4px 0;
-  color: #000000;
+  color: var(--color-text-primary);
 }
 
 .message-content-wrapper :deep(code) {
@@ -345,15 +344,15 @@ const refStatusClasses = computed(() => {
 }
 
 .message-content-wrapper :deep(blockquote) {
-  border-left: 3px solid #10b981;
+  border-left: 3px solid var(--color-primary);
   margin: 12px 0;
   padding: 8px 16px;
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(98, 194, 176, 0.08);
   border-radius: 0 8px 8px 0;
 }
 
 .message-content-wrapper :deep(a) {
-  color: #3b82f6;
+  color: var(--color-primary);
   text-decoration: underline;
 }
 

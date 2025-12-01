@@ -45,42 +45,71 @@ export const typographyTokens: TypographyToken[] = [
   },
 ];
 
+// 21Lab Design System - CSS Variables 기반
+export const COLORS = {
+  // Brand
+  primary: 'var(--color-primary)',
+  primaryHover: 'var(--color-primary-hover)',
+  accent: 'var(--color-accent)',
+  navy: 'var(--color-navy)',
+
+  // Text
+  textPrimary: 'var(--color-text-primary)',
+  textSecondary: 'var(--color-text-secondary)',
+  textTertiary: 'var(--color-text-tertiary)',
+  textDisabled: 'var(--color-text-disabled)',
+
+  // Background
+  bgPrimary: 'var(--color-bg-primary)',
+  bgSecondary: 'var(--color-bg-secondary)',
+  bgTertiary: 'var(--color-bg-tertiary)',
+
+  // Border
+  borderPrimary: 'var(--color-border-primary)',
+  borderSecondary: 'var(--color-border-secondary)',
+
+  // Semantic
+  success: 'var(--color-success)',
+  urgent: 'var(--color-urgent)',
+  cautious: 'var(--color-cautious)',
+} as const;
+
 export const colorTokens: ColorToken[] = [
   {
-    class: 'indigo-500',
-    hex: '#6366f1',
-    usage: 'Primary actions',
+    class: 'primary',
+    hex: '#62C2B0',
+    usage: 'Primary actions, links',
     textColor: 'white',
   },
   {
-    class: 'indigo-600',
-    hex: '#4f46e5',
+    class: 'primary-hover',
+    hex: '#4FA99A',
     usage: 'Hover states',
     textColor: 'white',
   },
   {
-    class: 'slate-900',
-    hex: '#0f172a',
-    usage: 'Headings',
-    textColor: 'white',
-  },
-  {
-    class: 'slate-800',
-    hex: '#1e293b',
-    usage: 'Body text',
-    textColor: 'white',
-  },
-  {
-    class: 'slate-600',
-    hex: '#475569',
-    usage: 'Secondary text',
-    textColor: 'white',
-  },
-  {
-    class: 'slate-200',
-    hex: '#e2e8f0',
-    usage: 'Borders, dividers',
+    class: 'accent',
+    hex: '#F3C969',
+    usage: 'Accent highlights',
     textColor: 'dark',
+  },
+  {
+    class: 'navy',
+    hex: '#191F28',
+    usage: 'Dark backgrounds, headings',
+    textColor: 'white',
+  },
+  {
+    class: 'success',
+    hex: '#00C471',
+    usage: 'Success states',
+    textColor: 'white',
+  },
+  {
+    class: 'urgent',
+    hex: '#F04452',
+    usage: 'Error states',
+    textColor: 'white',
   },
 ];
 

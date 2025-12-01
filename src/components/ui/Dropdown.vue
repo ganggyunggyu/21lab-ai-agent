@@ -31,7 +31,7 @@ const updateDropdownPosition = () => {
   if (!triggerRef.value) return;
 
   const rect = triggerRef.value.getBoundingClientRect();
-  const dropdownWidth = 192; // w-48 = 12rem = 192px
+  const dropdownWidth = 192;
 
   dropdownPosition.value = {
     top: rect.bottom + 8,
@@ -67,7 +67,6 @@ const handleMouseLeave = () => {
   }
 };
 
-// 외부 클릭 시 닫기
 const handleClickOutside = (e: MouseEvent) => {
   const target = e.target as HTMLElement;
   if (!target.closest('.dropdown-wrapper') && !target.closest('.dropdown-menu')) {
@@ -75,7 +74,6 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 };
 
-// 스크롤 시 위치 업데이트
 const handleScroll = () => {
   if (isOpen.value) {
     updateDropdownPosition();
@@ -98,7 +96,7 @@ onUnmounted(() => {
 <template>
   <div
     ref="triggerRef"
-    class="dropdown-wrapper relative inline-block"
+    class="dropdown-wrapper"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
@@ -108,16 +106,16 @@ onUnmounted(() => {
 
     <Teleport to="body">
       <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0 scale-95 -translate-y-2"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-95 -translate-y-2"
+        enter-active-class="dropdown-enter-active"
+        enter-from-class="dropdown-enter-from"
+        enter-to-class="dropdown-enter-to"
+        leave-active-class="dropdown-leave-active"
+        leave-from-class="dropdown-enter-to"
+        leave-to-class="dropdown-enter-from"
       >
         <div
           v-if="isOpen"
-          class="dropdown-menu fixed w-48 bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-600/40 shadow-lg dark:shadow-black/50 overflow-hidden z-[9999]"
+          class="dropdown-menu"
           :style="{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -127,12 +125,9 @@ onUnmounted(() => {
             v-for="(option, index) in options"
             :key="index"
             :class="[
-              option.type === 'divider'
-                ? 'h-px bg-slate-200 dark:bg-gray-600 my-1'
-                : 'px-4 py-2.5 text-sm cursor-pointer transition-colors duration-150 text-gray-900 dark:text-gray-100',
-              option.disabled
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-slate-50 dark:hover:bg-gray-700/50',
+              'dropdown-item',
+              option.type === 'divider' && 'dropdown-divider',
+              option.disabled && 'dropdown-item-disabled',
             ]"
             @click="handleSelect(option)"
           >
@@ -143,3 +138,61 @@ onUnmounted(() => {
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: fixed;
+  z-index: 9999;
+  width: 192px;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.dropdown-item {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.dropdown-item:hover:not(.dropdown-divider):not(.dropdown-item-disabled) {
+  background-color: var(--color-bg-secondary);
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: var(--space-1) 0;
+  padding: 0;
+  background-color: var(--color-border-primary);
+}
+
+.dropdown-item-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Transitions */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.dropdown-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>

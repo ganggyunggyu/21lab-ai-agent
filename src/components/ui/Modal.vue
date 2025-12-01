@@ -24,51 +24,51 @@ const handleBackdropClick = (e: MouseEvent) => {
 
 <template>
   <Transition
-    enter-active-class="transition duration-200 ease-out"
-    enter-from-class="opacity-0"
-    enter-to-class="opacity-100"
-    leave-active-class="transition duration-150 ease-in"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
+    enter-active-class="modal-backdrop-enter-active"
+    enter-from-class="modal-backdrop-enter-from"
+    enter-to-class="modal-backdrop-enter-to"
+    leave-active-class="modal-backdrop-leave-active"
+    leave-from-class="modal-backdrop-enter-to"
+    leave-to-class="modal-backdrop-enter-from"
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 dark:bg-black/70 backdrop-blur-sm"
+      class="modal-backdrop"
       @click="handleBackdropClick"
     >
       <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0 scale-95 -translate-y-4"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-95 -translate-y-4"
+        enter-active-class="modal-content-enter-active"
+        enter-from-class="modal-content-enter-from"
+        enter-to-class="modal-content-enter-to"
+        leave-active-class="modal-content-leave-active"
+        leave-from-class="modal-content-enter-to"
+        leave-to-class="modal-content-enter-from"
       >
         <div
           v-if="show"
-          class="w-[400px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/80 overflow-hidden"
+          class="modal-content"
           role="dialog"
           aria-modal="true"
         >
           <!-- Header -->
           <div
             v-if="title || $slots.header"
-            class="px-6 py-4 border-b border-slate-200 dark:border-gray-600 bg-slate-50/50 dark:bg-gray-700/50"
+            class="modal-header"
           >
             <slot name="header">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-gray-100">{{ title }}</h2>
+              <h2 class="modal-title">{{ title }}</h2>
             </slot>
           </div>
 
           <!-- Body -->
-          <div class="px-6 py-5 text-gray-900 dark:text-gray-100">
+          <div class="modal-body">
             <slot />
           </div>
 
           <!-- Footer -->
           <div
             v-if="$slots.footer"
-            class="px-6 py-4 border-t border-slate-200 dark:border-gray-600 bg-slate-50/30 dark:bg-gray-700/30"
+            class="modal-footer"
           >
             <slot name="footer" />
           </div>
@@ -77,3 +77,79 @@ const handleBackdropClick = (e: MouseEvent) => {
     </div>
   </Transition>
 </template>
+
+<style scoped>
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  width: 400px;
+  max-width: calc(100vw - var(--space-8));
+  max-height: calc(100vh - var(--space-8));
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.modal-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  padding: var(--space-5) var(--space-6);
+  color: var(--color-text-primary);
+}
+
+.modal-footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+/* Backdrop Transitions */
+.modal-backdrop-enter-active,
+.modal-backdrop-leave-active {
+  transition: opacity var(--transition-normal);
+}
+
+.modal-backdrop-enter-from {
+  opacity: 0;
+}
+
+.modal-backdrop-enter-to {
+  opacity: 1;
+}
+
+/* Content Transitions */
+.modal-content-enter-active,
+.modal-content-leave-active {
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.modal-content-enter-from {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
+.modal-content-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>

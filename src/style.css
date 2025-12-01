@@ -3,9 +3,382 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ========================================
+   21Lab Design System - CSS Variables
+   ======================================== */
+
+:root {
+  /* Brand Colors */
+  --color-primary: #62c2b0;
+  --color-primary-hover: #4fa99a;
+  --color-primary-active: #3d9185;
+  --color-accent: #f3c969;
+  --color-accent-hover: #e5b84f;
+  --color-navy: #191f28;
+
+  /* Text Colors */
+  --color-text-primary: #191f28;
+  --color-text-secondary: #4e5968;
+  --color-text-tertiary: #8b95a1;
+  --color-text-disabled: #b0b8c1;
+  --color-text-inverse: #ffffff;
+
+  /* Background Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f2f4f6;
+  --color-bg-tertiary: #e8ebed;
+
+  /* Border Colors */
+  --color-border-primary: #e8ebed;
+  --color-border-secondary: #d1d6db;
+  --color-border-focus: var(--color-primary);
+
+  /* Semantic Colors */
+  --color-urgent: #f04452;
+  --color-urgent-hover: #dc2626;
+  --color-urgent-active: #b91c1c;
+  --color-urgent-bg: #fff0f1;
+  --color-cautious: #ff8a3d;
+  --color-cautious-bg: #fff5eb;
+  --color-success: #00c471;
+  --color-success-bg: #e8faf0;
+  --color-kakao: #fee500;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+  --shadow-primary: 0 4px 16px rgba(98, 194, 176, 0.24);
+  --shadow-accent: 0 4px 16px rgba(243, 201, 105, 0.24);
+  --shadow-urgent: 0 4px 16px rgba(240, 68, 82, 0.24);
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Spacing (4pt grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Typography */
+  --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+
+  /* Font Sizes */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Line Heights */
+  --leading-tight: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+}
+
+/* Dark Mode Variables */
+.dark {
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  --color-text-disabled: #6b7280;
+
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+
+  --color-border-primary: #374151;
+  --color-border-secondary: #4b5563;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   Tailwind Theme Extensions
+   ======================================== */
+
+@theme {
+  /* Colors */
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-hover);
+  --color-brand-active: var(--color-primary-active);
+
+  /* Shadows with Tailwind */
+  --shadow-brand: var(--shadow-primary);
+  --shadow-accent: var(--shadow-accent);
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
 body {
-  @apply bg-gradient-to-br from-slate-50 via-white to-slate-100;
-  @apply dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-900 dark:to-black;
-  @apply transition-colors duration-200;
+  font-family: var(--font-family);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus Styles */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-disabled);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+/* Text Colors */
+.text-brand {
+  color: var(--color-primary);
+}
+.text-brand-hover:hover {
+  color: var(--color-primary-hover);
+}
+.text-accent {
+  color: var(--color-accent);
+}
+.text-urgent {
+  color: var(--color-urgent);
+}
+.text-cautious {
+  color: var(--color-cautious);
+}
+.text-success {
+  color: var(--color-success);
+}
+
+/* Background Colors */
+.bg-brand {
+  background-color: var(--color-primary);
+}
+.bg-brand-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+.bg-accent {
+  background-color: var(--color-accent);
+}
+.bg-urgent {
+  background-color: var(--color-urgent);
+}
+.bg-cautious {
+  background-color: var(--color-cautious);
+}
+.bg-success {
+  background-color: var(--color-success);
+}
+
+/* Surface Colors */
+.surface-primary {
+  background-color: var(--color-bg-primary);
+}
+.surface-secondary {
+  background-color: var(--color-bg-secondary);
+}
+.surface-tertiary {
+  background-color: var(--color-bg-tertiary);
+}
+
+/* Border Colors */
+.border-brand {
+  border-color: var(--color-primary);
+}
+.border-brand-hover:hover {
+  border-color: var(--color-primary);
+}
+
+/* Shadows */
+.shadow-brand {
+  box-shadow: var(--shadow-primary);
+}
+.shadow-accent {
+  box-shadow: var(--shadow-accent);
+}
+.shadow-urgent {
+  box-shadow: var(--shadow-urgent);
+}
+
+/* ========================================
+   Naive UI Override Styles
+   ======================================== */
+
+/* Naive UI Button 기본 스타일 오버라이드 */
+.n-button {
+  border: 1px solid var(--color-border-secondary) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.n-button:hover:not(:disabled) {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px);
+}
+
+.n-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.n-button--primary-type {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.n-button--primary-type:hover:not(:disabled) {
+  background-color: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+  box-shadow: var(--shadow-primary), var(--shadow-md) !important;
+}
+
+.n-button--success-type {
+  background-color: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+}
+
+.n-button--error-type {
+  background-color: var(--color-urgent) !important;
+  border-color: var(--color-urgent) !important;
+}
+
+.n-button--error-type:hover:not(:disabled) {
+  background-color: var(--color-urgent-hover) !important;
+  border-color: var(--color-urgent-hover) !important;
+  box-shadow: var(--shadow-urgent), var(--shadow-md) !important;
+}
+
+/* Toast Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Toast Component Styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-lg);
+  max-width: 90vw;
+}
+
+.toast-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast-hide {
+  opacity: 0;
+  transform: translate(-50%, -20px);
+}
+
+.toast-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.toast-error {
+  background-color: var(--color-urgent);
+  color: white;
+}
+
+.toast-warning {
+  background-color: var(--color-cautious);
+  color: white;
+}
+
+.toast-info {
+  background-color: var(--color-primary);
+  color: white;
 }

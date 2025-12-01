@@ -157,8 +157,8 @@ const handleBlur = (e: FocusEvent) => {
     :minlength="minlength"
     :rows="rows"
     :class="[
-      'w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors resize-none',
-      disabled && 'opacity-50 cursor-not-allowed',
+      'input-base input-textarea',
+      disabled && 'input-disabled',
       props.class
     ]"
     :style="props.style"
@@ -182,8 +182,8 @@ const handleBlur = (e: FocusEvent) => {
     :maxlength="maxlength"
     :minlength="minlength"
     :class="[
-      'w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors',
-      disabled && 'opacity-50 cursor-not-allowed',
+      'input-base',
+      disabled && 'input-disabled',
       props.class
     ]"
     :style="props.style"
@@ -198,3 +198,43 @@ const handleBlur = (e: FocusEvent) => {
     @compositionend="handleCompositionEnd"
   />
 </template>
+
+<style scoped>
+.input-base {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+
+.input-base::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.input-base:hover:not(:disabled) {
+  border-color: var(--color-border-secondary);
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(98, 194, 176, 0.15);
+}
+
+.input-textarea {
+  resize: none;
+  min-height: 100px;
+}
+
+.input-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-bg-tertiary);
+}
+</style>
