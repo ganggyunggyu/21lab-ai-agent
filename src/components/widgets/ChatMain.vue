@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
 import { MessageBubble, MessageDetailModal, Button } from '@/components/ui';
@@ -34,12 +34,62 @@ const publishedStore = usePublishedStore();
 const { openDetailModal } = publishedStore;
 
 const scrollAnchorRef = ref<HTMLDivElement | null>(null);
+const scrollContainerRef = ref<HTMLElement | null>(null);
 
 const showDetailModal = ref(false);
 const selectedMessage = ref<Message | null>(null);
 
 const showRegisterModal = ref(false);
 const messageToRegister = ref<Message | null>(null);
+
+const SCROLL_EXTRA_OFFSET = 150;
+
+const getScrollContainer = () => {
+  if (scrollContainerRef.value) return scrollContainerRef.value;
+
+  const anchor = scrollAnchorRef.value;
+  if (!anchor) return null;
+
+  let current: HTMLElement | null = anchor.parentElement as HTMLElement | null;
+  while (current) {
+    const { overflowY } = window.getComputedStyle(current);
+    if (overflowY === 'auto' || overflowY === 'scroll') {
+      return current;
+    }
+    current = current.parentElement;
+  }
+
+  return document.scrollingElement as HTMLElement | null;
+};
+
+const scrollToBottom = async (isSmooth: boolean = true) => {
+  await nextTick();
+
+  const behavior: ScrollBehavior = isSmooth ? 'smooth' : 'auto';
+
+  if (scrollAnchorRef.value) {
+    scrollAnchorRef.value.scrollIntoView({
+      behavior,
+      block: 'end',
+    });
+  }
+
+  const target = getScrollContainer();
+  if (!target) return;
+
+  const maxScrollTop = target.scrollHeight - target.clientHeight;
+  const desiredScrollTop = Math.max(0, Math.min(target.scrollHeight, maxScrollTop + SCROLL_EXTRA_OFFSET));
+
+  if (typeof target.scrollTo === 'function') {
+    target.scrollTo({
+      top: desiredScrollTop,
+      behavior,
+    });
+    return;
+  }
+
+  target.scrollTop = desiredScrollTop;
+};
 
 const handleShowDetail = (message: Message) => {
   selectedMessage.value = message;
@@ -108,10 +158,7 @@ const handleToggleSelectAll = () => {
 };
 
 const handleScrollToBottom = () => {
-  scrollAnchorRef.value?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'end',
-  });
+  scrollToBottom(true);
 };
 
 watch(
@@ -119,17 +166,14 @@ watch(
   async (newLength, oldLength) => {
     if (newLength > oldLength) {
       await delay(AUTO_SCROLL_DELAY);
-      scrollAnchorRef.value?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
+      await scrollToBottom(true);
     }
   }
 );
 
 onMounted(async () => {
   await delay(100);
-  scrollAnchorRef.value?.scrollIntoView({ behavior: 'auto', block: 'end' });
+  await scrollToBottom(false);
 });
 </script>
 <template>
@@ -146,12 +190,13 @@ onMounted(async () => {
         aria-label="메시지 목록"
       >
         <div
+          ref="scrollContainerRef"
           class="flex-1 h-full overflow-y-auto"
           role="log"
           aria-live="polite"
           aria-label="채팅 메시지들"
         >
-          <ul class="py-4 pb-[200px] flex flex-col gap-4" role="list">
+          <ul class="py-4 pb-0 flex flex-col gap-4" role="list">
             <li
               v-for="(msg, idx) in displayMessages"
               :key="`${idx}-${msg.timestamp}`"
@@ -169,7 +214,7 @@ onMounted(async () => {
                 @show-work-modal="handleShowWorkModal"
               />
             </li>
-            <div ref="scrollAnchorRef" class="h-px w-px"></div>
+            <div ref="scrollAnchorRef" class="h-px w-px mt-[150px]"></div>
           </ul>
         </div>
 
