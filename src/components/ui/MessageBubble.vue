@@ -98,7 +98,8 @@ const messageTextClasses = computed(() => {
     return cn(base, 'bg-brand text-white');
   }
 
-  return cn(base, 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100');
+  // 봇 메시지: 배경과 구분되도록 약간 다른 색상 + 테두리 적용
+  return cn(base, 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600');
 });
 
 const actionsClasses = 'mt-2 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex-wrap md:gap-1.5 md:mt-3 xs:mt-4';
