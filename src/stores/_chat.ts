@@ -44,12 +44,7 @@ export const useChatStore = defineStore(
     const displayMessages = computed(() => messages.value);
     const hasMessages = computed(() => messages.value.length > 1);
     const isLoading = computed(() => pendingMessages.size > 0);
-    const selectedMessagesCount = computed(() => {
-      const ids = selectedMessageIds.value;
-      if (ids instanceof Set) return ids.size;
-      if (Array.isArray(ids)) return ids.length;
-      return 0;
-    });
+    const selectedMessagesCount = computed(() => selectedMessageIds.value.size);
     const userMessages = computed(() =>
       messages.value.filter((msg) => msg.role === 'user' && Boolean(msg.id))
     );
@@ -293,17 +288,8 @@ export const useChatStore = defineStore(
       );
       if (!targetMessage) return;
 
-      // 배열인 경우와 Set인 경우 모두 처리
-      const currentIds = selectedMessageIds.value;
-      let newSet: Set<string>;
-
-      if (currentIds instanceof Set) {
-        newSet = new Set(currentIds);
-      } else if (Array.isArray(currentIds)) {
-        newSet = new Set(currentIds);
-      } else {
-        newSet = new Set();
-      }
+      // 반응성을 위해 새 Set 객체 할당
+      const newSet = new Set(selectedMessageIds.value);
 
       if (newSet.has(messageId)) {
         newSet.delete(messageId);
@@ -311,7 +297,6 @@ export const useChatStore = defineStore(
         newSet.add(messageId);
       }
 
-      // 반응성을 위해 새 Set 객체 할당
       selectedMessageIds.value = newSet;
     };
 
@@ -356,17 +341,13 @@ export const useChatStore = defineStore(
     };
 
     const exportSelectedMessages = (): SelectedMessagePackage[] => {
-      const ids = selectedMessageIds.value;
-      const selectedMessages = userMessages.value.filter((msg) => {
-        if (!msg.id) return false;
-        if (ids instanceof Set) return ids.has(msg.id);
-        if (Array.isArray(ids)) return ids.includes(msg.id);
-        return false;
-      });
+      const selectedMessages = userMessages.value.filter(
+        (msg) => msg.id && selectedMessageIds.value.has(msg.id)
+      );
 
       return selectedMessages.map((userMessage) => ({
         userMessage,
-        responses: collectBotResponses(userMessage.id as string),
+        responses: collectBotResponses(userMessage.id!),
       }));
     };
 
@@ -480,17 +461,6 @@ export const useChatStore = defineStore(
     persist: {
       key: 'chat-store',
       storage: localStorage,
-      afterRestore: (context) => {
-        // selectedMessageIds가 배열이면 Set으로 변환
-        if (Array.isArray(context.store.selectedMessageIds)) {
-          context.store.selectedMessageIds = new Set(context.store.selectedMessageIds);
-        }
-
-        // null이거나 undefined면 빈 Set으로
-        if (!context.store.selectedMessageIds) {
-          context.store.selectedMessageIds = new Set();
-        }
-      },
       serializer: {
         serialize: (state) => {
           // Set을 배열로 변환하여 저장
