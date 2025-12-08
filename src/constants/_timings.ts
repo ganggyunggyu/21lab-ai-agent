@@ -12,6 +12,9 @@ export const EXPECTED_RESPONSE_TIME: Record<ChatService, number> = {
   'restaurant-gpt5': 120,
   'restaurant-oai-4': 90,
   claude: 70,
+  'clean-claude': 60,
   'restaurant-grok': 25,
   'restaurant-claude': 70,
+  deepseek: 100,
+  'clean-deepseek': 70,
 };

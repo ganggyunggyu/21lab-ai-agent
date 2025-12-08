@@ -13,12 +13,17 @@ type GetCategoryReq = {
 
 const API = import.meta.env.VITE_API_URL;
 
+const getEndpoint = (service: ChatService): string => {
+  if (service === 'clean-claude') {
+    return `${API}/generate/clean-claude`;
+  }
+  return `${API}/generate/${service}`;
+};
+
 export const generateText = async (params: GenerationRequest) => {
   try {
-    const response = await axios.post(
-      `${API}/generate/${params.service}`,
-      params
-    );
+    const endpoint = getEndpoint(params.service);
+    const response = await axios.post(endpoint, params);
     return response.data;
   } catch (error: unknown) {
     if (isAxiosError(error) && error.response?.status === 429) {
