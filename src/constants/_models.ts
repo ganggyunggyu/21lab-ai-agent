@@ -13,6 +13,7 @@ export const MODEL_OPTIONS = [
   { label: 'GEM_맛집', value: 'restaurant' },
   { label: 'GROK_맛집', value: 'restaurant-grok' },
   { label: 'CLAUDE_맛집', value: 'restaurant-claude' },
+  { label: 'DEEPSEEK_맛집', value: 'restaurant-deepseek' },
 ] as const;
 
 // MODEL_OPTIONS에서 ChatService 타입 자동 추출

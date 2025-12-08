@@ -15,6 +15,7 @@ export const EXPECTED_RESPONSE_TIME: Record<ChatService, number> = {
   'clean-claude': 60,
   'restaurant-grok': 25,
   'restaurant-claude': 70,
+  'restaurant-deepseek': 80,
   deepseek: 100,
-  'clean-deepseek': 70,
+  'clean-deepseek': 100,
 };
