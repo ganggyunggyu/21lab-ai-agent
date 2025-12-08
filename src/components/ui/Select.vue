@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { ChevronDown as ChevronDownIcon } from '@vicons/ionicons5';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ChevronDown as ChevronDownIcon, Search as SearchIcon } from '@vicons/ionicons5';
 
 interface Option {
   label: string;
@@ -12,6 +12,8 @@ interface Props {
   options: Option[];
   placeholder?: string;
   size?: 'sm' | 'md' | 'lg';
+  searchable?: boolean;
+  maxHeight?: number;
 }
 
 interface Emits {
@@ -21,16 +23,32 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   placeholder: '선택하세요',
   size: 'md',
+  searchable: false,
+  maxHeight: 300,
 });
 
 const emit = defineEmits<Emits>();
 
 const isOpen = ref(false);
 const triggerRef = ref<HTMLElement | null>(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
 const dropdownPosition = ref({ top: 0, left: 0, width: 0 });
+const searchQuery = ref('');
 
 const selectedOption = computed(() => {
   return props.options.find((opt) => opt.value === props.modelValue);
+});
+
+const filteredOptions = computed(() => {
+  if (!props.searchable || !searchQuery.value.trim()) {
+    return props.options;
+  }
+  const query = searchQuery.value.toLowerCase().trim();
+  return props.options.filter(
+    (opt) =>
+      opt.label.toLowerCase().includes(query) ||
+      opt.value.toLowerCase().includes(query)
+  );
 });
 
 const sizeClass = computed(() => {
@@ -46,16 +64,18 @@ const updateDropdownPosition = () => {
   if (!triggerRef.value) return;
 
   const rect = triggerRef.value.getBoundingClientRect();
+  const dropdownWidth = props.searchable ? Math.max(rect.width, 250) : rect.width;
   dropdownPosition.value = {
     top: rect.bottom + 4,
     left: rect.left,
-    width: rect.width,
+    width: dropdownWidth,
   };
 };
 
 const handleSelect = (value: string) => {
   emit('update:modelValue', value);
   isOpen.value = false;
+  searchQuery.value = '';
 };
 
 const toggleDropdown = () => {
@@ -64,6 +84,16 @@ const toggleDropdown = () => {
   }
   isOpen.value = !isOpen.value;
 };
+
+watch(isOpen, async (open) => {
+  if (open && props.searchable) {
+    await nextTick();
+    searchInputRef.value?.focus();
+  }
+  if (!open) {
+    searchQuery.value = '';
+  }
+});
 
 const handleClickOutside = (e: MouseEvent) => {
   const target = e.target as HTMLElement;
@@ -118,13 +148,32 @@ onUnmounted(() => {
             width: `${dropdownPosition.width}px`,
           }"
         >
+          <div v-if="searchable" class="select-search">
+            <SearchIcon class="select-search-icon" />
+            <input
+              ref="searchInputRef"
+              v-model="searchQuery"
+              type="text"
+              placeholder="검색..."
+              class="select-search-input"
+              @click.stop
+            />
+          </div>
           <div
-            v-for="option in options"
-            :key="option.value"
-            :class="['select-option', option.value === modelValue && 'select-option-selected']"
-            @click.stop="handleSelect(option.value)"
+            class="select-options"
+            :style="{ maxHeight: `${maxHeight}px` }"
           >
-            {{ option.label }}
+            <div
+              v-for="option in filteredOptions"
+              :key="option.value"
+              :class="['select-option', option.value === modelValue && 'select-option-selected']"
+              @click.stop="handleSelect(option.value)"
+            >
+              {{ option.label }}
+            </div>
+            <div v-if="searchable && filteredOptions.length === 0" class="select-empty">
+              검색 결과가 없습니다
+            </div>
           </div>
         </div>
       </Transition>
@@ -204,6 +253,47 @@ onUnmounted(() => {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+}
+
+/* Search */
+.select-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.select-search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.select-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+.select-search-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.select-options {
+  overflow-y: auto;
+}
+
+.select-empty {
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
 }
 
 .select-option {

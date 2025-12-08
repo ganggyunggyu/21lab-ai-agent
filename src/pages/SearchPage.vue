@@ -1,31 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import { SearchOutline as SearchIcon } from '@vicons/ionicons5';
 import { Button, Input, Select } from '@/components/ui';
-import { useSearchManuscripts } from '@/entities/search';
+import { CATEGORY_OPTIONS } from '@/constants';
+import { useSearchStore, useSearchActions } from '@/entities/search';
 import { ManuscriptCard } from '@/features/search';
-import type { SearchRequest, SearchDocument } from '@/entities/search';
+import type { SearchDocument } from '@/entities/search';
 
 const router = useRouter();
 
-const query = ref('');
-const category = ref('');
-const page = ref(1);
-const limit = ref(20);
+const searchStore = useSearchStore();
+const { query, category, page, searchRequest, totalPages } = storeToRefs(searchStore);
+const { updateQuery, updateCategory } = searchStore;
 
-const categoryOptions = [
-  { label: '전체 카테고리', value: '' },
-  { label: '위고비', value: '위고비' },
-  { label: '마운자로', value: '마운자로' },
-  { label: '다이어트', value: '다이어트' },
-  { label: '맛집', value: '맛집' },
-  { label: '라미네이트', value: '라미네이트' },
-  { label: '리쥬란', value: '리쥬란' },
-  { label: '울쎄라', value: '울쎄라' },
-  { label: '외국어교육', value: '외국어교육' },
-  { label: '미용학원', value: '미용학원' },
-];
+const { searchData, isLoading, isError, error, refetch, executeSearch, changePage } = useSearchActions();
 
 const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
   const toast = document.createElement('div');
@@ -36,42 +26,23 @@ const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'succes
   setTimeout(() => toast.remove(), 3000);
 };
 
-const searchRequest = computed<SearchRequest | null>(() => {
-  if (!query.value.trim()) return null;
-
-  return {
-    query: query.value.trim(),
-    category: category.value || undefined,
-    page: page.value,
-    limit: limit.value,
-  };
-});
-
-const { data, isLoading, isError, error, refetch, totalPages } = useSearchManuscripts(searchRequest);
-
 const handleSearch = () => {
   if (!query.value.trim()) {
     showToast('검색어를 입력해주세요.', 'warning');
     return;
   }
-
-  page.value = 1;
-  refetch();
+  executeSearch();
 };
 
 const handlePageChange = (newPage: number) => {
-  if (newPage < 1 || newPage > totalPages.value) return;
-  page.value = newPage;
+  changePage(newPage);
 };
 
-watch(
-  () => page.value,
-  () => {
-    if (searchRequest.value) {
-      refetch();
-    }
+watch(page, () => {
+  if (searchRequest.value) {
+    refetch();
   }
-);
+});
 
 const handleKeyPress = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
@@ -121,9 +92,11 @@ const handleCardClick = (doc: SearchDocument) => {
           <div class="w-full md:w-[200px]">
             <Select
               v-model="category"
-              :options="categoryOptions"
+              :options="CATEGORY_OPTIONS"
               placeholder="카테고리"
               size="md"
+              searchable
+              :max-height="350"
             />
           </div>
 
@@ -143,11 +116,11 @@ const handleCardClick = (doc: SearchDocument) => {
 
       <!-- Search Results Summary -->
       <div
-        v-if="data && data.documents.length > 0"
+        v-if="searchData && searchData.documents.length > 0"
         class="mb-4 text-sm text-gray-600 dark:text-gray-400"
       >
-        총 <strong class="text-gray-900 dark:text-gray-100">{{ data.total }}</strong>개 결과 중
-        <strong class="text-gray-900 dark:text-gray-100">{{ data.skip + 1 }}</strong>~<strong class="text-gray-900 dark:text-gray-100">{{ data.skip + data.documents.length }}</strong>번 표시
+        총 <strong class="text-gray-900 dark:text-gray-100">{{ searchData.total }}</strong>개 결과 중
+        <strong class="text-gray-900 dark:text-gray-100">{{ searchData.skip + 1 }}</strong>~<strong class="text-gray-900 dark:text-gray-100">{{ searchData.skip + searchData.documents.length }}</strong>번 표시
       </div>
 
       <!-- Error State -->
@@ -174,11 +147,11 @@ const handleCardClick = (doc: SearchDocument) => {
 
       <!-- Search Results -->
       <div
-        v-if="data && data.documents.length > 0"
+        v-if="searchData && searchData.documents.length > 0"
         class="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <ManuscriptCard
-          v-for="doc in data.documents"
+          v-for="doc in searchData.documents"
           :key="doc._id"
           :document="doc"
           @click="handleCardClick"
@@ -187,7 +160,7 @@ const handleCardClick = (doc: SearchDocument) => {
 
       <!-- Empty State -->
       <div
-        v-if="data && data.documents.length === 0"
+        v-if="searchData && searchData.documents.length === 0"
         class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700"
       >
         <p class="text-gray-600 dark:text-gray-400 text-lg">
@@ -197,7 +170,7 @@ const handleCardClick = (doc: SearchDocument) => {
 
       <!-- Pagination -->
       <div
-        v-if="data && data.documents.length > 0 && totalPages > 1"
+        v-if="searchData && searchData.documents.length > 0 && totalPages > 1"
         class="mt-6 flex items-center justify-center gap-3"
       >
         <Button

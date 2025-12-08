@@ -1,3 +1,4 @@
+export * from './_categories';
 export * from './_markdown';
 export * from './_models';
 export * from './_regex';
