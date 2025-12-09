@@ -1,15 +1,22 @@
 <script setup lang="ts">
+import { computed, onUnmounted, watch } from 'vue';
+
 interface Props {
   show: boolean;
   title?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 interface Emits {
   'update:show': [value: boolean];
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  size: 'md',
+});
 const emit = defineEmits<Emits>();
+
+const sizeClass = computed(() => `modal-${props.size}`);
 
 const handleClose = () => {
   emit('update:show', false);
@@ -20,6 +27,28 @@ const handleBackdropClick = (e: MouseEvent) => {
     handleClose();
   }
 };
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && props.show) {
+    handleClose();
+  }
+};
+
+watch(
+  () => props.show,
+  (show) => {
+    if (show) {
+      document.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+  },
+  { immediate: true }
+);
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <template>
@@ -46,7 +75,7 @@ const handleBackdropClick = (e: MouseEvent) => {
       >
         <div
           v-if="show"
-          class="modal-content"
+          :class="['modal-content', sizeClass]"
           role="dialog"
           aria-modal="true"
         >
@@ -90,7 +119,6 @@ const handleBackdropClick = (e: MouseEvent) => {
 }
 
 .modal-content {
-  width: 400px;
   max-width: calc(100vw - var(--space-8));
   max-height: calc(100vh - var(--space-8));
   background-color: var(--color-bg-primary);
@@ -98,6 +126,23 @@ const handleBackdropClick = (e: MouseEvent) => {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
+}
+
+/* Size variants */
+.modal-sm {
+  width: 320px;
+}
+
+.modal-md {
+  width: 400px;
+}
+
+.modal-lg {
+  width: 600px;
+}
+
+.modal-xl {
+  width: min(900px, 90vw);
 }
 
 .modal-header {

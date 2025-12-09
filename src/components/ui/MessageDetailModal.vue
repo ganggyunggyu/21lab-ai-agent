@@ -77,7 +77,7 @@ const handleCopyContent = async () => {
 <template>
   <Modal
     v-model:show="localShow"
-    class="message-detail-modal"
+    size="xl"
   >
     <template #header>
       <header class="modal-header">
@@ -86,7 +86,7 @@ const handleCopyContent = async () => {
       </header>
     </template>
 
-    <main v-if="message" class="modal-content">
+    <main v-if="message" class="detail-content">
       <section class="modal-section">
         <header class="modal-item-header">
           <h3>역할:</h3>
@@ -178,11 +178,6 @@ const handleCopyContent = async () => {
 </template>
 
 <style scoped>
-.message-detail-modal {
-  max-width: 70vw;
-  max-height: 90vh;
-}
-
 .modal-header {
   display: flex;
   align-items: center;
@@ -203,9 +198,9 @@ const handleCopyContent = async () => {
   flex-shrink: 0;
 }
 
-.modal-content {
+.detail-content {
   padding: 8px 0;
-  max-height: 70vh;
+  max-height: 60vh;
   overflow-y: auto;
 }
 
