@@ -174,11 +174,11 @@ const handleCtrlEnterPress = (e: KeyboardEvent) => {
 
     <template #footer>
       <div class="modal-actions">
-        <Button variant="ghost" size="sm" @click="handleClose">
+        <Button color="light" variant="weak" size="sm" @click="handleClose">
           취소
         </Button>
         <Button
-          variant="primary"
+          color="primary"
           size="sm"
           :loading="isLoading"
           :disabled="!canSubmit"

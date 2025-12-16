@@ -102,7 +102,7 @@ const handleCopyResultWithMessage = (item: any) => {
         <header class="modal-item-header">
           <h3>키워드:</h3>
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             @click="handleCopyKeywordWithMessage(detailModal.selectedItem!)"
             aria-label="키워드 복사"
@@ -117,7 +117,7 @@ const handleCopyResultWithMessage = (item: any) => {
         <header class="modal-item-header">
           <h3>참조원고:</h3>
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             @click="handleCopyRefWithMessage(detailModal.selectedItem!)"
             aria-label="참조원고 복사"
@@ -134,7 +134,7 @@ const handleCopyResultWithMessage = (item: any) => {
         <header class="modal-item-header">
           <h3>결과원고:</h3>
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             @click="handleCopyResultWithMessage(detailModal.selectedItem!)"
             aria-label="결과원고 복사"
@@ -156,7 +156,7 @@ const handleCopyResultWithMessage = (item: any) => {
             aria-label="메모 편집 액션"
           >
             <Button
-              variant="secondary"
+              color="light"
               size="sm"
               @click="handleStartEditMemo(detailModal.selectedItem!)"
               aria-label="메모 편집"
@@ -164,7 +164,7 @@ const handleCopyResultWithMessage = (item: any) => {
               편집
             </Button>
             <Button
-              variant="secondary"
+              color="light"
               size="sm"
               class="markdown-button"
               @click="handleOpenMarkdownEditor(detailModal.selectedItem!)"
@@ -177,14 +177,14 @@ const handleCopyResultWithMessage = (item: any) => {
           </nav>
           <nav v-else class="action-buttons" aria-label="메모 저장 액션">
             <Button
-              variant="primary"
+              color="primary"
               size="sm"
               @click="handleSaveMemo(detailModal.selectedItem!)"
               aria-label="메모 저장"
             >
               저장
             </Button>
-            <Button variant="ghost" size="sm" @click="cancelEditMemo" aria-label="편집 취소">
+            <Button color="light" variant="weak" size="sm" @click="cancelEditMemo" aria-label="편집 취소">
               취소
             </Button>
           </nav>
@@ -216,7 +216,7 @@ const handleCopyResultWithMessage = (item: any) => {
             aria-label="블로그 ID 편집 액션"
           >
             <Button
-              variant="secondary"
+              color="light"
               size="sm"
               @click="handleStartEditBlogId(detailModal.selectedItem!)"
               aria-label="블로그 ID 편집"
@@ -226,14 +226,14 @@ const handleCopyResultWithMessage = (item: any) => {
           </nav>
           <nav v-else class="action-buttons" aria-label="블로그 ID 저장 액션">
             <Button
-              variant="primary"
+              color="primary"
               size="sm"
               @click="handleSaveBlogId(detailModal.selectedItem!)"
               aria-label="블로그 ID 저장"
             >
               저장
             </Button>
-            <Button variant="ghost" size="sm" @click="cancelEditBlogId" aria-label="편집 취소">
+            <Button color="light" variant="weak" size="sm" @click="cancelEditBlogId" aria-label="편집 취소">
               취소
             </Button>
           </nav>
@@ -288,7 +288,7 @@ const handleCopyResultWithMessage = (item: any) => {
               {{ detailModal.selectedItem.isVisible ? '노출중' : '미노출' }}
             </Button>
             <Button
-              variant="danger"
+              color="danger"
               size="sm"
               @click="handleDelete(detailModal.selectedItem!)"
               aria-label="발행원고 삭제"
@@ -296,7 +296,7 @@ const handleCopyResultWithMessage = (item: any) => {
               삭제
             </Button>
             <Button
-              variant="primary"
+              color="primary"
               size="sm"
               @click="handleUseTemplate(detailModal.selectedItem!)"
               aria-label="이 발행원고로 새 원고 작성"

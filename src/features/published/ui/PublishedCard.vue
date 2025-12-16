@@ -119,7 +119,7 @@ const getServiceColor = (service?: string) => {
         <div class="item-actions">
           <Button
             v-if="item.botContent"
-            variant="ghost"
+            color="light" variant="weak"
             size="sm"
             icon-only
             :icon="DocumentIcon"
@@ -128,7 +128,7 @@ const getServiceColor = (service?: string) => {
             class="action-btn copy-content-button"
           />
           <Button
-            variant="ghost"
+            color="light" variant="weak"
             size="sm"
             icon-only
             :icon="item.isActive !== false ? ActiveIcon : InactiveIcon"
@@ -141,7 +141,7 @@ const getServiceColor = (service?: string) => {
             ]"
           />
           <Button
-            variant="ghost"
+            color="light" variant="weak"
             size="sm"
             icon-only
             :icon="TrashIcon"
@@ -157,7 +157,7 @@ const getServiceColor = (service?: string) => {
           <div class="keyword-section">
             <span class="keyword">{{ item.keyword.length > 50 ? extractKeywordDisplay(item.keyword) : item.keyword }}</span>
             <Button
-              variant="ghost"
+              color="light" variant="weak"
               size="sm"
               icon-only
               :icon="CopyIcon"

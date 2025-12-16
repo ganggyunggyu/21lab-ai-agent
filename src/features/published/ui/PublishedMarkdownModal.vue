@@ -116,10 +116,10 @@ const handleCloseMarkdownModal = () => {
 
     <template #footer>
       <nav class="modal-actions" aria-label="에디터 액션">
-        <Button variant="ghost" size="sm" @click="handleCloseMarkdownModal" aria-label="에디터 닫기">
+        <Button color="light" variant="weak" size="sm" @click="handleCloseMarkdownModal" aria-label="에디터 닫기">
           취소
         </Button>
-        <Button variant="primary" size="sm" @click="handleSaveMarkdownMemo" aria-label="마크다운 저장">
+        <Button color="primary" size="sm" @click="handleSaveMarkdownMemo" aria-label="마크다운 저장">
           저장
         </Button>
       </nav>

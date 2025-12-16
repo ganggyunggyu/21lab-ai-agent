@@ -50,7 +50,7 @@ onMounted(() => {
     <div class="header-wrapper">
       <!-- 뒤로가기 버튼 -->
       <Button
-        variant="ghost"
+        color="light" variant="weak"
         size="sm"
         :icon="BackIcon"
         @click="handleGoBack"
@@ -71,7 +71,7 @@ onMounted(() => {
       <!-- 필터 버튼들 -->
       <div class="filter-section">
         <Button
-          variant="ghost"
+          color="light" variant="weak"
           size="sm"
           :icon="ActiveIcon"
           @click="handleFilterChange('active')"
@@ -80,7 +80,7 @@ onMounted(() => {
           활성화
         </Button>
         <Button
-          variant="ghost"
+          color="light" variant="weak"
           size="sm"
           :icon="InactiveIcon"
           @click="handleFilterChange('inactive')"
@@ -89,7 +89,7 @@ onMounted(() => {
           비활성화
         </Button>
         <Button
-          variant="ghost"
+          color="light" variant="weak"
           size="sm"
           :icon="AllIcon"
           @click="handleFilterChange('all')"

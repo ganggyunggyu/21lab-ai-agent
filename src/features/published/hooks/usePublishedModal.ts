@@ -2,7 +2,7 @@ import { storeToRefs } from 'pinia';
 import type { FavoriteSearch } from '@/entities';
 import { usePublishedStore } from '@/features';
 import { PublishedApi } from '@/entities';
-import { renderMarkdown } from '@/utils/markdown/renderer';
+import { renderMarkdown } from '@/utils';
 
 export const usePublishedModal = () => {
   // 직접 store 사용
