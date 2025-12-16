@@ -51,57 +51,54 @@ const getStatusClass = (status: 'pending' | 'loading' | 'success' | 'error') => 
       <article
         v-for="(req, idx) in requests"
         :key="req.id"
-        class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border border-black/8 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_4px_16px_rgba(99,102,241,0.1)]"
+        class="flex flex-col gap-3 py-4 border-b border-gray-200 last:border-b-0"
       >
-        <header class="flex justify-between items-center mb-3">
-          <span class="font-bold text-base text-indigo-500 bg-indigo-500/10 w-8 h-8 rounded-full flex items-center justify-center">
-            {{ idx + 1 }}
+        <header class="flex justify-between items-center">
+          <span class="font-semibold text-sm text-gray-500">
+            #{{ idx + 1 }}
           </span>
           <Button
             size="sm"
-            variant="danger"
+            color="danger"
             @click="handleRemoveRequest(idx)"
             aria-label="삭제"
             :icon="TrashIcon"
           />
         </header>
 
-        <div class="flex flex-col gap-3">
-          <Input
-            :value="req.keyword"
-            @update:value="(val) => handleKeywordUpdate(idx, val)"
-            placeholder="키워드를 입력해주세요"
-            type="text"
-          />
+        <Input
+          :model-value="req.keyword"
+          @update:model-value="(val: string) => handleKeywordUpdate(idx, val)"
+          placeholder="키워드를 입력해주세요"
+          type="text"
+        />
 
-          <Input
-            :value="req.refMsg || ''"
-            @update:value="(val) => handleRefMsgUpdate(idx, val)"
-            placeholder="참조원고 (선택)"
-            type="textarea"
-            :rows="2"
-            :autosize="{ minRows: 2, maxRows: 4 }"
-          />
+        <Input
+          :model-value="req.refMsg || ''"
+          @update:model-value="(val: string) => handleRefMsgUpdate(idx, val)"
+          placeholder="참조원고 (선택)"
+          type="textarea"
+          :rows="2"
+        />
 
-          <div v-if="statuses[req.id]" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/3 text-[13px] font-medium">
-            <span
-              :class="[
-                statuses[req.id] === 'pending' && 'text-gray-600',
-                statuses[req.id] === 'loading' && 'text-amber-600 animate-pulse',
-                statuses[req.id] === 'success' && 'text-emerald-600',
-                statuses[req.id] === 'error' && 'text-red-600'
-              ]"
-            >
-              {{ getStatusText(statuses[req.id]) }}
-            </span>
-          </div>
-        </div>
+        <span
+          v-if="statuses[req.id]"
+          :class="[
+            'text-[13px] font-medium',
+            statuses[req.id] === 'pending' && 'text-gray-500',
+            statuses[req.id] === 'loading' && 'text-amber-600 animate-pulse',
+            statuses[req.id] === 'success' && 'text-emerald-600',
+            statuses[req.id] === 'error' && 'text-red-600'
+          ]"
+        >
+          {{ getStatusText(statuses[req.id]) }}
+        </span>
       </article>
     </TransitionGroup>
 
     <Button
       @click="handleAddRequest"
-      variant="secondary"
+      color="light"
       size="lg"
       class="mt-2 w-full border-2 border-dashed border-brand/30 text-brand font-semibold transition-all duration-200 hover:border-brand/50 hover:bg-brand/5"
     >

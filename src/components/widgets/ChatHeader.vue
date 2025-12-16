@@ -154,11 +154,12 @@ watch(service, (newService) => {
             @keydown="handleSearchKeydown"
           />
           <Button
-            variant="ghost"
+            color="primary"
+            variant="weak"
             size="sm"
             @click="() => handleDirectNaverSearch()"
             title="네이버 검색 실행 (Enter)"
-            class="text-brand font-semibold whitespace-nowrap"
+            class="font-semibold whitespace-nowrap"
           >
             검색
           </Button>
@@ -167,7 +168,7 @@ watch(service, (newService) => {
         <!-- 오른쪽 그룹: 액션 & 설정 -->
         <div class="flex items-center gap-2.5 shrink-0">
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             @click="handleBatchPage"
             title="배치 원고 생성"
@@ -185,7 +186,8 @@ watch(service, (newService) => {
           </section>
 
           <Button
-            variant="ghost"
+            color="light"
+            variant="weak"
             size="sm"
             @click="toggleTheme"
             :title="isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
@@ -201,7 +203,8 @@ watch(service, (newService) => {
             @select="handleMenuSelect"
           >
             <Button
-              variant="ghost"
+              color="light"
+              variant="weak"
               size="sm"
               title="더보기 메뉴"
               icon-only
@@ -220,18 +223,12 @@ watch(service, (newService) => {
         이 작업은 되돌릴 수 없습니다.
       </p>
       <template #footer>
-        <div class="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" @click="cancelClearChat">
-            취소
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            @click="confirmClearChat"
-          >
-            초기화
-          </Button>
-        </div>
+        <Button color="light" variant="weak" size="sm" @click="cancelClearChat">
+          취소
+        </Button>
+        <Button color="danger" size="sm" @click="confirmClearChat">
+          초기화
+        </Button>
       </template>
     </Modal>
   </header>

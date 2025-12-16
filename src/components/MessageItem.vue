@@ -55,7 +55,7 @@ const onDownload = () => emit('download', props.msg);
         <Button
           class="copy-btn"
           size="sm"
-          variant="ghost"
+          color="light" variant="weak"
           :icon="CopyIcon"
           @click="onCopy"
         >
@@ -64,7 +64,7 @@ const onDownload = () => emit('download', props.msg);
         <Button
           class="download-btn"
           size="sm"
-          variant="ghost"
+          color="light" variant="weak"
           :icon="DownloadIcon"
           @click="onDownload"
         >

@@ -9,7 +9,6 @@ import {
   usePublishedStore,
 } from '@/features';
 import { useChatStore } from '@/stores';
-import { useChatActions } from '@/hooks';
 import { delay } from 'es-toolkit';
 import { AUTO_SCROLL_DELAY } from '@/constants';
 import type { Message, SelectedMessagePackage } from '@/types';
@@ -25,10 +24,7 @@ const {
   selectableMessagesCount,
 } = storeToRefs(chatStore);
 
-const { handleRegenerate, deleteMessage, selectAllMessages, clearSelection } =
-  chatStore;
-
-const { copyMsg, handleDownloadClick } = useChatActions();
+const { selectAllMessages, clearSelection } = chatStore;
 
 const publishedStore = usePublishedStore();
 const { openDetailModal } = publishedStore;
@@ -205,11 +201,6 @@ onMounted(async () => {
               <MessageBubble
                 :message="msg"
                 :index="idx"
-                :render-md="idx === 0"
-                @copy="(text, message) => copyMsg(text, message)"
-                @download="handleDownloadClick"
-                @regenerate="handleRegenerate"
-                @delete="deleteMessage"
                 @show-detail="handleShowDetail"
                 @show-work-modal="handleShowWorkModal"
               />
@@ -223,7 +214,7 @@ onMounted(async () => {
           aria-label="스크롤 컨트롤"
         >
           <Button
-            variant="secondary"
+            color="light"
             size="lg"
             icon-only
             :icon="ChevronDownIcon"

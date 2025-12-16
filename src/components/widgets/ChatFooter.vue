@@ -6,7 +6,7 @@ import {
   StarOutline as StarOutlineIcon,
   Close as CloseIcon,
 } from '@vicons/ionicons5';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 import { useChatStore } from '@/stores';
 import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -189,44 +189,39 @@ watch(refMsg, (newVal) => {
             class="ref-section"
             aria-label="참조 원고 입력 영역"
           >
-            <div class="input-wrapper" role="group" aria-label="참조 원고 입력">
-              <Input
-                v-model="refMsg"
-                type="textarea"
-                :rows="1"
-                :autosize="{ minRows: 1, maxRows: 4 }"
-                :placeholder="refPlaceholder"
-                class="input-transparent"
-                @focus="showRefInput = true"
-                @blur="showRefInput = false"
-                aria-label="참조 원고 텍스트 영역"
-              />
-            </div>
+            <textarea
+              v-model="refMsg"
+              rows="2"
+              :placeholder="refPlaceholder"
+              class="footer-textarea"
+              @focus="showRefInput = true"
+              @blur="showRefInput = false"
+              aria-label="참조 원고 텍스트 영역"
+            />
           </section>
         </transition>
 
-        <section aria-label="메인 입력 영역">
-          <div
-            class="input-wrapper"
-            role="group"
-            aria-label="키워드 입력 및 액션"
-          >
-            <Input
-              v-model="keyword"
-              type="text"
-              :rows="1"
-              :autosize="{ minRows: 1, maxRows: 4 }"
-              :placeholder="getKeywordPlaceholder(service)"
-              class="input-transparent"
-              :onEnter="handleEnterPress"
-              @focus="showRefInput = true"
-              @blur="showRefInput = false"
-              aria-label="키워드 입력"
-            />
+        <section
+          class="main-input-section"
+          aria-label="메인 입력 영역"
+          @click="$refs.keywordInput?.focus()"
+        >
+          <input
+            ref="keywordInput"
+            v-model="keyword"
+            type="text"
+            :placeholder="getKeywordPlaceholder(service)"
+            class="footer-input"
+            @keydown.enter.prevent="handleEnterPress"
+            @focus="showRefInput = true"
+            @blur="showRefInput = false"
+            aria-label="키워드 입력"
+          />
 
-            <nav class="action-buttons" aria-label="입력 관련 액션">
+          <nav class="action-buttons" aria-label="입력 관련 액션">
               <Button
-                variant="ghost"
+                color="light"
+                variant="weak"
                 size="sm"
                 icon-only
                 :icon="DocumentIcon"
@@ -237,7 +232,8 @@ watch(refMsg, (newVal) => {
 
               <div class="favorites-wrapper" ref="favoritesRef">
                 <Button
-                  variant="ghost"
+                  color="light"
+                  variant="weak"
                   size="sm"
                   icon-only
                   :icon="StarOutlineIcon"
@@ -262,7 +258,7 @@ watch(refMsg, (newVal) => {
                       <h3 class="favorites-title">즐겨찾기 검색</h3>
                       <div class="favorites-actions">
                         <Button
-                          variant="secondary"
+                          color="light"
                           size="sm"
                           @click="handlePublishedList"
                         >
@@ -270,7 +266,7 @@ watch(refMsg, (newVal) => {
                         </Button>
                         <Button
                           v-if="keyword.trim()"
-                          variant="primary"
+                          color="primary"
                           size="sm"
                           @click="handleAddFavorite"
                         >
@@ -304,7 +300,7 @@ watch(refMsg, (newVal) => {
                           </p>
                         </div>
                         <Button
-                          variant="danger"
+                          color="danger"
                           size="sm"
                           @click="handleRemoveFavorite(favorite.id, $event)"
                           :aria-label="`${favorite.title} 삭제`"
@@ -319,7 +315,7 @@ watch(refMsg, (newVal) => {
 
               <Button
                 v-if="keyword"
-                variant="primary"
+                color="primary"
                 size="sm"
                 icon-only
                 :icon="SendIcon"
@@ -327,7 +323,6 @@ watch(refMsg, (newVal) => {
                 aria-label="메시지 전송"
               />
             </nav>
-          </div>
         </section>
 
         <footer class="footer-info" aria-label="입력 정보">
@@ -371,11 +366,13 @@ watch(refMsg, (newVal) => {
   padding: var(--space-4);
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border-top: 1px solid var(--color-border-primary);
+  border: 1px solid var(--color-border-primary);
+  border-bottom: none;
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .ref-section {
@@ -383,26 +380,41 @@ watch(refMsg, (newVal) => {
   overflow: hidden;
 }
 
-.input-wrapper {
+.main-input-section {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-2);
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  transition: border-color var(--transition-fast);
+  padding: var(--space-2) 0;
+  cursor: text;
 }
 
-.input-wrapper:focus-within {
-  border-color: var(--color-primary);
-}
-
-.input-transparent {
+.footer-input,
+.footer-textarea {
   flex: 1;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  resize: none;
+  padding: var(--space-2) 0;
+}
+
+.footer-input::placeholder,
+.footer-textarea::placeholder {
+  color: var(--color-text-disabled);
+}
+
+.footer-textarea {
+  width: 100%;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-primary);
+  margin-bottom: var(--space-2);
+}
+
+.footer-inner:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .action-buttons {
