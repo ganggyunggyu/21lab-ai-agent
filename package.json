@@ -10,8 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
     "@tailwindcss/vite": "^4.1.16",
     "@tanstack/vue-query": "^5.85.5",
+    "@toss/tds-mobile": "^2.2.0",
+    "@toss/tds-mobile-ait": "^2.2.0",
     "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.11.0",
     "clsx": "^2.1.1",
@@ -23,10 +26,13 @@
     "papaparse": "^5.5.3",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.16",
     "vue": "^3.5.17",
-    "vue-router": "4"
+    "vue-router": "4",
+    "vue3-lottie": "^3.3.1"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
