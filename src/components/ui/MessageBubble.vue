@@ -17,7 +17,7 @@ import { useChatActions } from '@/hooks';
 
 const getLoadingMessage = (progress: number): string => {
   if (progress < 30) return 'AI 모델 준비 중...';
-  if (progress < 60) return '텍스트 분석 중...';
+  if (progress < 60) return '원고 작성 중...';
   if (progress < 85) return '응답 생성 중...';
   return '거의 완료...';
 };

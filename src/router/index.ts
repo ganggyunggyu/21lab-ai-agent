@@ -1,50 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import ChatPage from '../pages/ChatPage.vue';
-import BatchPage from '../pages/BatchPage.vue';
-import ComponentsPage from '../pages/ComponentsPage.vue';
-import SearchPage from '../pages/SearchPage.vue';
-import ManuscriptDetailPage from '../pages/ManuscriptDetailPage.vue';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'ChatPage',
-    component: ChatPage,
-    meta: {
-      title: '채팅',
-    },
+    name: 'Chat',
+    component: () => import('@/pages/ChatPage.vue'),
+    meta: { title: '채팅' },
   },
   {
     path: '/batch',
     name: 'Batch',
-    component: BatchPage,
-    meta: {
-      title: '배치 원고 생성',
-    },
+    component: () => import('@/pages/BatchPage.vue'),
+    meta: { title: '배치 원고 생성' },
   },
   {
     path: '/search',
     name: 'Search',
-    component: SearchPage,
-    meta: {
-      title: '원고 검색',
-    },
+    component: () => import('@/pages/SearchPage.vue'),
+    meta: { title: '원고 검색' },
   },
   {
     path: '/search/:id',
     name: 'ManuscriptDetail',
-    component: ManuscriptDetailPage,
-    meta: {
-      title: '원고 상세',
-    },
+    component: () => import('@/pages/ManuscriptDetailPage.vue'),
+    meta: { title: '원고 상세' },
   },
   {
     path: '/components',
     name: 'Components',
-    component: ComponentsPage,
-    meta: {
-      title: '컴포넌트 쇼케이스',
-    },
+    component: () => import('@/pages/ComponentsPage.vue'),
+    meta: { title: '컴포넌트 쇼케이스' },
   },
 ];
 
@@ -53,10 +38,9 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, _from, next) => {
-  document.title = to.meta?.title
-    ? `${to.meta.title} - 21Lab AI Agent`
-    : '21Lab AI Agent';
+router.beforeEach((to, _, next) => {
+  const title = to.meta?.title;
+  document.title = title ? `${title} - 21Lab AI Agent` : '21Lab AI Agent';
   next();
 });
 

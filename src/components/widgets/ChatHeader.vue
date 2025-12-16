@@ -71,6 +71,10 @@ const handleBatchPage = () => {
   router.push('/batch');
 };
 
+const handleSearchPage = () => {
+  router.push('/search');
+};
+
 const handleNaverSearch = () => {
   window.open('https://naver-search-app-xu8w.vercel.app/', '_blank');
 };
@@ -167,6 +171,16 @@ watch(service, (newService) => {
 
         <!-- 오른쪽 그룹: 액션 & 설정 -->
         <div class="flex items-center gap-2.5 shrink-0">
+          <Button
+            color="light"
+            size="sm"
+            @click="handleSearchPage"
+            title="원고 검색"
+            class="text-sm whitespace-nowrap font-semibold md:text-[13px]"
+          >
+            원고검색
+          </Button>
+
           <Button
             color="light"
             size="sm"
