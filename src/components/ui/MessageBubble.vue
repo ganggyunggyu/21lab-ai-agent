@@ -11,9 +11,16 @@ import {
 import { renderMarkdown, cn, extractKeywordDisplay } from '@/utils';
 import type { Message } from '@/types';
 import { MODEL_OPTIONS } from '@/constants';
-import { Button } from '@/components/ui';
+import { Button, Skeleton } from '@/components/ui';
 import { useChatStore } from '@/stores';
 import { useChatActions } from '@/hooks';
+
+const getLoadingMessage = (progress: number): string => {
+  if (progress < 30) return 'AI 모델 준비 중...';
+  if (progress < 60) return '텍스트 분석 중...';
+  if (progress < 85) return '응답 생성 중...';
+  return '거의 완료...';
+};
 
 interface Props {
   message: Message;
@@ -145,18 +152,31 @@ const refStatusClasses = computed(() => {
         <main :class="messageTextClasses">
           <section
             v-if="message.content === 'loading'"
-            class="flex items-center w-full py-3"
+            class="loading-state py-4"
             aria-live="polite"
             aria-label="AI 응답 생성 중"
           >
-            <div class="flex flex-col gap-2 w-full max-w-[400px]">
-              <div class="w-full h-2 bg-brand/10 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-brand transition-all duration-300 ease-out"
-                  :style="{ width: `${message.loadingProgress || 0}%` }"
-                ></div>
+            <!-- 스켈레톤 UI -->
+            <div class="mb-4">
+              <Skeleton variant="text" :lines="3" />
+            </div>
+
+            <!-- 진행률 바 + 상태 메시지 -->
+            <div class="flex flex-col gap-2 w-full max-w-[300px]">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-brand font-medium">
+                  {{ getLoadingMessage(message.loadingProgress || 0) }}
+                </span>
+                <span class="text-brand/70 font-semibold">
+                  {{ message.loadingProgress || 0 }}%
+                </span>
               </div>
-              <span class="text-sm text-brand font-semibold text-right">{{ message.loadingProgress || 0 }}%</span>
+              <div class="w-full h-1.5 bg-brand/10 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-brand rounded-full transition-all duration-300 ease-out"
+                  :style="{ width: `${message.loadingProgress || 0}%` }"
+                />
+              </div>
             </div>
           </section>
 
