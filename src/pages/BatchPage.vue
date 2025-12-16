@@ -14,7 +14,7 @@ import { useRouter } from 'vue-router';
 import { useChatStore } from '@/stores';
 import { Button, Card, Input, Select } from '@/components/ui';
 import * as Papa from 'papaparse';
-import { getBatchHistory, removeBatchHistory, type BatchHistoryItem } from '@/utils/_localStorage';
+import { getBatchHistory, removeBatchHistory, type BatchHistoryItem, toast } from '@/utils';
 import { MODEL_OPTIONS } from '@/constants/_models';
 
 const router = useRouter();
@@ -34,12 +34,7 @@ const validRequests = computed(() => {
 });
 
 const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
-  const toast = document.createElement('div');
-  const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-amber-500';
-  toast.className = `fixed top-4 left-1/2 -translate-x-1/2 ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg z-[9999] animate-[slideDown_0.3s_ease-out]`;
-  toast.textContent = text;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  toast[type](text);
 };
 
 const getStatusText = (status: 'pending' | 'loading' | 'success' | 'error') => {
@@ -257,7 +252,7 @@ const handleDrop = async (e: DragEvent) => {
     <header class="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-6 p-4 md:p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700">
       <div class="flex items-center gap-3 md:gap-4">
         <Button
-          variant="ghost"
+          color="light" variant="weak"
           size="sm"
           icon-only
           @click="handleBack"
@@ -277,7 +272,7 @@ const handleDrop = async (e: DragEvent) => {
       <div class="flex items-center justify-between gap-2 md:hidden">
         <div class="flex items-center gap-2">
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             icon-only
             @click="showHistory = !showHistory"
@@ -287,7 +282,7 @@ const handleDrop = async (e: DragEvent) => {
             <HistoryIcon class="w-4 h-4" />
           </Button>
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             icon-only
             @click="handleFileUploadClick"
@@ -297,7 +292,7 @@ const handleDrop = async (e: DragEvent) => {
             <UploadIcon class="w-4 h-4" />
           </Button>
           <Button
-            variant="secondary"
+            color="light"
             size="sm"
             icon-only
             @click="handleTxtUploadClick"
@@ -307,7 +302,7 @@ const handleDrop = async (e: DragEvent) => {
             <UploadIcon class="w-4 h-4" />
           </Button>
           <Button
-            variant="ghost"
+            color="light" variant="weak"
             size="sm"
             icon-only
             @click="addBatchRequest"
@@ -318,7 +313,7 @@ const handleDrop = async (e: DragEvent) => {
           </Button>
         </div>
         <Button
-          variant="primary"
+          color="primary"
           size="sm"
           @click="handleGenerate"
           :disabled="validRequests.length === 0"
@@ -331,7 +326,7 @@ const handleDrop = async (e: DragEvent) => {
       <!-- 데스크톱: 텍스트 포함 버튼 -->
       <div class="hidden md:flex items-center gap-3">
         <Button
-          variant="secondary"
+          color="light"
           size="sm"
           @click="showHistory = !showHistory"
           class="text-purple-600 bg-purple-600/10 border-purple-600/30 hover:bg-purple-600/15"
@@ -340,7 +335,7 @@ const handleDrop = async (e: DragEvent) => {
           히스토리 ({{ batchHistory.length }})
         </Button>
         <Button
-          variant="secondary"
+          color="light"
           size="sm"
           @click="handleFileUploadClick"
           class="text-emerald-600 bg-emerald-600/10 border-emerald-600/30 hover:bg-emerald-600/15"
@@ -349,7 +344,7 @@ const handleDrop = async (e: DragEvent) => {
           CSV
         </Button>
         <Button
-          variant="secondary"
+          color="light"
           size="sm"
           @click="handleTxtUploadClick"
           class="text-brand bg-brand/10 border-brand/30 hover:bg-brand/15"
@@ -358,7 +353,7 @@ const handleDrop = async (e: DragEvent) => {
           TXT
         </Button>
         <Button
-          variant="ghost"
+          color="light" variant="weak"
           size="sm"
           @click="addBatchRequest"
           class="border-2 border-dashed border-gray-300 text-brand hover:border-brand hover:bg-brand/10"
@@ -367,7 +362,7 @@ const handleDrop = async (e: DragEvent) => {
           추가 ({{ batchRequests.length }})
         </Button>
         <Button
-          variant="primary"
+          color="primary"
           size="sm"
           @click="handleGenerate"
           :disabled="validRequests.length === 0"
@@ -473,7 +468,7 @@ const handleDrop = async (e: DragEvent) => {
                 </td>
                 <td class="p-3 border-b border-gray-100 text-center">
                   <Button
-                    variant="ghost"
+                    color="light" variant="weak"
                     size="sm"
                     icon-only
                     @click="removeBatchRequest(idx)"
@@ -525,7 +520,7 @@ const handleDrop = async (e: DragEvent) => {
         <Card variant="elevated">
           <div class="flex justify-between items-center mb-4">
             <h3 class="m-0 text-base font-bold text-gray-800 dark:text-gray-100">배치 생성 히스토리</h3>
-            <Button variant="ghost" size="sm" @click="showHistory = false">
+            <Button color="light" variant="weak" size="sm" @click="showHistory = false">
               닫기
             </Button>
           </div>
@@ -551,7 +546,7 @@ const handleDrop = async (e: DragEvent) => {
                 </div>
                 <div class="flex gap-2">
                   <Button
-                    variant="primary"
+                    color="primary"
                     size="sm"
                     @click="loadHistoryItem(item)"
                   >
@@ -559,7 +554,7 @@ const handleDrop = async (e: DragEvent) => {
                     불러오기
                   </Button>
                   <Button
-                    variant="danger"
+                    color="danger"
                     size="sm"
                     @click="deleteHistoryItem(item.id)"
                   >
@@ -591,15 +586,3 @@ const handleDrop = async (e: DragEvent) => {
   </div>
 </template>
 
-<style>
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -20px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-</style>

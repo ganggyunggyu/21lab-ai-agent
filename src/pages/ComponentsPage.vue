@@ -6,7 +6,7 @@ import {
   Trash as TrashIcon,
   Settings as SettingsIcon,
 } from '@vicons/ionicons5';
-import { Button, Card, Input, Select, Dropdown, Modal, Switch } from '@/components/ui';
+import { Button, Card, Input, Select, Dropdown, Modal, Switch, Loader } from '@/components/ui';
 import { toast } from '@/utils/_toast';
 
 // Button states
@@ -47,6 +47,8 @@ const handleDropdownSelect = (key: string) => {
 
 // Modal
 const showModal = ref(false);
+const modalSize = ref<'sm' | 'md' | 'lg' | 'xl'>('md');
+const showPersistentModal = ref(false);
 
 // Switch
 const switchValue = ref(false);
@@ -77,18 +79,28 @@ const showToastDemo = (type: 'success' | 'error' | 'warning' | 'info') => {
       </header>
 
       <div class="space-y-8">
-        <!-- Button Section -->
+        <!-- Button Section (TDS Pattern) -->
         <Card variant="elevated">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Button</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Button (TDS Pattern)</h2>
 
-          <!-- Variants -->
+          <!-- Color + Variant -->
           <div class="mb-8">
-            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Variants</h3>
-            <div class="flex flex-wrap gap-3">
-              <Button variant="primary">Primary</Button>
-              <Button variant="secondary">Secondary</Button>
-              <Button variant="ghost">Ghost</Button>
-              <Button variant="danger">Danger</Button>
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Color × Variant</h3>
+            <div class="space-y-4">
+              <div class="flex flex-wrap gap-3 items-center">
+                <span class="w-20 text-sm text-gray-500">Fill:</span>
+                <Button color="primary">Primary</Button>
+                <Button color="danger">Danger</Button>
+                <Button color="light">Light</Button>
+                <Button color="dark">Dark</Button>
+              </div>
+              <div class="flex flex-wrap gap-3 items-center">
+                <span class="w-20 text-sm text-gray-500">Weak:</span>
+                <Button color="primary" variant="weak">Primary</Button>
+                <Button color="danger" variant="weak">Danger</Button>
+                <Button color="light" variant="weak">Light</Button>
+                <Button color="dark" variant="weak">Dark</Button>
+              </div>
             </div>
           </div>
 
@@ -99,6 +111,20 @@ const showToastDemo = (type: 'success' | 'error' | 'warning' | 'info') => {
               <Button size="sm">Small</Button>
               <Button size="md">Medium</Button>
               <Button size="lg">Large</Button>
+              <Button size="xl">XLarge</Button>
+            </div>
+          </div>
+
+          <!-- Display -->
+          <div class="mb-8">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Display</h3>
+            <div class="space-y-3">
+              <div class="flex gap-3">
+                <Button display="inline">Inline</Button>
+                <Button display="inline" color="light">Inline</Button>
+              </div>
+              <Button display="block" color="light">Block (auto width)</Button>
+              <Button display="full">Full Width</Button>
             </div>
           </div>
 
@@ -107,20 +133,49 @@ const showToastDemo = (type: 'success' | 'error' | 'warning' | 'info') => {
             <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">With Icons</h3>
             <div class="flex flex-wrap items-center gap-3">
               <Button :icon="SendIcon">전송</Button>
-              <Button variant="secondary" :icon="AddIcon">추가</Button>
-              <Button variant="danger" :icon="TrashIcon">삭제</Button>
-              <Button variant="ghost" icon-only :icon="SettingsIcon" />
+              <Button color="light" :icon="AddIcon">추가</Button>
+              <Button color="danger" :icon="TrashIcon">삭제</Button>
+              <Button color="light" variant="weak" icon-only :icon="SettingsIcon" />
             </div>
           </div>
 
           <!-- States -->
           <div>
-            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">States</h3>
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">States (Lottie Loading)</h3>
             <div class="flex flex-wrap items-center gap-3">
               <Button disabled>Disabled</Button>
               <Button :loading="buttonLoading" @click="handleButtonLoading">
-                {{ buttonLoading ? '처리중...' : 'Click Me' }}
+                {{ buttonLoading ? '처리중...' : 'Click to Load' }}
               </Button>
+              <Button color="light" :loading="true">Always Loading</Button>
+              <Button color="danger" :loading="true">Loading</Button>
+            </div>
+          </div>
+        </Card>
+
+        <!-- Loader Section -->
+        <Card variant="elevated">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Loader (Lottie)</h2>
+
+          <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center">
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Small</h3>
+              <Loader size="small" />
+            </div>
+            <div class="text-center">
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Medium</h3>
+              <Loader size="medium" />
+            </div>
+            <div class="text-center">
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Large</h3>
+              <Loader size="large" />
+            </div>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">With Label</h3>
+            <div class="flex justify-center">
+              <Loader size="medium" label="데이터를 불러오는 중..." />
             </div>
           </div>
         </Card>
@@ -184,14 +239,14 @@ const showToastDemo = (type: 'success' | 'error' | 'warning' | 'info') => {
             <div>
               <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Click Trigger</h3>
               <Dropdown :options="dropdownOptions" @select="handleDropdownSelect">
-                <Button variant="secondary">메뉴 열기</Button>
+                <Button color="light">메뉴 열기</Button>
               </Dropdown>
             </div>
 
             <div>
               <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Hover Trigger</h3>
               <Dropdown :options="dropdownOptions" trigger="hover" @select="handleDropdownSelect">
-                <Button variant="ghost">호버하세요</Button>
+                <Button color="light" variant="weak">호버하세요</Button>
               </Dropdown>
             </div>
 
@@ -203,18 +258,62 @@ const showToastDemo = (type: 'success' | 'error' | 'warning' | 'info') => {
 
         <!-- Modal Section -->
         <Card variant="elevated">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Modal</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Modal (TDS Dialog)</h2>
 
-          <Button @click="showModal = true">모달 열기</Button>
-
-          <Modal v-model:show="showModal" title="모달 제목">
-            <p class="text-gray-600 dark:text-gray-300 mb-6">
-              모달 컨텐츠입니다. 배경을 클릭하거나 X 버튼을 눌러 닫을 수 있습니다.
-            </p>
-            <div class="flex justify-end gap-3">
-              <Button variant="ghost" @click="showModal = false">취소</Button>
-              <Button @click="showModal = false; toast.success('확인되었습니다!')">확인</Button>
+          <div class="space-y-6">
+            <!-- Size Variants -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Size Variants</h3>
+              <div class="flex flex-wrap gap-3">
+                <Button color="light" @click="modalSize = 'sm'; showModal = true">Small</Button>
+                <Button color="light" @click="modalSize = 'md'; showModal = true">Medium</Button>
+                <Button color="light" @click="modalSize = 'lg'; showModal = true">Large</Button>
+                <Button color="light" @click="modalSize = 'xl'; showModal = true">XLarge</Button>
+              </div>
             </div>
+
+            <!-- Options -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Options</h3>
+              <div class="flex flex-wrap gap-3">
+                <Button color="primary" @click="showModal = true">기본 모달</Button>
+                <Button color="danger" @click="showPersistentModal = true">Persistent (닫기 불가)</Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 기본 Modal -->
+          <Modal v-model:show="showModal" title="TDS Dialog" :size="modalSize">
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              TDS Dialog 패턴 기반 Modal 컴포넌트입니다.
+            </p>
+            <ul class="list-disc list-inside text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>ESC 키로 닫기</li>
+              <li>배경 클릭으로 닫기</li>
+              <li>X 버튼으로 닫기</li>
+              <li>Teleport to body</li>
+              <li>TDS 스타일 애니메이션</li>
+            </ul>
+            <template #footer>
+              <Button color="light" variant="weak" @click="showModal = false">취소</Button>
+              <Button @click="showModal = false; toast.success('확인되었습니다!')">확인</Button>
+            </template>
+          </Modal>
+
+          <!-- Persistent Modal -->
+          <Modal
+            v-model:show="showPersistentModal"
+            title="Persistent Modal"
+            persistent
+            :show-close-button="false"
+          >
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              이 모달은 배경 클릭이나 ESC 키로 닫을 수 없습니다.
+            </p>
+            <p class="text-sm text-gray-500">반드시 버튼을 클릭해야 닫힙니다.</p>
+            <template #footer>
+              <Button color="danger" @click="showPersistentModal = false">확인 후 닫기</Button>
+            </template>
           </Modal>
         </Card>
 
@@ -256,33 +355,40 @@ const showToastDemo = (type: 'success' | 'error' | 'warning' | 'info') => {
 
         <!-- Toast Section -->
         <Card variant="elevated">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Toast</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Toast (TDS)</h2>
 
-          <div class="flex flex-wrap gap-3">
-            <Button
-              class="bg-emerald-500 hover:bg-emerald-600 border-emerald-500"
-              @click="showToastDemo('success')"
-            >
-              Success
-            </Button>
-            <Button
-              class="bg-red-500 hover:bg-red-600 border-red-500"
-              @click="showToastDemo('error')"
-            >
-              Error
-            </Button>
-            <Button
-              class="bg-amber-500 hover:bg-amber-600 border-amber-500"
-              @click="showToastDemo('warning')"
-            >
-              Warning
-            </Button>
-            <Button
-              class="bg-blue-500 hover:bg-blue-600 border-blue-500"
-              @click="showToastDemo('info')"
-            >
-              Info
-            </Button>
+          <div class="space-y-6">
+            <!-- Type Variants -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Types</h3>
+              <div class="flex flex-wrap gap-3">
+                <Button color="primary" variant="weak" @click="showToastDemo('success')">
+                  Success
+                </Button>
+                <Button color="danger" variant="weak" @click="showToastDemo('error')">
+                  Error
+                </Button>
+                <Button color="light" @click="showToastDemo('warning')">
+                  Warning
+                </Button>
+                <Button color="light" variant="weak" @click="showToastDemo('info')">
+                  Info
+                </Button>
+              </div>
+            </div>
+
+            <!-- Options -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Options</h3>
+              <div class="flex flex-wrap gap-3">
+                <Button color="light" @click="toast.success('닫기 버튼 있는 토스트', { closable: true, duration: 10000 })">
+                  Closable (10초)
+                </Button>
+                <Button color="light" variant="weak" @click="toast.info('하단 토스트', { position: 'bottom' })">
+                  Bottom Position
+                </Button>
+              </div>
+            </div>
           </div>
         </Card>
 

@@ -102,7 +102,7 @@ const handleCardClick = (doc: SearchDocument) => {
 
           <!-- Search Button -->
           <Button
-            variant="primary"
+            color="primary"
             size="md"
             @click="handleSearch"
             :disabled="!query.trim() || isLoading"
@@ -174,7 +174,7 @@ const handleCardClick = (doc: SearchDocument) => {
         class="mt-6 flex items-center justify-center gap-3"
       >
         <Button
-          variant="secondary"
+          color="light"
           size="md"
           @click="handlePageChange(page - 1)"
           :disabled="page === 1 || isLoading"
@@ -190,7 +190,7 @@ const handleCardClick = (doc: SearchDocument) => {
         </div>
 
         <Button
-          variant="secondary"
+          color="light"
           size="md"
           @click="handlePageChange(page + 1)"
           :disabled="page === totalPages || isLoading"

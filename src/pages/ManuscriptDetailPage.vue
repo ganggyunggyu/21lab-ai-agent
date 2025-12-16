@@ -51,7 +51,7 @@ const handleBack = () => {
       <!-- Header -->
       <header class="mb-6 flex items-center gap-4">
         <Button
-          variant="ghost"
+          color="light" variant="weak"
           size="lg"
           :icon="BackIcon"
           @click="handleBack"
@@ -106,7 +106,7 @@ const handleBack = () => {
             </div>
           </div>
           <Button
-            variant="primary"
+            color="primary"
             size="lg"
             :icon="CopyIcon"
             @click="handleCopy"
