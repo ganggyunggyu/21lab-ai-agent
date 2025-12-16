@@ -1,36 +1,74 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { SearchOutline as SearchIcon } from '@vicons/ionicons5';
-import { Button, Input, Select } from '@/components/ui';
+import { useDebounceFn } from '@vueuse/core';
+import {
+  SearchOutline as SearchIcon,
+  TimeOutline as HistoryIcon,
+  TrendingUpOutline as TrendingIcon,
+  CloseCircle as ClearIcon,
+} from '@vicons/ionicons5';
+import { Button, Input, Select, Skeleton } from '@/components/ui';
 import { CATEGORY_OPTIONS } from '@/constants';
-import { useSearchStore, useSearchActions } from '@/entities/search';
+import {
+  useSearchStore,
+  useSearchActions,
+  useAutocomplete,
+  usePopular,
+} from '@/entities/search';
 import { ManuscriptCard } from '@/features/search';
+import { toast } from '@/utils';
 import type { SearchDocument } from '@/entities/search';
 
 const router = useRouter();
 
 const searchStore = useSearchStore();
 const { query, category, page, searchRequest, totalPages } = storeToRefs(searchStore);
-const { updateQuery, updateCategory } = searchStore;
 
 const { searchData, isLoading, isError, error, refetch, executeSearch, changePage } = useSearchActions();
 
-const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
-  const toast = document.createElement('div');
-  const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-amber-500';
-  toast.className = `fixed top-4 left-1/2 -translate-x-1/2 ${bgColor} text-white px-6 py-3 rounded-xl shadow-lg z-[9999] animate-[slideDown_0.3s_ease-out]`;
-  toast.textContent = text;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+// 자동완성
+const showSuggestions = ref(false);
+const autocompleteEnabled = computed(() => showSuggestions.value);
+const { data: autocompleteData } = useAutocomplete(query, autocompleteEnabled);
+
+// 인기 검색어
+const popularPeriod = ref<'today' | 'week' | 'month'>('week');
+const { data: popularData, isLoading: isPopularLoading } = usePopular(popularPeriod);
+
+// 디바운스된 자동완성 표시
+const debouncedShowSuggestions = useDebounceFn(() => {
+  if (query.value.length >= 2) {
+    showSuggestions.value = true;
+  }
+}, 300);
+
+const handleInputChange = () => {
+  if (query.value.length < 2) {
+    showSuggestions.value = false;
+  } else {
+    debouncedShowSuggestions();
+  }
 };
 
 const handleSearch = () => {
   if (!query.value.trim()) {
-    showToast('검색어를 입력해주세요.', 'warning');
+    toast.warning('검색어를 입력해주세요.');
     return;
   }
+  showSuggestions.value = false;
+  executeSearch();
+};
+
+const handleSuggestionClick = (keyword: string) => {
+  query.value = keyword;
+  showSuggestions.value = false;
+  executeSearch();
+};
+
+const handlePopularClick = (keyword: string) => {
+  query.value = keyword;
   executeSearch();
 };
 
@@ -45,8 +83,14 @@ watch(page, () => {
 });
 
 const handleKeyPress = (e: KeyboardEvent) => {
+  if (e.isComposing || (e as unknown as { keyCode?: number }).keyCode === 229) {
+    return;
+  }
   if (e.key === 'Enter') {
     handleSearch();
+  }
+  if (e.key === 'Escape') {
+    showSuggestions.value = false;
   }
 };
 
@@ -55,10 +99,20 @@ const handleCardClick = (doc: SearchDocument) => {
     name: 'ManuscriptDetail',
     params: { id: doc._id },
     query: {
-      category: category.value || undefined,
+      category: doc.__category || category.value || undefined,
     },
   });
 };
+
+const clearQuery = () => {
+  query.value = '';
+  showSuggestions.value = false;
+};
+
+// 검색 결과 여부
+const hasResults = computed(() => searchData.value && searchData.value.documents.length > 0);
+const hasNoResults = computed(() => searchData.value && searchData.value.documents.length === 0);
+const showInitialState = computed(() => !searchRequest.value && !isLoading.value);
 </script>
 
 <template>
@@ -77,15 +131,45 @@ const handleCardClick = (doc: SearchDocument) => {
       <!-- Search Bar -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700 mb-6 p-6">
         <div class="flex flex-col md:flex-row gap-3">
-          <!-- Search Input -->
-          <div class="flex-1">
-            <Input
-              v-model="query"
-              type="text"
-              placeholder="검색어를 입력하세요 (예: 위고비, 다이어트)"
-              @keydown="handleKeyPress"
-              class="w-full"
-            />
+          <!-- Search Input with Autocomplete -->
+          <div class="flex-1 relative">
+            <div class="relative">
+              <Input
+                v-model="query"
+                type="text"
+                placeholder="검색어를 입력하세요 (예: 위고비, 다이어트)"
+                @keydown="handleKeyPress"
+                @input="handleInputChange"
+                @focus="handleInputChange"
+                @blur="() => setTimeout(() => showSuggestions = false, 200)"
+                class="w-full pr-10"
+              />
+              <button
+                v-if="query"
+                @click="clearQuery"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <ClearIcon class="w-5 h-5" />
+              </button>
+            </div>
+
+            <!-- Autocomplete Dropdown -->
+            <div
+              v-if="showSuggestions && autocompleteData?.suggestions?.length"
+              class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
+            >
+              <ul class="py-2">
+                <li
+                  v-for="item in autocompleteData.suggestions"
+                  :key="item.keyword"
+                  @mousedown.prevent="handleSuggestionClick(item.keyword)"
+                  class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between"
+                >
+                  <span class="text-gray-900 dark:text-gray-100">{{ item.keyword }}</span>
+                  <span class="text-xs text-gray-500">{{ item.count }}건</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <!-- Category Select -->
@@ -93,7 +177,7 @@ const handleCardClick = (doc: SearchDocument) => {
             <Select
               v-model="category"
               :options="CATEGORY_OPTIONS"
-              placeholder="카테고리"
+              placeholder="전체 카테고리"
               size="md"
               searchable
               :max-height="350"
@@ -114,13 +198,68 @@ const handleCardClick = (doc: SearchDocument) => {
         </div>
       </div>
 
+      <!-- Popular Keywords (Initial State) -->
+      <div
+        v-if="showInitialState"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700 p-6"
+      >
+        <div class="flex items-center gap-2 mb-4">
+          <TrendingIcon class="w-5 h-5 text-brand" />
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">인기 검색어</h2>
+          <div class="flex gap-1 ml-auto">
+            <button
+              v-for="p in (['today', 'week', 'month'] as const)"
+              :key="p"
+              @click="popularPeriod = p"
+              :class="[
+                'px-3 py-1 text-sm rounded-lg transition-colors',
+                popularPeriod === p
+                  ? 'bg-brand text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+              ]"
+            >
+              {{ p === 'today' ? '오늘' : p === 'week' ? '이번주' : '이번달' }}
+            </button>
+          </div>
+        </div>
+
+        <div v-if="isPopularLoading" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <Skeleton v-for="i in 10" :key="i" variant="rectangular" height="40px" />
+        </div>
+
+        <div v-else-if="popularData?.keywords?.length" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <button
+            v-for="item in popularData.keywords"
+            :key="item.rank"
+            @click="handlePopularClick(item.keyword)"
+            class="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-left"
+          >
+            <span
+              :class="[
+                'w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold',
+                item.rank <= 3 ? 'bg-brand text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+              ]"
+            >
+              {{ item.rank }}
+            </span>
+            <span class="text-sm text-gray-900 dark:text-gray-100 truncate flex-1">{{ item.keyword }}</span>
+            <span class="text-xs text-gray-500">{{ item.count }}</span>
+          </button>
+        </div>
+
+        <div v-else class="text-center py-8">
+          <SearchIcon class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p class="text-gray-500 dark:text-gray-400">검색어를 입력하고 검색 버튼을 눌러주세요</p>
+        </div>
+      </div>
+
       <!-- Search Results Summary -->
       <div
-        v-if="searchData && searchData.documents.length > 0"
+        v-if="hasResults"
         class="mb-4 text-sm text-gray-600 dark:text-gray-400"
       >
-        총 <strong class="text-gray-900 dark:text-gray-100">{{ searchData.total }}</strong>개 결과 중
-        <strong class="text-gray-900 dark:text-gray-100">{{ searchData.skip + 1 }}</strong>~<strong class="text-gray-900 dark:text-gray-100">{{ searchData.skip + searchData.documents.length }}</strong>번 표시
+        총 <strong class="text-gray-900 dark:text-gray-100">{{ searchData!.total }}</strong>개 결과 중
+        <strong class="text-gray-900 dark:text-gray-100">{{ searchData!.skip + 1 }}</strong>~<strong class="text-gray-900 dark:text-gray-100">{{ searchData!.skip + searchData!.documents.length }}</strong>번 표시
       </div>
 
       <!-- Error State -->
@@ -138,20 +277,38 @@ const handleCardClick = (doc: SearchDocument) => {
         v-if="isLoading"
         class="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
-        <div
+        <article
           v-for="i in 6"
           :key="i"
-          class="h-[200px] bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"
-        ></div>
+          class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          <!-- 카테고리 바 스켈레톤 -->
+          <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+            <Skeleton variant="text" width="80px" height="16px" />
+          </div>
+          <!-- 메인 컨텐츠 스켈레톤 -->
+          <div class="p-4">
+            <Skeleton variant="text" width="70%" height="20px" class="mb-2" />
+            <Skeleton variant="text" :lines="2" class="mb-4" />
+            <!-- 메타 정보 스켈레톤 -->
+            <div class="flex items-center gap-3">
+              <Skeleton variant="rectangular" width="70px" height="16px" rounded />
+              <Skeleton variant="rectangular" width="50px" height="16px" rounded />
+              <div class="ml-auto">
+                <Skeleton variant="rectangular" width="90px" height="16px" rounded />
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
 
       <!-- Search Results -->
       <div
-        v-if="searchData && searchData.documents.length > 0"
+        v-if="hasResults && !isLoading"
         class="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <ManuscriptCard
-          v-for="doc in searchData.documents"
+          v-for="doc in searchData!.documents"
           :key="doc._id"
           :document="doc"
           @click="handleCardClick"
@@ -160,7 +317,7 @@ const handleCardClick = (doc: SearchDocument) => {
 
       <!-- Empty State -->
       <div
-        v-if="searchData && searchData.documents.length === 0"
+        v-if="hasNoResults"
         class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700"
       >
         <p class="text-gray-600 dark:text-gray-400 text-lg">
@@ -170,7 +327,7 @@ const handleCardClick = (doc: SearchDocument) => {
 
       <!-- Pagination -->
       <div
-        v-if="searchData && searchData.documents.length > 0 && totalPages > 1"
+        v-if="hasResults && totalPages > 1"
         class="mt-6 flex items-center justify-center gap-3"
       >
         <Button
@@ -199,30 +356,6 @@ const handleCardClick = (doc: SearchDocument) => {
           다음
         </Button>
       </div>
-
-      <!-- Initial State -->
-      <div
-        v-if="!searchRequest && !isLoading"
-        class="p-10 text-center bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700"
-      >
-        <SearchIcon class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-        <p class="text-gray-600 dark:text-gray-400 text-lg">
-          검색어를 입력하고 검색 버튼을 눌러주세요
-        </p>
-      </div>
     </div>
   </div>
 </template>
-
-<style>
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -20px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-</style>

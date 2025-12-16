@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import {
+  DocumentTextOutline as DocIcon,
+  TimeOutline as TimeIcon,
+  ServerOutline as EngineIcon,
+  CopyOutline as CopyIcon,
+} from '@vicons/ionicons5';
 import type { SearchDocument } from '@/entities/search';
 
 interface Props {
@@ -12,14 +19,39 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-const formatDate = (timestamp: number) => {
-  const date = new Date(timestamp * 1000);
+const formatDate = (doc: SearchDocument) => {
+  let date: Date | null = null;
+
+  if (doc.createdAt) {
+    date = new Date(doc.createdAt);
+  } else if ((doc as any).timestamp) {
+    const ts = (doc as any).timestamp;
+    date = new Date(ts < 10000000000 ? ts * 1000 : ts);
+  }
+
+  if (!date || isNaN(date.getTime())) return '';
+
   return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 };
+
+const contentPreview = computed(() => {
+  const content = props.document.content || '';
+  const firstLine = content.split('\n')[0] || '';
+  return firstLine.length > 80 ? firstLine.substring(0, 80) + '...' : firstLine;
+});
+
+const contentLength = computed(() => {
+  const len = props.document.content?.length || 0;
+  if (len >= 1000) return `${(len / 1000).toFixed(1)}k`;
+  return len.toString();
+});
+
+const categoryLabel = computed(() => props.document.__category || props.document.category || '');
 
 const handleClick = () => {
   emit('click', props.document);
@@ -27,40 +59,53 @@ const handleClick = () => {
 </script>
 
 <template>
-  <div
-    class="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[0_4px_16px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_4px_16px_rgba(59,130,246,0.2)] transition-all hover:-translate-y-1 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-blue-500"
+  <article
+    class="group relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer transition-all duration-200 hover:border-brand dark:hover:border-brand hover:shadow-[0_8px_30px_rgba(98,194,176,0.12)]"
     @click="handleClick"
   >
-    <!-- Header -->
-    <div class="flex items-start justify-between mb-3">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 line-clamp-2 flex-1">
+    <!-- 상단 카테고리 바 -->
+    <div
+      v-if="categoryLabel"
+      class="px-4 py-2 bg-linear-to-r from-brand/10 to-transparent border-b border-gray-100 dark:border-gray-700"
+    >
+      <span class="text-xs font-semibold text-brand">{{ categoryLabel }}</span>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="p-4">
+      <!-- 키워드 (제목) -->
+      <h3 class="text-base font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1 group-hover:text-brand transition-colors">
         {{ document.keyword }}
       </h3>
-      <div class="flex items-center gap-2 ml-2">
-        <span
-          v-if="document.category"
-          class="px-2 py-1 text-xs font-semibold bg-indigo-500/10 dark:bg-blue-500/20 text-indigo-600 dark:text-blue-400 rounded-md"
-        >
-          {{ document.category }}
-        </span>
+
+      <!-- 내용 미리보기 -->
+      <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 min-h-10">
+        {{ contentPreview }}
+      </p>
+
+      <!-- 메타 정보 -->
+      <div class="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+        <div class="flex items-center gap-1">
+          <EngineIcon class="w-3.5 h-3.5" />
+          <span class="truncate max-w-20">{{ document.engine }}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <DocIcon class="w-3.5 h-3.5" />
+          <span>{{ contentLength }}자</span>
+        </div>
+        <div class="flex items-center gap-1 ml-auto">
+          <TimeIcon class="w-3.5 h-3.5" />
+          <span>{{ formatDate(document) }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Content Preview -->
-    <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">
-      {{ document.content.substring(0, 150) }}{{ document.content.length > 150 ? '...' : '' }}
-    </p>
-
-    <!-- Footer -->
-    <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
-      <div class="flex items-center gap-2">
-        <span class="font-medium">{{ document.engine }}</span>
-        <span>•</span>
-        <span>{{ formatDate(document.timestamp) }}</span>
+    <!-- 호버 시 복사 힌트 -->
+    <div class="absolute inset-0 bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+      <div class="absolute bottom-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-brand text-white text-xs font-medium rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+        <CopyIcon class="w-3.5 h-3.5" />
+        클릭하여 상세보기
       </div>
-      <span class="text-indigo-500 dark:text-blue-400 font-semibold">
-        클릭하여 복사
-      </span>
     </div>
-  </div>
+  </article>
 </template>
