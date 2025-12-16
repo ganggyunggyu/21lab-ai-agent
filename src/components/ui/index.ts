@@ -7,3 +7,5 @@ export { default as Select } from './Select.vue';
 export { default as Dropdown } from './Dropdown.vue';
 export { default as Modal } from './Modal.vue';
 export { default as Switch } from './Switch.vue';
+export { default as Loader } from './Loader.vue';
+export { default as Skeleton } from './Skeleton.vue';

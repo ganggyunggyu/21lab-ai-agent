@@ -1,33 +1,32 @@
-<template>
-  <button
-    :class="buttonClasses"
-    :disabled="disabled || loading"
-    @click="handleClick"
-  >
-    <div v-if="loading" :class="spinnerClasses">
-      <div class="spinner"></div>
-    </div>
-
-    <component v-if="icon && !loading" :is="icon" :style="{ width: iconSize + 'px', height: iconSize + 'px' }" class="flex-shrink-0" />
-
-    <span v-if="!loading && !iconOnly" class="slot-content">
-      <slot />
-    </span>
-    <slot v-else-if="!loading && iconOnly" />
-  </button>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Vue3Lottie } from 'vue3-lottie';
+import loadingDotsAnimation from '@/assets/lottie/loading-dots.json';
 import { cn } from '@/utils';
 
+/**
+ * TDS 패턴 기반 Button 컴포넌트
+ *
+ * @prop color - 버튼 색상 (primary, danger, light, dark)
+ * @prop variant - 스타일 강도 (fill: 채워진, weak: 약한)
+ * @prop display - 너비/배치 (inline, block, full)
+ * @prop size - 크기 (sm, md, lg, xl)
+ * @prop loading - 로딩 상태 (Lottie 애니메이션)
+ * @prop disabled - 비활성화 상태
+ * @prop icon - 아이콘 컴포넌트
+ * @prop iconOnly - 아이콘만 표시
+ */
+
 interface Props {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  color?: 'primary' | 'danger' | 'light' | 'dark';
+  variant?: 'fill' | 'weak';
+  display?: 'inline' | 'block' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
   disabled?: boolean;
   icon?: any;
   iconOnly?: boolean;
+  as?: 'button' | 'a';
 }
 
 interface Emits {
@@ -35,39 +34,61 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variant: 'primary',
+  color: 'primary',
+  variant: 'fill',
+  display: 'inline',
   size: 'md',
   loading: false,
   disabled: false,
   iconOnly: false,
+  as: 'button',
 });
 
 const emit = defineEmits<Emits>();
 
 const iconSize = computed(() => {
-  const sizes = { sm: 16, md: 20, lg: 24 };
+  const sizes = { sm: 16, md: 18, lg: 20, xl: 22 };
   return sizes[props.size];
 });
 
-const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold cursor-pointer whitespace-nowrap btn-base';
+const lottieSize = computed(() => {
+  const sizes = { sm: 32, md: 40, lg: 48, xl: 56 };
+  return sizes[props.size];
+});
+
+const baseClasses = 'btn-base';
 
 const sizeClasses = computed(() => {
   const sizes = {
     sm: 'btn-sm',
     md: 'btn-md',
     lg: 'btn-lg',
+    xl: 'btn-xl',
   };
   return sizes[props.size];
 });
 
-const variantClasses = computed(() => {
-  const variants = {
-    primary: 'btn-primary',
-    secondary: 'btn-secondary',
-    ghost: 'btn-ghost',
-    danger: 'btn-danger',
+const colorVariantClasses = computed(() => {
+  const map = {
+    'primary-fill': 'btn-primary-fill',
+    'primary-weak': 'btn-primary-weak',
+    'danger-fill': 'btn-danger-fill',
+    'danger-weak': 'btn-danger-weak',
+    'light-fill': 'btn-light-fill',
+    'light-weak': 'btn-light-weak',
+    'dark-fill': 'btn-dark-fill',
+    'dark-weak': 'btn-dark-weak',
   };
-  return variants[props.variant];
+  return map[`${props.color}-${props.variant}`];
+});
+
+const displayClasses = computed(() => {
+  const displays = {
+    inline: 'btn-inline',
+    block: 'btn-block',
+    full: 'btn-full',
+  };
+  return displays[props.display];
 });
 
 const stateClasses = computed(() => {
@@ -79,10 +100,14 @@ const stateClasses = computed(() => {
 });
 
 const buttonClasses = computed(() => {
-  return cn(baseClasses, sizeClasses.value, variantClasses.value, stateClasses.value);
+  return cn(
+    baseClasses,
+    sizeClasses.value,
+    colorVariantClasses.value,
+    displayClasses.value,
+    stateClasses.value
+  );
 });
-
-const spinnerClasses = 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
 
 const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
@@ -91,12 +116,62 @@ const handleClick = (event: MouseEvent) => {
 };
 </script>
 
+<template>
+  <component
+    :is="as"
+    :class="buttonClasses"
+    :disabled="disabled || loading"
+    @click="handleClick"
+    :aria-busy="loading"
+    :aria-disabled="disabled"
+  >
+    <!-- 로딩 상태: Lottie 애니메이션 -->
+    <div v-if="loading" class="btn-loader">
+      <Vue3Lottie
+        :animation-data="loadingDotsAnimation"
+        :width="lottieSize"
+        :height="lottieSize / 2"
+        :loop="true"
+        :auto-play="true"
+      />
+    </div>
+
+    <!-- 아이콘 -->
+    <component
+      v-if="icon && !loading"
+      :is="icon"
+      :style="{ width: iconSize + 'px', height: iconSize + 'px' }"
+      class="btn-icon"
+    />
+
+    <!-- 텍스트 슬롯 -->
+    <span v-if="!loading && !iconOnly" class="btn-text">
+      <slot />
+    </span>
+
+    <!-- 아이콘 전용일 때 슬롯 -->
+    <slot v-else-if="!loading && iconOnly" />
+  </component>
+</template>
+
 <style scoped>
 .btn-base {
-  transition: background-color var(--transition-fast),
-              border-color var(--transition-fast),
-              box-shadow var(--transition-fast),
-              transform var(--transition-fast);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  outline: none;
+  text-decoration: none;
+  transition:
+    background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .btn-base:focus-visible {
@@ -104,115 +179,156 @@ const handleClick = (event: MouseEvent) => {
   outline-offset: 2px;
 }
 
-/* Sizes */
+.btn-base:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ===== Sizes ===== */
 .btn-sm {
   height: 36px;
-  padding: 0 var(--space-4);
-  font-size: var(--text-sm);
+  padding: 0 var(--space-3);
+  font-size: 13px;
   border-radius: var(--radius-sm);
 }
 
 .btn-md {
   height: 44px;
-  padding: 0 var(--space-5);
-  font-size: var(--text-base);
+  padding: 0 var(--space-4);
+  font-size: 14px;
   border-radius: var(--radius-md);
 }
 
 .btn-lg {
   height: 52px;
-  padding: 0 var(--space-6);
-  font-size: var(--text-lg);
+  padding: 0 var(--space-5);
+  font-size: 15px;
   border-radius: var(--radius-lg);
 }
 
-/* Variants */
-.btn-primary {
+.btn-xl {
+  height: 60px;
+  padding: 0 var(--space-6);
+  font-size: 16px;
+  border-radius: var(--radius-lg);
+}
+
+/* ===== Display ===== */
+.btn-inline {
+  display: inline-flex;
+}
+
+.btn-block {
+  display: flex;
+  width: auto;
+}
+
+.btn-full {
+  display: flex;
+  width: 100%;
+}
+
+/* ===== Color + Variant Combinations ===== */
+
+/* Primary Fill */
+.btn-primary-fill {
   background-color: var(--color-primary);
-  color: var(--color-text-inverse);
-  border: 1px solid var(--color-primary);
-  box-shadow: var(--shadow-sm);
+  color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
+.btn-primary-fill:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-  box-shadow: var(--shadow-primary), var(--shadow-md);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.btn-primary:active:not(:disabled) {
-  background-color: var(--color-primary-active);
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+/* Primary Weak */
+.btn-primary-weak {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
 }
 
-.btn-secondary {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-secondary);
-  box-shadow: var(--shadow-sm);
+.btn-primary-weak:hover:not(:disabled) {
+  background-color: rgba(59, 130, 246, 0.2);
 }
 
-.btn-secondary:hover:not(:disabled) {
+/* Danger Fill */
+.btn-danger-fill {
+  background-color: var(--color-urgent);
+  color: white;
+}
+
+.btn-danger-fill:hover:not(:disabled) {
+  background-color: var(--color-urgent-hover);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Danger Weak */
+.btn-danger-weak {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-urgent);
+}
+
+.btn-danger-weak:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Light Fill */
+.btn-light-fill {
   background-color: var(--color-bg-secondary);
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
 }
 
-.btn-secondary:active:not(:disabled) {
+.btn-light-fill:hover:not(:disabled) {
   background-color: var(--color-bg-tertiary);
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--color-border-secondary);
 }
 
-.btn-ghost {
+/* Light Weak */
+.btn-light-weak {
   background-color: transparent;
   color: var(--color-text-secondary);
-  border: 1px solid transparent;
 }
 
-.btn-ghost:hover:not(:disabled) {
+.btn-light-weak:hover:not(:disabled) {
   background-color: var(--color-bg-tertiary);
   color: var(--color-text-primary);
-  border-color: var(--color-border-primary);
-  box-shadow: var(--shadow-sm);
 }
 
-.btn-ghost:active:not(:disabled) {
-  background-color: var(--color-border-primary);
+/* Dark Fill */
+.btn-dark-fill {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg-primary);
 }
 
-.btn-danger {
-  background-color: var(--color-urgent);
-  color: var(--color-text-inverse);
-  border: 1px solid var(--color-urgent);
-  box-shadow: var(--shadow-sm);
+.btn-dark-fill:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
-.btn-danger:hover:not(:disabled) {
-  background-color: var(--color-urgent-hover);
-  border-color: var(--color-urgent-hover);
-  box-shadow: var(--shadow-urgent), var(--shadow-md);
-  transform: translateY(-1px);
+/* Dark Weak */
+.btn-dark-weak {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-primary);
 }
 
-.btn-danger:active:not(:disabled) {
-  background-color: var(--color-urgent-active);
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
+.btn-dark-weak:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
-/* States */
+/* ===== States ===== */
 .btn-disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .btn-loading {
-  cursor: not-allowed;
-  color: transparent;
+  cursor: wait;
+  color: transparent !important;
+}
+
+.btn-loading .btn-text,
+.btn-loading .btn-icon {
+  visibility: hidden;
 }
 
 .btn-icon-only {
@@ -220,31 +336,24 @@ const handleClick = (event: MouseEvent) => {
   padding: 0;
 }
 
-.slot-content {
+/* ===== Inner Elements ===== */
+.btn-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon {
+  flex-shrink: 0;
+}
+
+.btn-text {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-/* Spinner */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  opacity: 0.3;
-}
-
-.btn-loading .spinner {
-  color: var(--color-text-inverse);
-  opacity: 1;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  gap: var(--space-1);
 }
 </style>

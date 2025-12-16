@@ -13,6 +13,7 @@ import type { Message } from '@/types';
 import { MODEL_OPTIONS } from '@/constants';
 import { Button } from '@/components/ui';
 import { useChatStore } from '@/stores';
+import { useChatActions } from '@/hooks';
 
 interface Props {
   message: Message;
@@ -20,10 +21,6 @@ interface Props {
 }
 
 interface Emits {
-  copy: [text: string, message: any];
-  download: [message: Message];
-  regenerate: [message: Message];
-  delete: [index: number];
   showDetail: [message: Message];
   showWorkModal: [message: Message];
 }
@@ -31,7 +28,9 @@ interface Emits {
 const props = defineProps<Props>();
 defineEmits<Emits>();
 
-const { openActionModal } = useChatStore();
+const chatStore = useChatStore();
+const { openActionModal, handleRegenerate, deleteMessage } = chatStore;
+const { copyMsg, handleDownloadClick } = useChatActions();
 
 const renderedContent = computed(() => {
   if (props.message.content === 'loading') return '';
@@ -165,7 +164,7 @@ const refStatusClasses = computed(() => {
             v-else
             @dblclick="
               message.content !== 'loading' &&
-                $emit('copy', message.content, message)
+                copyMsg(message.content, message)
             "
             role="document"
           >
@@ -202,10 +201,10 @@ const refStatusClasses = computed(() => {
             aria-label="메시지 액션 버튼"
           >
             <Button
-              variant="ghost"
+              color="light" variant="weak"
               size="sm"
               :icon="CopyIcon"
-              @click="$emit('copy', message.content, message)"
+              @click="copyMsg(message.content, message)"
               class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="메시지 내용 복사"
             >
@@ -213,10 +212,10 @@ const refStatusClasses = computed(() => {
             </Button>
 
             <Button
-              variant="ghost"
+              color="light" variant="weak"
               size="sm"
               :icon="DownloadIcon"
-              @click="$emit('download', message)"
+              @click="handleDownloadClick(message)"
               class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="메시지 파일로 저장"
             >
@@ -224,10 +223,10 @@ const refStatusClasses = computed(() => {
             </Button>
 
             <Button
-              variant="ghost"
+              color="light" variant="weak"
               size="sm"
               :icon="RefreshIcon"
-              @click="$emit('regenerate', message)"
+              @click="handleRegenerate(message)"
               class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
               aria-label="AI 응답 재생성"
             >
@@ -235,7 +234,7 @@ const refStatusClasses = computed(() => {
             </Button>
 
             <Button
-              variant="ghost"
+              color="light" variant="weak"
               size="sm"
               :icon="InfoIcon"
               @click="$emit('showDetail', message)"
@@ -246,7 +245,7 @@ const refStatusClasses = computed(() => {
             </Button>
 
             <Button
-              variant="ghost"
+              color="light" variant="weak"
               size="sm"
               :icon="OptionsIcon"
               @click="handleUserMessageClick(message)"
@@ -259,10 +258,10 @@ const refStatusClasses = computed(() => {
 
           <Button
             v-if="index > 0"
-            variant="ghost"
+            color="light" variant="weak"
             size="sm"
             :icon="CloseIcon"
-            @click="$emit('delete', index)"
+            @click="deleteMessage(index)"
             class="text-red-500 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/30 text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
             title="메시지 삭제"
             aria-label="이 메시지 삭제"

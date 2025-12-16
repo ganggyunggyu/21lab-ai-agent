@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref } from 'vue';
+import { watch, ref } from 'vue';
 import { Information as InfoIcon } from '@vicons/ionicons5';
 import Modal from './Modal.vue';
 import Button from './Button.vue';
@@ -101,7 +101,7 @@ const handleCopyContent = async () => {
           <h3>키워드:</h3>
           <Button
             size="sm"
-            variant="secondary"
+            color="light"
             @click="handleCopyKeyword"
             aria-label="키워드 복사"
           >
@@ -123,7 +123,7 @@ const handleCopyContent = async () => {
           <h3>참조원고:</h3>
           <Button
             size="sm"
-            variant="secondary"
+            color="light"
             @click="handleCopyRef"
             aria-label="참조원고 복사"
           >
@@ -140,7 +140,7 @@ const handleCopyContent = async () => {
           <h3>메시지 내용:</h3>
           <Button
             size="sm"
-            variant="secondary"
+            color="light"
             @click="handleCopyContent"
             aria-label="메시지 내용 복사"
           >
@@ -169,7 +169,7 @@ const handleCopyContent = async () => {
 
     <template #footer>
       <div class="modal-actions">
-        <Button variant="primary" size="sm" @click="handleClose">
+        <Button color="primary" size="sm" @click="handleClose">
           닫기
         </Button>
       </div>
@@ -188,13 +188,13 @@ const handleCopyContent = async () => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .modal-badge-icon {
   width: 18px;
   height: 18px;
-  color: #3b82f6;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -219,18 +219,18 @@ const handleCopyContent = async () => {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .modal-text {
   margin: 0;
-  color: #374151;
+  color: var(--color-text-primary);
   line-height: 1.5;
 }
 
 .preview-container {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
   border-radius: 6px;
   padding: 12px;
   max-height: 200px;
@@ -238,19 +238,7 @@ const handleCopyContent = async () => {
   white-space: pre-wrap;
   font-size: 14px;
   line-height: 1.5;
-  color: #374151;
-}
-
-:global(.dark) .modal-header h2,
-:global(.dark) .modal-item-header h3,
-:global(.dark) .modal-text {
-  color: #d1d5db;
-}
-
-:global(.dark) .preview-container {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #d1d5db;
+  color: var(--color-text-primary);
 }
 
 .modal-actions {
