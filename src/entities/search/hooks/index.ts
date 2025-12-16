@@ -1,3 +1,9 @@
 export { useSearchManuscripts } from './useSearchManuscripts';
 export { useManuscriptDetail } from './useManuscriptDetail';
 export { useSearchActions } from './useSearchActions';
+export { useAutocomplete } from './useAutocomplete';
+export { usePopular } from './usePopular';
+export { useSearchHistory } from './useSearchHistory';
+export { useBookmarks } from './useBookmarks';
+export { useStats } from './useStats';
+export { useManuscriptMutations } from './useManuscriptMutations';
