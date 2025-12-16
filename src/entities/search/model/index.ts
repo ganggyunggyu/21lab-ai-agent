@@ -1,1 +1,20 @@
-export type { SearchDocument, SearchRequest, SearchResponse } from './types';
+export type {
+  SearchDocument,
+  SearchRequest,
+  SearchResponse,
+  SearchAllRequest,
+  SearchAllResponse,
+  AutocompleteItem,
+  AutocompleteResponse,
+  PopularPeriod,
+  PopularKeyword,
+  PopularResponse,
+  SearchHistoryItem,
+  SearchHistoryResponse,
+  BookmarkItem,
+  BookmarksResponse,
+  StatsResponse,
+  UpdateManuscriptRequest,
+  UpdateManuscriptResponse,
+  DeleteManuscriptResponse,
+} from './types';

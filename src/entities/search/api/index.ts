@@ -1,1 +1,17 @@
-export { searchManuscripts, getManuscriptById } from './searchApi';
+export {
+  searchAll,
+  searchManuscripts,
+  getManuscriptById,
+  getAutocomplete,
+  getPopularKeywords,
+  getSearchHistory,
+  addSearchHistory,
+  deleteSearchHistory,
+  clearSearchHistory,
+  getBookmarks,
+  addBookmark,
+  removeBookmark,
+  getStats,
+  updateManuscript,
+  deleteManuscript,
+} from './searchApi';
