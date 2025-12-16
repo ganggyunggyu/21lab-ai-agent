@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import ModernChatPage from './_ModernChatPage.vue';
-import ModernUploadPage from './_ModernUploadPage.vue';
-import ChatPage from './_ChatPage.vue';
-import PublishedListPage from './_PublishedListPage.vue';
+import ChatPage from '../pages/ChatPage.vue';
 import BatchPage from '../pages/BatchPage.vue';
 import ComponentsPage from '../pages/ComponentsPage.vue';
 import SearchPage from '../pages/SearchPage.vue';
@@ -12,33 +9,9 @@ const routes = [
   {
     path: '/',
     name: 'ChatPage',
-    component: ModernChatPage,
-    meta: {
-      title: '채팅',
-    },
-  },
-  {
-    path: '/prev',
-    name: 'PrevChatPage',
     component: ChatPage,
     meta: {
       title: '채팅',
-    },
-  },
-  {
-    path: '/upload',
-    name: 'Upload',
-    component: ModernUploadPage,
-    meta: {
-      title: '파일 업로드',
-    },
-  },
-  {
-    path: '/published',
-    name: 'PublishedList',
-    component: PublishedListPage,
-    meta: {
-      title: '발행원고',
     },
   },
   {
