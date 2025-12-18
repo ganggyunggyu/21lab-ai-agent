@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
-import { updateManuscript, deleteManuscript } from '../api/searchApi';
-import type { UpdateManuscriptRequest } from '../model/types';
+import { updateManuscript, deleteManuscript, toggleVisibility } from '../api/searchApi';
+import type { UpdateManuscriptRequest, ToggleVisibilityRequest } from '../model/types';
 import { toast } from '@/utils';
 
 export const useManuscriptMutations = () => {
@@ -31,10 +31,27 @@ export const useManuscriptMutations = () => {
     },
   });
 
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: (params: ToggleVisibilityRequest) => toggleVisibility(params),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['manuscripts'] });
+      queryClient.invalidateQueries({ queryKey: ['searchResults'] });
+      queryClient.invalidateQueries({ queryKey: ['manuscriptDetail'] });
+      const message = data.isVisible ? '노출 ON' : '노출 OFF';
+      toast.success(message);
+    },
+    onError: () => {
+      toast.error('노출 설정 변경에 실패했습니다.');
+    },
+  });
+
   return {
     updateManuscript: updateMutation.mutate,
     deleteManuscript: deleteMutation.mutate,
+    toggleVisibility: toggleVisibilityMutation.mutate,
+    toggleVisibilityAsync: toggleVisibilityMutation.mutateAsync,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isTogglingVisibility: toggleVisibilityMutation.isPending,
   };
 };

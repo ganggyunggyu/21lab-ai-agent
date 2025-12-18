@@ -14,6 +14,9 @@ import type {
   UpdateManuscriptRequest,
   UpdateManuscriptResponse,
   DeleteManuscriptResponse,
+  ToggleVisibilityRequest,
+  ToggleVisibilityResponse,
+  VisibilityResponse,
 } from '../model/types';
 
 const API = import.meta.env.VITE_API_URL;
@@ -166,6 +169,27 @@ export const updateManuscript = async (
 export const deleteManuscript = async (manuscriptId: string): Promise<DeleteManuscriptResponse> => {
   const { data } = await axios.delete<DeleteManuscriptResponse>(
     `${API}/search/manuscript/${manuscriptId}`
+  );
+  return data;
+};
+
+// 노출 토글 API
+export const toggleVisibility = async (
+  params: ToggleVisibilityRequest
+): Promise<ToggleVisibilityResponse> => {
+  const { data } = await axios.post<ToggleVisibilityResponse>(
+    `${API}/manuscript/toggle-visibility`,
+    params
+  );
+  return data;
+};
+
+export const getVisibility = async (
+  category: string,
+  manuscriptId: string
+): Promise<VisibilityResponse> => {
+  const { data } = await axios.get<VisibilityResponse>(
+    `${API}/manuscript/visibility/${encodeURIComponent(category)}/${manuscriptId}`
   );
   return data;
 };

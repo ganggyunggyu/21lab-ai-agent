@@ -12,6 +12,7 @@ export interface SearchDocument {
   deleted?: boolean;
   deletedAt?: string;
   memo?: string;
+  isVisible?: boolean;
   // 전체 검색 결과에서 추가되는 필드
   __category?: string;
   __score?: number;
@@ -118,4 +119,23 @@ export interface UpdateManuscriptResponse {
 export interface DeleteManuscriptResponse {
   ok: boolean;
   deletedId: string;
+}
+
+// 노출 토글
+export interface ToggleVisibilityRequest {
+  category: string;
+  manuscript_id: string;
+}
+
+export interface ToggleVisibilityResponse {
+  success: boolean;
+  manuscript_id: string;
+  isVisible: boolean;
+  message: string;
+}
+
+export interface VisibilityResponse {
+  manuscript_id: string;
+  category: string;
+  isVisible: boolean;
 }

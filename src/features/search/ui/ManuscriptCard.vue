@@ -5,6 +5,8 @@ import {
   TimeOutline as TimeIcon,
   ServerOutline as EngineIcon,
   CopyOutline as CopyIcon,
+  EyeOutline as EyeIcon,
+  EyeOffOutline as EyeOffIcon,
 } from '@vicons/ionicons5';
 import type { SearchDocument } from '@/entities/search';
 
@@ -53,6 +55,8 @@ const contentLength = computed(() => {
 
 const categoryLabel = computed(() => props.document.__category || props.document.category || '');
 
+const isVisible = computed(() => props.document.isVisible === true);
+
 const handleClick = () => {
   emit('click', props.document);
 };
@@ -65,10 +69,20 @@ const handleClick = () => {
   >
     <!-- 상단 카테고리 바 -->
     <div
-      v-if="categoryLabel"
-      class="px-4 py-2 bg-linear-to-r from-brand/10 to-transparent border-b border-gray-100 dark:border-gray-700"
+      class="px-4 py-2 bg-linear-to-r from-brand/10 to-transparent border-b border-gray-100 dark:border-gray-700 flex items-center justify-between"
     >
-      <span class="text-xs font-semibold text-brand">{{ categoryLabel }}</span>
+      <span v-if="categoryLabel" class="text-xs font-semibold text-brand">{{ categoryLabel }}</span>
+      <span v-else />
+      <div
+        class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+        :class="isVisible
+          ? 'bg-brand/10 text-brand'
+          : 'bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
+        "
+      >
+        <component :is="isVisible ? EyeIcon : EyeOffIcon" class="w-3 h-3" />
+        {{ isVisible ? '노출' : '비노출' }}
+      </div>
     </div>
 
     <!-- 메인 컨텐츠 -->

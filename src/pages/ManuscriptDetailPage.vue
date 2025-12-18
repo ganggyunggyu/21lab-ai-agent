@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   ArrowBackOutline as BackIcon,
@@ -12,10 +12,12 @@ import {
   FlaskOutline as TestIcon,
   CheckmarkCircle as SuccessIcon,
   SparklesOutline as SparkleIcon,
+  EyeOutline as EyeIcon,
+  EyeOffOutline as EyeOffIcon,
 } from '@vicons/ionicons5';
 import { Button, Skeleton } from '@/components/ui';
 import { toast } from '@/utils/_toast';
-import { useManuscriptDetail } from '@/entities/search';
+import { useManuscriptDetail, useManuscriptMutations } from '@/entities/search';
 import type { SearchDocument } from '@/entities/search';
 
 const route = useRoute();
@@ -25,6 +27,29 @@ const manuscriptId = ref(route.params.id as string);
 const category = ref(route.query.category as string | undefined);
 
 const { manuscript, isLoading, isError, error } = useManuscriptDetail(manuscriptId, category);
+const { toggleVisibilityAsync, isTogglingVisibility } = useManuscriptMutations();
+
+const isVisible = ref(false);
+
+watch(manuscript, (doc) => {
+  if (doc) {
+    isVisible.value = doc.isVisible === true;
+  }
+}, { immediate: true });
+
+const handleToggleVisibility = async () => {
+  if (!manuscript.value || !category.value) return;
+
+  try {
+    const result = await toggleVisibilityAsync({
+      category: category.value,
+      manuscript_id: manuscriptId.value,
+    });
+    isVisible.value = result.isVisible;
+  } catch {
+    // 에러는 mutation의 onError에서 처리됨
+  }
+};
 
 const formatDate = (doc: SearchDocument) => {
   let date: Date | null = null;
@@ -100,9 +125,22 @@ const handleBack = () => {
             뒤로가기
           </Button>
 
-          <div class="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700">
-            <SparkleIcon class="w-4 h-4 text-brand" />
-            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">원고 상세</span>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700">
+              <SparkleIcon class="w-4 h-4 text-brand" />
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-300">원고 상세</span>
+            </div>
+            <div
+              v-if="manuscript"
+              class="flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-sm transition-all"
+              :class="isVisible
+                ? 'bg-brand/10 border-brand text-brand'
+                : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+              "
+            >
+              <component :is="isVisible ? EyeIcon : EyeOffIcon" class="w-4 h-4" />
+              <span class="text-sm font-bold">{{ isVisible ? '노출 중' : '비노출' }}</span>
+            </div>
           </div>
         </header>
 
@@ -254,7 +292,7 @@ const handleBack = () => {
 
           <!-- 하단 메타데이터 -->
           <div class="px-8 py-6 bg-linear-to-r from-gray-50 via-gray-100/50 to-gray-50 dark:from-gray-800/70 dark:via-gray-800 dark:to-gray-800/70 border-t border-gray-200 dark:border-gray-700">
-            <div class="grid grid-cols-3 gap-6">
+            <div class="grid grid-cols-4 gap-6">
               <div class="group flex items-center gap-3 cursor-default">
                 <div class="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl flex items-center justify-center shadow-sm border border-gray-200 dark:border-gray-600 group-hover:border-brand group-hover:shadow-md transition-all">
                   <ServiceIcon class="w-5 h-5 text-gray-400 group-hover:text-brand transition-colors" />
@@ -287,6 +325,33 @@ const handleBack = () => {
                     {{ manuscript._id }}
                   </div>
                 </div>
+              </div>
+              <div
+                class="group flex items-center gap-3 cursor-pointer"
+                @click="handleToggleVisibility"
+              >
+                <div
+                  class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm border transition-all"
+                  :class="isVisible
+                    ? 'bg-brand/10 border-brand text-brand'
+                    : 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400'
+                  "
+                >
+                  <component :is="isVisible ? EyeIcon : EyeOffIcon" class="w-5 h-5" />
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">노출</div>
+                  <div
+                    class="text-sm font-bold transition-colors"
+                    :class="isVisible ? 'text-brand' : 'text-gray-500 dark:text-gray-400'"
+                  >
+                    {{ isVisible ? 'ON' : 'OFF' }}
+                  </div>
+                </div>
+                <div
+                  v-if="isTogglingVisibility"
+                  class="ml-auto w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin"
+                />
               </div>
             </div>
           </div>

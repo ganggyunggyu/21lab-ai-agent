@@ -17,4 +17,7 @@ export type {
   UpdateManuscriptRequest,
   UpdateManuscriptResponse,
   DeleteManuscriptResponse,
+  ToggleVisibilityRequest,
+  ToggleVisibilityResponse,
+  VisibilityResponse,
 } from './types';
