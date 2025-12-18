@@ -7,6 +7,25 @@ type GenerationRequest = {
   keyword: string;
   ref: string;
 };
+
+type GenerationResponse = {
+  content: string;
+};
+
+type ImageGenerationRequest = {
+  keyword: string;
+};
+
+type ImageItem = {
+  url: string;
+};
+
+type ImageGenerationResponse = {
+  images: ImageItem[];
+  total: number;
+  failed: number;
+};
+
 type GetCategoryReq = {
   keyword: string;
 };
@@ -14,16 +33,13 @@ type GetCategoryReq = {
 const API = import.meta.env.VITE_API_URL;
 
 const getEndpoint = (service: ChatService): string => {
-  if (service === 'clean-claude') {
-    return `${API}/generate/clean-claude`;
-  }
   return `${API}/generate/${service}`;
 };
 
-export const generateText = async (params: GenerationRequest) => {
+export const generateText = async (params: GenerationRequest): Promise<GenerationResponse> => {
   try {
     const endpoint = getEndpoint(params.service);
-    const response = await axios.post(endpoint, params);
+    const response = await axios.post<GenerationResponse>(endpoint, params);
     return response.data;
   } catch (error: unknown) {
     if (isAxiosError(error) && error.response?.status === 429) {
@@ -41,6 +57,18 @@ export const getCategory = async (params: GetCategoryReq) => {
 
     return response.data;
   } catch (error) {
+    throw error;
+  }
+};
+
+export const generateImage = async (params: ImageGenerationRequest): Promise<ImageGenerationResponse> => {
+  try {
+    const response = await axios.post<ImageGenerationResponse>(`${API}/generate/image`, params);
+    return response.data;
+  } catch (error: unknown) {
+    if (isAxiosError(error) && error.response?.status === 429) {
+      throw new Error('이미지 API 요청 할당량을 초과했습니다.');
+    }
     throw error;
   }
 };

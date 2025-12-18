@@ -54,6 +54,80 @@ export const useChatActions = () => {
     }
   };
 
+  const downloadImage = async (imageUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      throw new Error('이미지 다운로드 실패');
+    }
+  };
+
+  const getExtFromUrl = (url: string): string => {
+    const match = url.match(/\.(\w+)(?:\?|$)/);
+    return match?.[1] || 'png';
+  };
+
+  const handleDownloadImages = async (msg: Message) => {
+    if (!msg.images || msg.images.length === 0) {
+      message.error('다운로드할 이미지가 없습니다');
+      return;
+    }
+
+    try {
+      const rawKeyword = msg.keyword || '';
+      const keyword = rawKeyword.length > 50
+        ? extractKeywordDisplay(rawKeyword)
+        : rawKeyword;
+      const safeKeyword = sanitizeFileName(keyword || 'image');
+
+      for (let i = 0; i < msg.images.length; i++) {
+        const ext = getExtFromUrl(msg.images[i].url);
+        const fileName = `${safeKeyword}_${i + 1}.${ext}`;
+        await downloadImage(msg.images[i].url, fileName);
+      }
+
+      message.success(`${msg.images.length}개 이미지가 다운로드되었습니다`);
+    } catch {
+      message.error('이미지 다운로드에 실패했습니다');
+    }
+  };
+
+  const handleDownloadAll = async (msg: Message) => {
+    try {
+      // 원고 다운로드
+      const rawKeyword = msg.keyword || '';
+      const keyword = rawKeyword.length > 50
+        ? extractKeywordDisplay(rawKeyword)
+        : rawKeyword;
+      const safeKeyword = sanitizeFileName(keyword || 'message');
+      const textFileName = `${safeKeyword}-${msg.content.replace(/\s/g, '').length}`;
+      downloadText({ fileName: textFileName, content: msg.content });
+
+      // 이미지 다운로드
+      if (msg.images && msg.images.length > 0) {
+        for (let i = 0; i < msg.images.length; i++) {
+          const ext = getExtFromUrl(msg.images[i].url);
+          const imageFileName = `${safeKeyword}_${i + 1}.${ext}`;
+          await downloadImage(msg.images[i].url, imageFileName);
+        }
+        message.success(`원고와 ${msg.images.length}개 이미지가 다운로드되었습니다`);
+      } else {
+        message.success(MSG_DOWNLOAD_SUCCESS);
+      }
+    } catch {
+      message.error(MSG_DOWNLOAD_FAIL);
+    }
+  };
+
   const downloadChatHistory = (exportChat: () => string) => {
     try {
       const chatData = exportChat();
@@ -84,6 +158,8 @@ export const useChatActions = () => {
   return {
     copyMsg,
     handleDownloadClick,
+    handleDownloadImages,
+    handleDownloadAll,
     downloadChatHistory,
     downloadMultipleFiles,
   };

@@ -5,6 +5,7 @@ import {
   Send as SendIcon,
   StarOutline as StarOutlineIcon,
   Close as CloseIcon,
+  Image as ImageIcon,
 } from '@vicons/ionicons5';
 import { Button, Card, Input } from '@/components/ui';
 import { useChatStore } from '@/stores';
@@ -31,6 +32,7 @@ const {
   refMsg,
   isLoading,
   showRefInput,
+  includeImage,
 } = storeToRefs(chatStore);
 
 const {
@@ -211,6 +213,19 @@ watch(refMsg, (newVal) => {
           />
 
           <nav class="action-buttons" aria-label="입력 관련 액션">
+              <label class="image-toggle" :class="{ 'image-toggle-active': includeImage }">
+                <input
+                  type="checkbox"
+                  v-model="includeImage"
+                  class="image-toggle-input"
+                />
+                <span class="image-toggle-switch">
+                  <span class="image-toggle-slider"></span>
+                </span>
+                <ImageIcon class="image-toggle-icon" />
+                <span class="image-toggle-label">{{ includeImage ? 'ON' : 'OFF' }}</span>
+              </label>
+
               <Button
                 color="light"
                 variant="weak"
@@ -442,6 +457,83 @@ watch(refMsg, (newVal) => {
 
 .action-btn-inactive:hover {
   opacity: 1;
+}
+
+.image-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+}
+
+.image-toggle:hover {
+  background-color: var(--color-bg-tertiary, var(--color-bg-secondary));
+}
+
+.image-toggle-active {
+  background-color: rgba(var(--color-primary-rgb, 98, 194, 176), 0.1);
+  border-color: var(--color-primary);
+}
+
+.image-toggle-input {
+  display: none;
+}
+
+.image-toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background-color: var(--color-border-primary);
+  border-radius: 9px;
+  transition: background-color var(--transition-fast);
+}
+
+.image-toggle-active .image-toggle-switch {
+  background-color: var(--color-primary);
+}
+
+.image-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.image-toggle-active .image-toggle-slider {
+  transform: translateX(14px);
+}
+
+.image-toggle-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-tertiary);
+  transition: color var(--transition-fast);
+}
+
+.image-toggle-active .image-toggle-icon {
+  color: var(--color-primary);
+}
+
+.image-toggle-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-tertiary);
+  min-width: 22px;
+  transition: color var(--transition-fast);
+}
+
+.image-toggle-active .image-toggle-label {
+  color: var(--color-primary);
 }
 
 .favorites-wrapper {

@@ -1,3 +1,7 @@
+export interface ImageItem {
+  url: string;
+}
+
 export interface Message {
   role: 'user' | 'bot';
   content: string;
@@ -8,6 +12,10 @@ export interface Message {
   ref?: string;
   service?: string;
   loadingProgress?: number;
+  // 이미지 관련 필드
+  images?: ImageItem[];
+  imageLoading?: boolean;
+  imageError?: string;
 }
 
 // ChatService 타입은 constants/_models.ts에서 자동 추출됨

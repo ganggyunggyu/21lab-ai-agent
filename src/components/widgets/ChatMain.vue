@@ -195,7 +195,7 @@ onMounted(async () => {
           <ul class="py-4 pb-0 flex flex-col gap-4" role="list">
             <li
               v-for="(msg, idx) in displayMessages"
-              :key="`${idx}-${msg.timestamp}`"
+              :key="`${msg.id}-${msg.images?.length || 0}`"
               role="listitem"
             >
               <MessageBubble

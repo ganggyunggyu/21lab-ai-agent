@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import {
   Copy as CopyIcon,
   Download as DownloadIcon,
@@ -7,11 +7,16 @@ import {
   Close as CloseIcon,
   Information as InfoIcon,
   Options as OptionsIcon,
+  Image as ImageIcon,
+  AlertCircle as AlertIcon,
+  DocumentText as DocumentIcon,
+  Images as ImagesIcon,
+  CloudDownload as AllDownloadIcon,
 } from '@vicons/ionicons5';
 import { renderMarkdown, cn, extractKeywordDisplay } from '@/utils';
 import type { Message } from '@/types';
 import { MODEL_OPTIONS } from '@/constants';
-import { Button, Skeleton } from '@/components/ui';
+import { Button, Skeleton, ImageViewer } from '@/components/ui';
 import { useChatStore } from '@/stores';
 import { useChatActions } from '@/hooks';
 
@@ -37,7 +42,73 @@ defineEmits<Emits>();
 
 const chatStore = useChatStore();
 const { openActionModal, handleRegenerate, deleteMessage } = chatStore;
-const { copyMsg, handleDownloadClick } = useChatActions();
+const { copyMsg, handleDownloadClick, handleDownloadImages, handleDownloadAll } = useChatActions();
+
+const showDownloadMenu = ref(false);
+
+// 이미지 뷰어 상태
+const showImageViewer = ref(false);
+const viewerInitialIndex = ref(0);
+
+const openImageViewer = (index: number) => {
+  viewerInitialIndex.value = index;
+  showImageViewer.value = true;
+};
+
+const closeImageViewer = () => {
+  showImageViewer.value = false;
+};
+
+const handleViewerDownload = async (image: { url: string }, index: number) => {
+  try {
+    const response = await fetch(image.url);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const ext = image.url.match(/\.(\w+)(?:\?|$)/)?.[1] || 'png';
+    link.href = url;
+    link.download = `${props.message.keyword || 'image'}_${index + 1}.${ext}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch {
+    console.error('이미지 다운로드 실패');
+  }
+};
+
+const hasImages = computed(() => {
+  return props.message.images && props.message.images.length > 0;
+});
+
+// 이미지 전용 메시지 (content가 비어있고 이미지 관련 상태만 있음)
+const isImageOnlyMessage = computed(() => {
+  return props.message.content === '' &&
+    (props.message.imageLoading || props.message.images?.length || props.message.imageError);
+});
+
+const toggleDownloadMenu = () => {
+  showDownloadMenu.value = !showDownloadMenu.value;
+};
+
+const closeDownloadMenu = () => {
+  showDownloadMenu.value = false;
+};
+
+const onDownloadText = () => {
+  handleDownloadClick(props.message);
+  closeDownloadMenu();
+};
+
+const onDownloadImages = () => {
+  handleDownloadImages(props.message);
+  closeDownloadMenu();
+};
+
+const onDownloadAll = () => {
+  handleDownloadAll(props.message);
+  closeDownloadMenu();
+};
 
 const renderedContent = computed(() => {
   if (props.message.content === 'loading') return '';
@@ -150,18 +221,16 @@ const refStatusClasses = computed(() => {
         </header>
 
         <main :class="messageTextClasses">
+          <!-- 텍스트 로딩 상태 -->
           <section
             v-if="message.content === 'loading'"
             class="loading-state py-4"
             aria-live="polite"
             aria-label="AI 응답 생성 중"
           >
-            <!-- 스켈레톤 UI -->
             <div class="mb-4">
               <Skeleton variant="text" :lines="3" />
             </div>
-
-            <!-- 진행률 바 + 상태 메시지 -->
             <div class="flex flex-col gap-2 w-full max-w-[300px]">
               <div class="flex items-center justify-between text-sm">
                 <span class="text-brand font-medium">
@@ -180,12 +249,42 @@ const refStatusClasses = computed(() => {
             </div>
           </section>
 
+          <!-- 이미지 전용 메시지 -->
+          <section v-else-if="isImageOnlyMessage" class="image-only-section">
+            <!-- 이미지 로딩 중 -->
+            <div v-if="message.imageLoading" class="message-image-loading">
+              <div class="image-loading-spinner"></div>
+              <span class="image-loading-text">이미지 생성 중... (4장)</span>
+            </div>
+
+            <!-- 이미지 로드 완료 -->
+            <div v-else-if="message.images?.length" class="message-images-grid">
+              <div
+                v-for="(img, idx) in message.images"
+                :key="idx"
+                class="message-image-item"
+                @click="openImageViewer(idx)"
+              >
+                <img
+                  :src="img.url"
+                  :alt="`${message.keyword} 이미지 ${idx + 1}`"
+                  class="message-image"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+            <!-- 이미지 에러 -->
+            <div v-else-if="message.imageError" class="message-image-error">
+              <AlertIcon class="image-error-icon" />
+              <span class="image-error-text">{{ message.imageError }}</span>
+            </div>
+          </section>
+
+          <!-- 일반 메시지 -->
           <section
             v-else
-            @dblclick="
-              message.content !== 'loading' &&
-                copyMsg(message.content, message)
-            "
+            @dblclick="copyMsg(message.content, message)"
             role="document"
           >
             <aside
@@ -215,8 +314,27 @@ const refStatusClasses = computed(() => {
         </main>
 
         <footer :class="actionsClasses" role="toolbar" aria-label="메시지 액션">
+          <!-- 이미지 전용 메시지 액션 -->
           <nav
-            v-if="message.content !== 'loading'"
+            v-if="isImageOnlyMessage && hasImages"
+            :class="botActionsClasses"
+            aria-label="이미지 액션 버튼"
+          >
+            <Button
+              color="light" variant="weak"
+              size="sm"
+              :icon="DownloadIcon"
+              @click="onDownloadImages"
+              class="text-base px-3 py-2 h-auto rounded-lg"
+              aria-label="이미지 다운로드"
+            >
+              이미지 저장
+            </Button>
+          </nav>
+
+          <!-- 일반 메시지 액션 -->
+          <nav
+            v-else-if="message.content !== 'loading' && message.content !== ''"
             :class="botActionsClasses"
             aria-label="메시지 액션 버튼"
           >
@@ -231,16 +349,40 @@ const refStatusClasses = computed(() => {
               복사
             </Button>
 
-            <Button
-              color="light" variant="weak"
-              size="sm"
-              :icon="DownloadIcon"
-              @click="handleDownloadClick(message)"
-              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
-              aria-label="메시지 파일로 저장"
-            >
-              저장
-            </Button>
+            <div class="download-menu-wrapper" @mouseleave="closeDownloadMenu">
+              <Button
+                color="light" variant="weak"
+                size="sm"
+                :icon="DownloadIcon"
+                @click="toggleDownloadMenu"
+                class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
+                aria-label="다운로드 메뉴 열기"
+              >
+                저장
+              </Button>
+              <div v-if="showDownloadMenu" class="download-menu">
+                <button class="download-menu-item" @click="onDownloadText">
+                  <DocumentIcon class="download-menu-icon" />
+                  <span>원고 저장</span>
+                </button>
+                <button
+                  class="download-menu-item"
+                  :class="{ 'download-menu-item--disabled': !hasImages }"
+                  :disabled="!hasImages"
+                  @click="onDownloadImages"
+                >
+                  <ImagesIcon class="download-menu-icon" />
+                  <span>이미지 저장</span>
+                </button>
+                <button
+                  class="download-menu-item"
+                  @click="onDownloadAll"
+                >
+                  <AllDownloadIcon class="download-menu-icon" />
+                  <span>전체 저장</span>
+                </button>
+              </div>
+            </div>
 
             <Button
               color="light" variant="weak"
@@ -291,6 +433,16 @@ const refStatusClasses = computed(() => {
         </footer>
       </div>
     </div>
+
+    <!-- 이미지 뷰어 -->
+    <ImageViewer
+      v-if="hasImages"
+      :show="showImageViewer"
+      :images="message.images || []"
+      :initial-index="viewerInitialIndex"
+      @close="closeImageViewer"
+      @download="handleViewerDownload"
+    />
   </article>
 </template>
 
@@ -378,5 +530,142 @@ const refStatusClasses = computed(() => {
 
 .message-bubble--user .message-content-wrapper :deep(a) {
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* 이미지 섹션 스타일 */
+.message-image-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-primary);
+}
+
+.message-image-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+}
+
+.image-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--color-border-primary);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.image-loading-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.message-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.message-image-item {
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--color-bg-secondary);
+}
+
+.message-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.message-image:hover {
+  transform: scale(1.02);
+}
+
+.message-image-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+.image-error-icon {
+  width: 20px;
+  height: 20px;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.image-error-text {
+  font-size: 14px;
+  color: #ef4444;
+}
+
+/* 다운로드 메뉴 스타일 */
+.download-menu-wrapper {
+  position: relative;
+}
+
+.download-menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 140px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.download-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  text-align: left;
+}
+
+.download-menu-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.download-menu-item--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.download-menu-item--disabled:hover {
+  background: transparent;
+}
+
+.download-menu-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 </style>
