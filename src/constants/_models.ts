@@ -19,6 +19,12 @@ export const MODEL_OPTIONS = [
   // { label: 'GROK_맛집', value: 'restaurant-grok' },
   // { label: 'CLAUDE_맛집', value: 'restaurant-claude' },
   // { label: 'DEEPSEEK_맛집', value: 'restaurant-deepseek' },
+  { label: 'SOLAR', value: 'solar' },
+  { label: 'SOLAR_CLEAN', value: 'solar-ver3-clean' },
+  { label: 'GPT_CLEAN', value: 'gpt-ver3-clean' },
+  { label: 'GROK_CLEAN', value: 'grok-ver3-clean' },
+  { label: 'GEM3_FLASH', value: 'gemini-3-flash' },
+  { label: 'GEM3_FLASH_CLEAN', value: 'gemini-3-flash-clean' },
 ] as const;
 
 export type ChatService = (typeof MODEL_OPTIONS)[number]['value'];
