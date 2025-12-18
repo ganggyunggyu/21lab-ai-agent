@@ -9,3 +9,4 @@ export { default as Modal } from './Modal.vue';
 export { default as Switch } from './Switch.vue';
 export { default as Loader } from './Loader.vue';
 export { default as Skeleton } from './Skeleton.vue';
+export { default as ImageViewer } from './ImageViewer.vue';
