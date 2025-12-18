@@ -6,7 +6,7 @@ import {
   StarOutline as StarOutlineIcon,
   Close as CloseIcon,
 } from '@vicons/ionicons5';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, Input } from '@/components/ui';
 import { useChatStore } from '@/stores';
 import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -37,10 +37,6 @@ const {
   handleGenerate,
 } = chatStore;
 
-const handleEnterPress = () => {
-  handleGenerate();
-};
-
 const frequentKeywords = ref<FrequentKeyword[]>([]);
 
 const favoriteSearches = ref<FavoriteSearch[]>([]);
@@ -48,7 +44,6 @@ const showFavorites = ref(false);
 const favoritesRef = ref<HTMLElement | null>(null);
 
 const searchHistory = ref<SearchHistory[]>([]);
-
 
 const { service } = storeToRefs(chatStore);
 
@@ -130,7 +125,6 @@ const cleanText = (text: string) => {
     .trim();
 };
 
-
 const handleGenerateWithKeyword = () => {
   if (keyword.value.trim()) {
     addKeywordToFrequent(keyword.value.trim());
@@ -189,14 +183,14 @@ watch(refMsg, (newVal) => {
             class="ref-section"
             aria-label="참조 원고 입력 영역"
           >
-            <textarea
+            <Input
               v-model="refMsg"
-              rows="2"
+              type="textarea"
+              :rows="2"
               :placeholder="refPlaceholder"
               class="footer-textarea"
               @focus="showRefInput = true"
               @blur="showRefInput = false"
-              aria-label="참조 원고 텍스트 영역"
             />
           </section>
         </transition>
@@ -204,18 +198,16 @@ watch(refMsg, (newVal) => {
         <section
           class="main-input-section"
           aria-label="메인 입력 영역"
-          @click="$refs.keywordInput?.focus()"
         >
-          <input
-            ref="keywordInput"
+          <Input
             v-model="keyword"
             type="text"
             :placeholder="getKeywordPlaceholder(service)"
             class="footer-input"
-            @keydown.enter.prevent="handleEnterPress"
+            :on-enter="handleGenerateWithKeyword"
+            prevent-enter-submit
             @focus="showRefInput = true"
             @blur="showRefInput = false"
-            aria-label="키워드 입력"
           />
 
           <nav class="action-buttons" aria-label="입력 관련 액션">
@@ -391,24 +383,37 @@ watch(refMsg, (newVal) => {
 .footer-input,
 .footer-textarea {
   flex: 1;
+  width: 100%;
+}
+
+.footer-input :deep(.input-wrapper),
+.footer-textarea :deep(.input-wrapper) {
+  gap: 0;
+  width: 100%;
+}
+
+.footer-input :deep(.input-base),
+.footer-textarea :deep(.input-base) {
   background: transparent;
   border: none;
-  outline: none;
+  box-shadow: none;
+  padding: var(--space-2) 0;
+  height: auto;
   font-size: var(--text-base);
-  color: var(--color-text-primary);
-  resize: none;
-  padding: var(--space-2) 0;
 }
 
-.footer-input::placeholder,
-.footer-textarea::placeholder {
-  color: var(--color-text-disabled);
+.footer-input :deep(.input-base:focus),
+.footer-textarea :deep(.input-base:focus),
+.footer-input :deep(.input-focused),
+.footer-textarea :deep(.input-focused) {
+  border: none;
+  box-shadow: none;
 }
 
-.footer-textarea {
-  width: 100%;
-  padding: var(--space-2) 0;
+.footer-textarea :deep(.input-base) {
+  min-height: auto;
   border-bottom: 1px solid var(--color-border-primary);
+  border-radius: 0;
   margin-bottom: var(--space-2);
 }
 
