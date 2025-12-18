@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import {
   Add as AddIcon,
@@ -204,6 +204,14 @@ const handleDragLeave = (e: DragEvent) => {
     isDragging.value = false;
   }
 };
+
+onMounted(() => {
+  if (batchRequests.value.length === 0) {
+    for (let i = 0; i < 5; i++) {
+      addBatchRequest();
+    }
+  }
+});
 
 const handleDrop = async (e: DragEvent) => {
   e.preventDefault();
