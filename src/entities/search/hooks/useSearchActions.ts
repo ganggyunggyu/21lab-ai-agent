@@ -17,7 +17,7 @@ export const useSearchActions = () => {
       }
       return searchManuscripts(searchRequest.value);
     },
-    enabled: computed(() => !!searchRequest.value),
+    enabled: false,
     retry: false,
     staleTime: 1000 * 60 * 5,
   });

@@ -2,7 +2,6 @@
 import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { useDebounceFn } from '@vueuse/core';
 import {
   SearchOutline as SearchIcon,
   TimeOutline as HistoryIcon,
@@ -14,7 +13,6 @@ import { CATEGORY_OPTIONS } from '@/constants';
 import {
   useSearchStore,
   useSearchActions,
-  useAutocomplete,
   usePopular,
 } from '@/entities/search';
 import { ManuscriptCard } from '@/features/search';
@@ -28,42 +26,15 @@ const { query, category, page, searchRequest, totalPages } = storeToRefs(searchS
 
 const { searchData, isLoading, isError, error, refetch, executeSearch, changePage } = useSearchActions();
 
-// 자동완성
-const showSuggestions = ref(false);
-const autocompleteEnabled = computed(() => showSuggestions.value);
-const { data: autocompleteData } = useAutocomplete(query, autocompleteEnabled);
-
 // 인기 검색어
 const popularPeriod = ref<'today' | 'week' | 'month'>('week');
 const { data: popularData, isLoading: isPopularLoading } = usePopular(popularPeriod);
-
-// 디바운스된 자동완성 표시
-const debouncedShowSuggestions = useDebounceFn(() => {
-  if (query.value.length >= 2) {
-    showSuggestions.value = true;
-  }
-}, 300);
-
-const handleInputChange = () => {
-  if (query.value.length < 2) {
-    showSuggestions.value = false;
-  } else {
-    debouncedShowSuggestions();
-  }
-};
 
 const handleSearch = () => {
   if (!query.value.trim()) {
     toast.warning('검색어를 입력해주세요.');
     return;
   }
-  showSuggestions.value = false;
-  executeSearch();
-};
-
-const handleSuggestionClick = (keyword: string) => {
-  query.value = keyword;
-  showSuggestions.value = false;
   executeSearch();
 };
 
@@ -88,9 +59,6 @@ const handleKeyPress = (e: KeyboardEvent) => {
   }
   if (e.key === 'Enter') {
     handleSearch();
-  }
-  if (e.key === 'Escape') {
-    showSuggestions.value = false;
   }
 };
 
@@ -131,45 +99,22 @@ const showInitialState = computed(() => !searchRequest.value && !isLoading.value
       <!-- Search Bar -->
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-black/30 border border-gray-200 dark:border-gray-700 mb-6 p-6">
         <div class="flex flex-col md:flex-row gap-3">
-          <!-- Search Input with Autocomplete -->
+          <!-- Search Input -->
           <div class="flex-1 relative">
-            <div class="relative">
-              <Input
-                v-model="query"
-                type="text"
-                placeholder="검색어를 입력하세요 (예: 위고비, 다이어트)"
-                @keydown="handleKeyPress"
-                @input="handleInputChange"
-                @focus="handleInputChange"
-                @blur="() => setTimeout(() => showSuggestions = false, 200)"
-                class="w-full pr-10"
-              />
-              <button
-                v-if="query"
-                @click="clearQuery"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <ClearIcon class="w-5 h-5" />
-              </button>
-            </div>
-
-            <!-- Autocomplete Dropdown -->
-            <div
-              v-if="showSuggestions && autocompleteData?.suggestions?.length"
-              class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
+            <Input
+              v-model="query"
+              type="text"
+              placeholder="검색어를 입력하세요 (예: 위고비, 다이어트)"
+              @keydown="handleKeyPress"
+              class="w-full pr-10"
+            />
+            <button
+              v-if="query"
+              @click="clearQuery"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
-              <ul class="py-2">
-                <li
-                  v-for="item in autocompleteData.suggestions"
-                  :key="item.keyword"
-                  @mousedown.prevent="handleSuggestionClick(item.keyword)"
-                  class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between"
-                >
-                  <span class="text-gray-900 dark:text-gray-100">{{ item.keyword }}</span>
-                  <span class="text-xs text-gray-500">{{ item.count }}건</span>
-                </li>
-              </ul>
-            </div>
+              <ClearIcon class="w-5 h-5" />
+            </button>
           </div>
 
           <!-- Category Select -->
