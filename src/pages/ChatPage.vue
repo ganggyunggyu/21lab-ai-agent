@@ -11,6 +11,7 @@ const chatStore = useChatStore();
 const { keyword, refMsg, showRefInput } = storeToRefs(chatStore);
 
 const isDragging = ref(false);
+const dragCounter = ref(0);
 
 const cleanText = (text: string) => {
   return text
@@ -22,20 +23,18 @@ const cleanText = (text: string) => {
 
 const handleDragEnter = (e: DragEvent) => {
   e.preventDefault();
-  e.stopPropagation();
+  dragCounter.value++;
   isDragging.value = true;
 };
 
 const handleDragOver = (e: DragEvent) => {
   e.preventDefault();
-  e.stopPropagation();
-  isDragging.value = true;
 };
 
 const handleDragLeave = (e: DragEvent) => {
   e.preventDefault();
-  e.stopPropagation();
-  if (e.currentTarget === e.target) {
+  dragCounter.value--;
+  if (dragCounter.value === 0) {
     isDragging.value = false;
   }
 };
@@ -44,6 +43,7 @@ const handleDrop = async (e: DragEvent) => {
   e.preventDefault();
   e.stopPropagation();
   isDragging.value = false;
+  dragCounter.value = 0;
 
   const files = e.dataTransfer?.files;
   if (!files || files.length === 0) return;
