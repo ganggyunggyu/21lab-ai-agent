@@ -299,6 +299,12 @@ onUnmounted(() => {
 
 .select-options {
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.select-options::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .select-empty {
