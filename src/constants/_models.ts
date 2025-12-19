@@ -1,30 +1,48 @@
-export const MODEL_OPTIONS = [
-  // { label: 'TEST', value: 'test' },
-  // { label: 'GPT5.2', value: 'gpt-5-2' },
-  // { label: 'GPT5', value: 'gpt-5-v2' },
-  // { label: 'GPT4O', value: 'gpt-4-v3' },
-  // { label: 'GEM', value: 'gemini-3-pro' },
-  // { label: 'GROK', value: 'grok' },
-  // { label: 'CLAUDE', value: 'claude' },
-  // { label: 'CLEAN_CLAUDE', value: 'clean-claude' },
-  // { label: 'DS', value: 'deepseek' },
-  // { label: 'GPT5.2_NEW', value: 'openai-new' },
-  { label: 'GEM_NEW', value: 'gemini-new' },
-  // { label: 'DS_NEW', value: 'deepseek-new' },
-  // { label: 'GROK_NEW', value: 'grok-new' },
-  // { label: 'CLEAN_DEEPSEEK', value: 'clean-deepseek' },
-  // { label: 'GPT5.1_맛집', value: 'restaurant-gpt5' },
-  // { label: 'GPT4O_맛집', value: 'restaurant-oai-4' },
-  // { label: 'GEM_맛집', value: 'restaurant' },
-  // { label: 'GROK_맛집', value: 'restaurant-grok' },
-  // { label: 'CLAUDE_맛집', value: 'restaurant-claude' },
-  // { label: 'DEEPSEEK_맛집', value: 'restaurant-deepseek' },
-  // { label: 'SOLAR', value: 'solar' },
-  // { label: 'SOLAR_CLEAN', value: 'solar-ver3-clean' },
-  // { label: 'GPT_CLEAN', value: 'gpt-ver3-clean' },
-  // { label: 'GROK_CLEAN', value: 'grok-ver3-clean' },
-  // { label: 'GEM3_FLASH', value: 'gemini-3-flash' },
-  // { label: 'GEM3_FLASH_CLEAN', value: 'gemini-3-flash-clean' },
-] as const;
+export interface ModelOption {
+  label: string;
+  value: string;
+  description: string;
+}
+
+export const MODEL_OPTIONS: ModelOption[] = [
+  // { label: 'TEST', value: 'test', description: '' },
+  // { label: 'GPT5.2', value: 'gpt-5-2', description: '' },
+  // { label: 'GPT5', value: 'gpt-5-v2', description: '' },
+  {
+    label: 'GROK',
+    value: 'grok',
+    description: '빠름 잘뜸',
+  },
+  { label: 'GPT4O', value: 'gpt-4-v3', description: '두번째로 잘뜸' },
+  // { label: 'GEM', value: 'gemini-3-pro', description: '' },
+  // { label: 'CLAUDE', value: 'claude', description: '' },
+  // { label: 'CLEAN_CLAUDE', value: 'clean-claude', description: '' },
+  // { label: 'DS', value: 'deepseek', description: '' },
+  // { label: 'GPT5.2_NEW', value: 'openai-new', description: '' },
+  {
+    label: 'GEM_NEW',
+    value: 'gemini-new',
+    description: '네이버 새로운 로직 프롬프트 적용',
+  },
+  // { label: 'DS_NEW', value: 'deepseek-new', description: '' },
+  // { label: 'GROK_NEW', value: 'grok-new', description: '' },
+  // { label: 'CLEAN_DEEPSEEK', value: 'clean-deepseek', description: '' },
+  // { label: 'GPT5.1_맛집', value: 'restaurant-gpt5', description: '' },
+  // { label: 'GPT4O_맛집', value: 'restaurant-oai-4', description: '' },
+  // { label: 'GEM_맛집', value: 'restaurant', description: '' },
+  // { label: 'GROK_맛집', value: 'restaurant-grok', description: '' },
+  // { label: 'CLAUDE_맛집', value: 'restaurant-claude', description: '' },
+  // { label: 'DEEPSEEK_맛집', value: 'restaurant-deepseek', description: '' },
+  // { label: 'SOLAR', value: 'solar', description: '' },
+  // { label: 'SOLAR_CLEAN', value: 'solar-ver3-clean', description: '' },
+  {
+    label: 'GPT_CLEAN',
+    value: 'gpt-ver3-clean',
+    description: '기본 데이터와 프롬프트만 사용한 GPT 4O 참조원고 권장',
+  },
+  // { label: 'GROK_CLEAN', value: 'grok-ver3-clean', description: '' },
+  // { label: 'GEM3_FLASH', value: 'gemini-3-flash', description: '' },
+  // { label: 'GEM3_FLASH_CLEAN', value: 'gemini-3-flash-clean', description: '' },
+];
 
 export type ChatService = (typeof MODEL_OPTIONS)[number]['value'];

@@ -5,6 +5,7 @@ import { ChevronDown as ChevronDownIcon, Search as SearchIcon } from '@vicons/io
 interface Option {
   label: string;
   value: string;
+  description?: string;
 }
 
 interface Props {
@@ -34,6 +35,7 @@ const triggerRef = ref<HTMLElement | null>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
 const dropdownPosition = ref({ top: 0, left: 0, width: 0 });
 const searchQuery = ref('');
+const hoveredValue = ref<string | null>(null);
 
 const selectedOption = computed(() => {
   return props.options.find((opt) => opt.value === props.modelValue);
@@ -168,8 +170,18 @@ onUnmounted(() => {
               :key="option.value"
               :class="['select-option', option.value === modelValue && 'select-option-selected']"
               @click.stop="handleSelect(option.value)"
+              @mouseenter="hoveredValue = option.value"
+              @mouseleave="hoveredValue = null"
             >
-              {{ option.label }}
+              <span class="select-option-label">{{ option.label }}</span>
+              <Transition name="desc">
+                <span
+                  v-if="option.description && hoveredValue === option.value"
+                  class="select-option-desc"
+                >
+                  {{ option.description }}
+                </span>
+              </Transition>
             </div>
             <div v-if="searchable && filteredOptions.length === 0" class="select-empty">
               검색 결과가 없습니다
@@ -297,12 +309,26 @@ onUnmounted(() => {
 }
 
 .select-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: background-color var(--transition-fast);
+}
+
+.select-option-label {
+  line-height: 1.4;
+}
+
+.select-option-desc {
+  font-size: var(--text-xs);
+  font-weight: var(--font-normal);
+  color: var(--color-text-tertiary);
+  line-height: 1.3;
 }
 
 .select-option:hover {
@@ -332,5 +358,24 @@ onUnmounted(() => {
 .select-enter-to {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Description transition */
+.desc-enter-active,
+.desc-leave-active {
+  transition: opacity 0.15s ease, max-height 0.15s ease;
+  overflow: hidden;
+}
+
+.desc-enter-from,
+.desc-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.desc-enter-to,
+.desc-leave-from {
+  opacity: 1;
+  max-height: 40px;
 }
 </style>
