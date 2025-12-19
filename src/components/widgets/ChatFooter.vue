@@ -33,6 +33,7 @@ const {
   isLoading,
   showRefInput,
   includeImage,
+  onlyImage,
 } = storeToRefs(chatStore);
 
 const {
@@ -213,17 +214,32 @@ watch(refMsg, (newVal) => {
           />
 
           <nav class="action-buttons" aria-label="입력 관련 액션">
-              <label class="image-toggle" :class="{ 'image-toggle-active': includeImage }">
+              <label class="image-toggle" :class="{ 'image-toggle-active': includeImage, 'image-toggle-disabled': onlyImage }">
                 <input
                   type="checkbox"
                   v-model="includeImage"
                   class="image-toggle-input"
+                  :disabled="onlyImage"
                 />
                 <span class="image-toggle-switch">
                   <span class="image-toggle-slider"></span>
                 </span>
                 <ImageIcon class="image-toggle-icon" />
-                <span class="image-toggle-label">{{ includeImage ? 'ON' : 'OFF' }}</span>
+                <span class="image-toggle-label">+IMG</span>
+              </label>
+
+              <label class="image-toggle only-image-toggle" :class="{ 'image-toggle-active': onlyImage }">
+                <input
+                  type="checkbox"
+                  v-model="onlyImage"
+                  class="image-toggle-input"
+                  @change="onlyImage && (includeImage = false)"
+                />
+                <span class="image-toggle-switch">
+                  <span class="image-toggle-slider"></span>
+                </span>
+                <ImageIcon class="image-toggle-icon" />
+                <span class="image-toggle-label">ONLY</span>
               </label>
 
               <Button
@@ -534,6 +550,29 @@ watch(refMsg, (newVal) => {
 
 .image-toggle-active .image-toggle-label {
   color: var(--color-primary);
+}
+
+.image-toggle-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.image-toggle-disabled:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.only-image-toggle.image-toggle-active {
+  background-color: rgba(243, 201, 105, 0.15);
+  border-color: var(--color-accent);
+}
+
+.only-image-toggle.image-toggle-active .image-toggle-switch {
+  background-color: var(--color-accent);
+}
+
+.only-image-toggle.image-toggle-active .image-toggle-icon,
+.only-image-toggle.image-toggle-active .image-toggle-label {
+  color: var(--color-accent);
 }
 
 .favorites-wrapper {

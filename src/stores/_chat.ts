@@ -68,7 +68,8 @@ export const useChatStore = defineStore(
       const input = keyword.value;
       const refSnapshot = refMsg.value;
       const baseId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-      const shouldGenerateImage = includeImage.value;
+      const shouldGenerateImage = includeImage.value || onlyImage.value;
+      const shouldGenerateText = !onlyImage.value;
 
       // 1. 사용자 메시지 추가
       messages.value.push({
@@ -81,21 +82,25 @@ export const useChatStore = defineStore(
         timestamp: Date.now(),
       });
 
-      // 2. 텍스트 로딩 메시지 추가
       const textLoadingId = `text-${baseId}`;
-      messages.value.push({
-        id: textLoadingId,
-        role: 'bot',
-        content: 'loading',
-        keyword: input,
-        ref: refSnapshot,
-        service: service.value,
-        timestamp: Date.now(),
-        loadingProgress: 0,
-      });
-
-      // 3. 이미지 로딩 메시지 추가 (별도!)
       const imageLoadingId = `image-${baseId}`;
+
+      // 2. 텍스트 로딩 메시지 추가 (onlyImage가 아닐 때만)
+      if (shouldGenerateText) {
+        messages.value.push({
+          id: textLoadingId,
+          role: 'bot',
+          content: 'loading',
+          keyword: input,
+          ref: refSnapshot,
+          service: service.value,
+          timestamp: Date.now(),
+          loadingProgress: 0,
+        });
+        pendingMessages.add(textLoadingId);
+      }
+
+      // 3. 이미지 로딩 메시지 추가
       if (shouldGenerateImage) {
         messages.value.push({
           id: imageLoadingId,
@@ -105,110 +110,111 @@ export const useChatStore = defineStore(
           timestamp: Date.now(),
           imageLoading: true,
         });
+        pendingMessages.add(imageLoadingId);
       }
 
       keyword.value = '';
       showRefInput.value = false;
-      pendingMessages.add(textLoadingId);
-      if (shouldGenerateImage) pendingMessages.add(imageLoadingId);
 
       const abortController = new AbortController();
-      activeRequests.set(textLoadingId, abortController);
+      if (shouldGenerateText) {
+        activeRequests.set(textLoadingId, abortController);
+      }
 
       // 텍스트 진행률 업데이트
-      const startTime = Date.now();
-      const expectedTime = (EXPECTED_RESPONSE_TIME[service.value] || 30) * 1000;
-      const progressInterval = setInterval(() => {
-        const loadingMsg = messages.value.find((msg) => msg.id === textLoadingId);
-        if (loadingMsg && loadingMsg.content === 'loading') {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(95, (elapsed / expectedTime) * 100);
-          loadingMsg.loadingProgress = Math.round(progress);
-        }
-      }, 100);
+      let progressInterval: ReturnType<typeof setInterval> | null = null;
+      if (shouldGenerateText) {
+        const startTime = Date.now();
+        const expectedTime = (EXPECTED_RESPONSE_TIME[service.value] || 30) * 1000;
+        progressInterval = setInterval(() => {
+          const loadingMsg = messages.value.find((msg) => msg.id === textLoadingId);
+          if (loadingMsg && loadingMsg.content === 'loading') {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(95, (elapsed / expectedTime) * 100);
+            loadingMsg.loadingProgress = Math.round(progress);
+          }
+        }, 100);
+      }
 
-      // 4. 텍스트 & 이미지 요청 동시 시작
-      const textPromise = generateText({
-        service: service.value || defaultService,
-        keyword: input,
-        ref: refSnapshot,
-      });
+      // 4. 텍스트 요청 (onlyImage가 아닐 때만)
+      if (shouldGenerateText) {
+        generateText({
+          service: service.value || defaultService,
+          keyword: input,
+          ref: refSnapshot,
+        })
+          .then((res) => {
+            if (progressInterval) clearInterval(progressInterval);
+            const botResponse = res?.content || '(응답 없음)';
+            const parts = botResponse.split(PART_SEPARATOR).map((p) => p.trim()).filter(Boolean);
 
-      const imagePromise = shouldGenerateImage
-        ? generateImage({ keyword: input })
-        : null;
-
-      // 텍스트 응답 처리
-      textPromise
-        .then((res) => {
-          clearInterval(progressInterval);
-          const botResponse = res?.content || '(응답 없음)';
-          const parts = botResponse.split(PART_SEPARATOR).map((p) => p.trim()).filter(Boolean);
-
-          const textLoadingIndex = messages.value.findIndex((msg) => msg.id === textLoadingId);
-          if (textLoadingIndex !== -1) {
-            if (parts.length > 0) {
-              messages.value[textLoadingIndex] = {
-                id: textLoadingId,
-                role: 'bot',
-                content: parts[0],
-                keyword: input,
-                ref: refSnapshot,
-                service: service.value,
-                timestamp: Date.now(),
-              };
-
-              // 추가 파트가 있으면 별도 메시지로
-              for (let i = 1; i < parts.length; i++) {
-                messages.value.splice(textLoadingIndex + i, 0, {
-                  id: `text-part-${baseId}-${i}`,
+            const textLoadingIndex = messages.value.findIndex((msg) => msg.id === textLoadingId);
+            if (textLoadingIndex !== -1) {
+              if (parts.length > 0) {
+                messages.value[textLoadingIndex] = {
+                  id: textLoadingId,
                   role: 'bot',
-                  content: parts[i],
+                  content: parts[0],
                   keyword: input,
                   ref: refSnapshot,
                   service: service.value,
                   timestamp: Date.now(),
-                });
+                };
+
+                for (let i = 1; i < parts.length; i++) {
+                  messages.value.splice(textLoadingIndex + i, 0, {
+                    id: `text-part-${baseId}-${i}`,
+                    role: 'bot',
+                    content: parts[i],
+                    keyword: input,
+                    ref: refSnapshot,
+                    service: service.value,
+                    timestamp: Date.now(),
+                  });
+                }
+              } else {
+                messages.value[textLoadingIndex] = {
+                  id: textLoadingId,
+                  role: 'bot',
+                  content: '(응답 없음)',
+                  keyword: input,
+                  ref: refSnapshot,
+                  service: service.value,
+                  timestamp: Date.now(),
+                };
               }
-            } else {
+            }
+          })
+          .catch((error) => {
+            if (progressInterval) clearInterval(progressInterval);
+            if (abortController.signal.aborted) return;
+
+            const textLoadingIndex = messages.value.findIndex((msg) => msg.id === textLoadingId);
+            if (textLoadingIndex !== -1) {
               messages.value[textLoadingIndex] = {
                 id: textLoadingId,
                 role: 'bot',
-                content: '(응답 없음)',
+                content: `⚠️ ${(error as Error).message || '오류가 발생했어요. 다시 시도해주세요!'}`,
                 keyword: input,
                 ref: refSnapshot,
                 service: service.value,
                 timestamp: Date.now(),
               };
             }
-          }
-        })
-        .catch((error) => {
-          clearInterval(progressInterval);
-          if (abortController.signal.aborted) return;
+          })
+          .finally(() => {
+            pendingMessages.delete(textLoadingId);
+            activeRequests.delete(textLoadingId);
+            refMsg.value = '';
+          });
+      } else {
+        // onlyImage 모드일 때 refMsg 클리어
+        refMsg.value = '';
+      }
 
-          const textLoadingIndex = messages.value.findIndex((msg) => msg.id === textLoadingId);
-          if (textLoadingIndex !== -1) {
-            messages.value[textLoadingIndex] = {
-              id: textLoadingId,
-              role: 'bot',
-              content: `⚠️ ${(error as Error).message || '오류가 발생했어요. 다시 시도해주세요!'}`,
-              keyword: input,
-              ref: refSnapshot,
-              service: service.value,
-              timestamp: Date.now(),
-            };
-          }
-        })
-        .finally(() => {
-          pendingMessages.delete(textLoadingId);
-          activeRequests.delete(textLoadingId);
-          refMsg.value = '';
-        });
-
-      // 이미지 응답 처리 (별도!)
-      if (imagePromise) {
-        imagePromise
+      // 5. 이미지 요청
+      if (shouldGenerateImage) {
+        generateImage({ keyword: input })
           .then((imageRes) => {
             const imageLoadingIndex = messages.value.findIndex((msg) => msg.id === imageLoadingId);
             if (imageLoadingIndex !== -1) {
@@ -489,6 +495,7 @@ export const useChatStore = defineStore(
       batchRequests,
       batchStatuses,
       includeImage,
+      onlyImage,
 
       // computed
       displayMessages,
