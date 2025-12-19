@@ -141,7 +141,7 @@ const handleUserMessageClick = (userMsg: any) => {
 
 const bubbleClasses = computed(() => {
   return cn(
-    'flex mb-6 animate-[slideIn_0.4s_ease-out]',
+    'flex mb-6',
     {
       'justify-end': props.message.role === 'user',
       'justify-start': props.message.role === 'bot',
@@ -169,14 +169,13 @@ const senderClasses = computed(() => {
 const timeClasses = 'text-base opacity-50 text-gray-900 dark:text-gray-100 md:text-base xs:text-base';
 
 const messageTextClasses = computed(() => {
-  const base = 'px-5 py-4 rounded-2xl relative transition-colors duration-200';
+  const base = 'px-5 py-4 rounded-2xl relative transition-all duration-300 hover:shadow-lg';
 
   if (props.message.role === 'user') {
-    return cn(base, 'bg-brand text-white');
+    return cn(base, 'bg-brand text-white hover:bg-brand/90 hover:-translate-y-0.5');
   }
 
-  // 봇 메시지: 배경과 구분되도록 약간 다른 색상 + 테두리 적용
-  return cn(base, 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600');
+  return cn(base, 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 hover:border-brand/30 hover:-translate-y-0.5');
 });
 
 const actionsClasses = 'mt-2 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex-wrap md:gap-1.5 md:mt-3 xs:mt-4';
@@ -221,96 +220,104 @@ const refStatusClasses = computed(() => {
         </header>
 
         <main :class="messageTextClasses">
-          <!-- 텍스트 로딩 상태 -->
-          <section
-            v-if="message.content === 'loading'"
-            class="loading-state py-4"
-            aria-live="polite"
-            aria-label="AI 응답 생성 중"
-          >
-            <div class="mb-4">
-              <Skeleton variant="text" :lines="3" />
-            </div>
-            <div class="flex flex-col gap-2 w-full max-w-[300px]">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-brand font-medium">
-                  {{ getLoadingMessage(message.loadingProgress || 0) }}
-                </span>
-                <span class="text-brand/70 font-semibold">
-                  {{ message.loadingProgress || 0 }}%
-                </span>
-              </div>
-              <div class="w-full h-1.5 bg-brand/10 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-brand rounded-full transition-all duration-300 ease-out"
-                  :style="{ width: `${message.loadingProgress || 0}%` }"
-                />
-              </div>
-            </div>
-          </section>
-
-          <!-- 이미지 전용 메시지 -->
-          <section v-else-if="isImageOnlyMessage" class="image-only-section">
-            <!-- 이미지 로딩 중 -->
-            <div v-if="message.imageLoading" class="message-image-loading">
-              <div class="image-loading-spinner"></div>
-              <span class="image-loading-text">이미지 생성 중... (4장)</span>
-            </div>
-
-            <!-- 이미지 로드 완료 -->
-            <div v-else-if="message.images?.length" class="message-images-grid">
-              <div
-                v-for="(img, idx) in message.images"
-                :key="idx"
-                class="message-image-item"
-                @click="openImageViewer(idx)"
-              >
-                <img
-                  :src="img.url"
-                  :alt="`${message.keyword} 이미지 ${idx + 1}`"
-                  class="message-image"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            <!-- 이미지 에러 -->
-            <div v-else-if="message.imageError" class="message-image-error">
-              <AlertIcon class="image-error-icon" />
-              <span class="image-error-text">{{ message.imageError }}</span>
-            </div>
-          </section>
-
-          <!-- 일반 메시지 -->
-          <section
-            v-else
-            @dblclick="copyMsg(message.content, message)"
-            role="document"
-          >
-            <aside
-              v-if="message.role === 'user'"
-              :class="userInfoClasses"
-              aria-label="메시지 생성 정보"
+          <Transition name="content-fade" mode="out-in">
+            <!-- 텍스트 로딩 상태 -->
+            <section
+              v-if="message.content === 'loading'"
+              key="loading"
+              class="loading-state py-4"
+              aria-live="polite"
+              aria-label="AI 응답 생성 중"
             >
-              <div :class="generationInfoClasses">
-                <span class="font-semibold opacity-80">키워드:</span>
-                {{ extractKeywordDisplay(message.keyword || '') }}
-                <span class="font-semibold opacity-80">서비스:</span>
-                {{ getServiceLabel(message.service) }}
-                <span :class="refStatusClasses">
-                  {{ message.ref ? '참조원고 있음' : '참조원고 없음' }}
-                </span>
+              <div class="mb-4">
+                <Skeleton variant="text" :lines="3" />
               </div>
-            </aside>
+              <div class="flex flex-col gap-2 w-full max-w-[300px]">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-brand font-medium">
+                    {{ getLoadingMessage(message.loadingProgress || 0) }}
+                  </span>
+                  <span class="text-brand/70 font-semibold">
+                    {{ message.loadingProgress || 0 }}%
+                  </span>
+                </div>
+                <div class="w-full h-1.5 bg-brand/10 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-brand rounded-full transition-all duration-300 ease-out progress-bar-shimmer"
+                    :style="{ width: `${message.loadingProgress || 0}%` }"
+                  />
+                </div>
+              </div>
+            </section>
 
-            <div
-              v-show="message.role === 'bot'"
-              class="leading-relaxed text-base break-words md:text-base md:leading-relaxed xs:text-base xs:leading-relaxed message-content-wrapper"
-              v-html="renderedContent"
+            <!-- 이미지 전용 메시지 -->
+            <section v-else-if="isImageOnlyMessage" key="image" class="image-only-section">
+              <Transition name="content-fade" mode="out-in">
+                <!-- 이미지 로딩 중 -->
+                <div v-if="message.imageLoading" key="img-loading" class="message-image-loading">
+                  <div class="image-loading-spinner"></div>
+                  <span class="image-loading-text">이미지 생성 중... (4장)</span>
+                </div>
+
+                <!-- 이미지 로드 완료 -->
+                <div v-else-if="message.images?.length" key="img-done" class="message-images-grid">
+                  <div
+                    v-for="(img, idx) in message.images"
+                    :key="idx"
+                    class="message-image-item"
+                    :style="{ animationDelay: `${idx * 0.1}s` }"
+                    @click="openImageViewer(idx)"
+                  >
+                    <img
+                      :src="img.url"
+                      :alt="`${message.keyword} 이미지 ${idx + 1}`"
+                      class="message-image"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+
+                <!-- 이미지 에러 -->
+                <div v-else-if="message.imageError" key="img-error" class="message-image-error">
+                  <AlertIcon class="image-error-icon" />
+                  <span class="image-error-text">{{ message.imageError }}</span>
+                </div>
+              </Transition>
+            </section>
+
+            <!-- 일반 메시지 -->
+            <section
+              v-else
+              key="content"
+              class="content-reveal"
+              @dblclick="copyMsg(message.content, message)"
               role="document"
-              aria-label="AI 응답 내용"
-            ></div>
-          </section>
+            >
+              <aside
+                v-if="message.role === 'user'"
+                :class="userInfoClasses"
+                aria-label="메시지 생성 정보"
+              >
+                <div :class="generationInfoClasses">
+                  <span class="font-semibold opacity-80">키워드:</span>
+                  {{ extractKeywordDisplay(message.keyword || '') }}
+                  <span class="font-semibold opacity-80">서비스:</span>
+                  {{ getServiceLabel(message.service) }}
+                  <span :class="refStatusClasses">
+                    {{ message.ref ? '참조원고 있음' : '참조원고 없음' }}
+                  </span>
+                </div>
+              </aside>
+
+              <div
+                v-show="message.role === 'bot'"
+                class="leading-relaxed text-base break-words md:text-base md:leading-relaxed xs:text-base xs:leading-relaxed message-content-wrapper"
+                v-html="renderedContent"
+                role="document"
+                aria-label="AI 응답 내용"
+              ></div>
+            </section>
+          </Transition>
         </main>
 
         <footer :class="actionsClasses" role="toolbar" aria-label="메시지 액션">
@@ -447,22 +454,6 @@ const refStatusClasses = computed(() => {
 </template>
 
 <style>
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.message-bubble:nth-child(1) { animation-delay: 0s; }
-.message-bubble:nth-child(2) { animation-delay: 0.1s; }
-.message-bubble:nth-child(3) { animation-delay: 0.2s; }
-.message-bubble:nth-child(4) { animation-delay: 0.3s; }
-.message-bubble:nth-child(5) { animation-delay: 0.4s; }
 
 .message-content-wrapper :deep(h1),
 .message-content-wrapper :deep(h2),
@@ -587,11 +578,21 @@ const refStatusClasses = computed(() => {
   object-fit: cover;
   display: block;
   cursor: pointer;
-  transition: transform var(--transition-fast);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .message-image:hover {
-  transform: scale(1.02);
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.message-image-item {
+  transition: all 0.3s ease;
+}
+
+.message-image-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .message-image-error {
@@ -633,6 +634,18 @@ const refStatusClasses = computed(() => {
   min-width: 140px;
   z-index: 100;
   overflow: hidden;
+  animation: menuPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes menuPop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 .download-menu-item {
@@ -646,12 +659,17 @@ const refStatusClasses = computed(() => {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: all 0.2s ease;
   text-align: left;
 }
 
 .download-menu-item:hover {
   background: var(--color-bg-secondary);
+  padding-left: 18px;
+}
+
+.download-menu-item:hover .download-menu-icon {
+  transform: scale(1.15);
 }
 
 .download-menu-item--disabled {
@@ -667,5 +685,105 @@ const refStatusClasses = computed(() => {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+/* 프로그레스 바 shimmer 효과 */
+.progress-bar-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 로딩 섹션 pulse 효과 */
+.loading-state {
+  animation: loadingPulse 2s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 로딩 -> 메시지 전환 트랜지션 */
+.content-fade-enter-active {
+  animation: contentReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.content-fade-leave-active {
+  animation: contentFadeOut 0.25s ease-out forwards;
+}
+
+@keyframes contentReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes contentFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* 메시지 내용 reveal 효과 */
+.content-reveal {
+  animation: contentReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 이미지 그리드 아이템 stagger 애니메이션 */
+.message-images-grid .message-image-item {
+  animation: imageReveal 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes imageReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 </style>

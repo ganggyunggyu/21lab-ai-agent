@@ -192,11 +192,18 @@ onMounted(async () => {
           aria-live="polite"
           aria-label="채팅 메시지들"
         >
-          <ul class="py-4 pb-0 flex flex-col gap-4" role="list">
+          <TransitionGroup
+            tag="ul"
+            name="message-list"
+            class="py-4 pb-0 flex flex-col gap-4"
+            role="list"
+          >
             <li
               v-for="(msg, idx) in displayMessages"
               :key="`${msg.id}-${msg.images?.length || 0}`"
               role="listitem"
+              class="message-item"
+              :style="{ '--item-index': idx }"
             >
               <MessageBubble
                 :message="msg"
@@ -205,8 +212,8 @@ onMounted(async () => {
                 @show-work-modal="handleShowWorkModal"
               />
             </li>
-            <div ref="scrollAnchorRef" class="h-px w-px mt-[150px]"></div>
-          </ul>
+          </TransitionGroup>
+          <div ref="scrollAnchorRef" class="h-px w-px mt-[150px]"></div>
         </div>
 
         <aside
@@ -243,3 +250,48 @@ onMounted(async () => {
     <PublishedDetailModal />
   </main>
 </template>
+
+<style scoped>
+/* TransitionGroup 애니메이션 */
+.message-list-enter-active {
+  animation: messageEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.message-list-leave-active {
+  animation: messageLeave 0.3s ease-out forwards;
+}
+
+.message-list-move {
+  transition: transform 0.4s ease;
+}
+
+@keyframes messageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes messageLeave {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.9);
+  }
+}
+
+.message-item {
+  will-change: transform, opacity;
+}
+</style>
