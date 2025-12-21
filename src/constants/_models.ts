@@ -14,6 +14,7 @@ export const MODEL_OPTIONS: ModelOption[] = [
     description: '빠름 잘뜸',
   },
   { label: 'GPT4O', value: 'gpt4o', description: '두번째로 잘뜸' },
+  { label: 'CHATGPT4O', value: 'chatgpt4o', description: 'chatgpt-4o-latest' },
   // { label: 'GEM', value: 'gemini-3-pro', description: '' },
   // { label: 'CLAUDE', value: 'claude', description: '' },
   // { label: 'CLEAN_CLAUDE', value: 'clean-claude', description: '' },
