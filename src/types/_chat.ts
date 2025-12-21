@@ -12,6 +12,7 @@ export interface Message {
   ref?: string;
   service?: string;
   loadingProgress?: number;
+  manuscriptId?: string;
   // 이미지 관련 필드
   images?: ImageItem[];
   imageLoading?: boolean;

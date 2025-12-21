@@ -146,6 +146,7 @@ export const useChatStore = defineStore(
           .then((res) => {
             if (progressInterval) clearInterval(progressInterval);
             const botResponse = res?.content || '(응답 없음)';
+            const manuscriptId = res?._id;
             const parts = botResponse.split(PART_SEPARATOR).map((p) => p.trim()).filter(Boolean);
 
             const textLoadingIndex = messages.value.findIndex((msg) => msg.id === textLoadingId);
@@ -159,6 +160,7 @@ export const useChatStore = defineStore(
                   ref: refSnapshot,
                   service: service.value,
                   timestamp: Date.now(),
+                  manuscriptId,
                 };
 
                 for (let i = 1; i < parts.length; i++) {
@@ -170,6 +172,7 @@ export const useChatStore = defineStore(
                     ref: refSnapshot,
                     service: service.value,
                     timestamp: Date.now(),
+                    manuscriptId,
                   });
                 }
               } else {
@@ -181,6 +184,7 @@ export const useChatStore = defineStore(
                   ref: refSnapshot,
                   service: service.value,
                   timestamp: Date.now(),
+                  manuscriptId,
                 };
               }
             }

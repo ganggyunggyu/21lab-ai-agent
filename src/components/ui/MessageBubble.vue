@@ -6,12 +6,11 @@ import {
   Refresh as RefreshIcon,
   Close as CloseIcon,
   Information as InfoIcon,
-  Options as OptionsIcon,
-  Image as ImageIcon,
   AlertCircle as AlertIcon,
   DocumentText as DocumentIcon,
   Images as ImagesIcon,
   CloudDownload as AllDownloadIcon,
+  Link as LinkIcon,
 } from '@vicons/ionicons5';
 import { renderMarkdown, cn, extractKeywordDisplay } from '@/utils';
 import type { Message } from '@/types';
@@ -34,14 +33,13 @@ interface Props {
 
 interface Emits {
   showDetail: [message: Message];
-  showWorkModal: [message: Message];
 }
 
 const props = defineProps<Props>();
 defineEmits<Emits>();
 
 const chatStore = useChatStore();
-const { openActionModal, handleRegenerate, deleteMessage } = chatStore;
+const { handleRegenerate, deleteMessage } = chatStore;
 const { copyMsg, handleDownloadClick, handleDownloadImages, handleDownloadAll } = useChatActions();
 
 const showDownloadMenu = ref(false);
@@ -80,6 +78,20 @@ const handleViewerDownload = async (image: { url: string }, index: number) => {
 const hasImages = computed(() => {
   return props.message.images && props.message.images.length > 0;
 });
+
+const hasManuscriptId = computed(() => {
+  return Boolean(props.message.manuscriptId);
+});
+
+const copyManuscriptId = async () => {
+  if (!props.message.manuscriptId) return;
+  try {
+    await navigator.clipboard.writeText(props.message.manuscriptId);
+    // toast는 useChatActions에서 가져와서 쓰거나 간단히 처리
+  } catch {
+    console.error('ID 복사 실패');
+  }
+};
 
 // 이미지 전용 메시지 (content가 비어있고 이미지 관련 상태만 있음)
 const isImageOnlyMessage = computed(() => {
@@ -133,10 +145,6 @@ const getServiceLabel = (service?: string) => {
   if (!service) return 'Unknown';
   const option = MODEL_OPTIONS.find((opt) => opt.value === service);
   return option?.label || service;
-};
-
-const handleUserMessageClick = (userMsg: any) => {
-  openActionModal(userMsg);
 };
 
 const bubbleClasses = computed(() => {
@@ -356,6 +364,19 @@ const refStatusClasses = computed(() => {
               복사
             </Button>
 
+            <Button
+              v-if="hasManuscriptId"
+              color="light" variant="weak"
+              size="sm"
+              :icon="LinkIcon"
+              @click="copyManuscriptId"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
+              aria-label="원고 ID 복사"
+              :title="message.manuscriptId"
+            >
+              ID
+            </Button>
+
             <div class="download-menu-wrapper" @mouseleave="closeDownloadMenu">
               <Button
                 color="light" variant="weak"
@@ -413,16 +434,6 @@ const refStatusClasses = computed(() => {
               상세정보
             </Button>
 
-            <Button
-              color="light" variant="weak"
-              size="sm"
-              :icon="OptionsIcon"
-              @click="handleUserMessageClick(message)"
-              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
-              aria-label="메시지 작업선택"
-            >
-              작업선택
-            </Button>
           </nav>
 
           <Button

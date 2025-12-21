@@ -10,6 +10,7 @@ type GenerationRequest = {
 
 type GenerationResponse = {
   content: string;
+  _id?: string;
 };
 
 type ImageGenerationRequest = {
