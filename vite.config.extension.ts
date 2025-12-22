@@ -2,9 +2,15 @@ import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
+import { crx } from '@crxjs/vite-plugin';
+import manifest from './extension/manifest';
 
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [
+    vue(),
+    tailwindcss(),
+    crx({ manifest }),
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -17,8 +23,19 @@ export default defineConfig({
       '@extension': resolve(__dirname, 'extension'),
     },
   },
+  build: {
+    outDir: 'dist-extension',
+    rollupOptions: {
+      input: {
+        sidepanel: resolve(__dirname, 'extension/sidepanel.html'),
+      },
+    },
+  },
   server: {
-    host: '0.0.0.0',
-    port: 5521,
+    port: 5522,
+    strictPort: true,
+    hmr: {
+      port: 5522,
+    },
   },
 });
