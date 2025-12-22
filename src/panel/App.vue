@@ -8,23 +8,47 @@ import type {
   MessageAction,
 } from '@extension/types';
 import { MODEL_OPTIONS } from '@/constants';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, Switch } from '@/components/ui';
 
-const keyword = ref('');
+const keywords = ref('');
 const refMsg = ref('');
 const service = ref(MODEL_OPTIONS[0]?.value || 'grok');
 const showRefInput = ref(false);
 const drafts = ref<Draft[]>([]);
 const isLoading = ref(false);
+const isBatchRunning = ref(false);
 const copiedId = ref<string | null>(null);
 const charCountText = ref('');
+
+const withImage = ref(true);
+const autoSchedule = ref(false);
+const scheduleStartTime = ref('09:00');
 
 const charCountExcludingSpaces = computed(() => {
   return charCountText.value.replace(/\s/g, '').length;
 });
 
+const keywordList = computed(() => {
+  return keywords.value
+    .split('\n')
+    .map((k) => k.trim())
+    .filter(Boolean);
+});
+
 const sortedDrafts = computed(() => {
   return [...drafts.value].sort((a, b) => b.createdAt - a.createdAt);
+});
+
+const completedCount = computed(() => {
+  return drafts.value.filter((d) =>
+    ['COMPLETED', 'COPIED', 'POSTED'].includes(d.status)
+  ).length;
+});
+
+const processingCount = computed(() => {
+  return drafts.value.filter((d) =>
+    ['GENERATING', 'IMAGE_GENERATING', 'POSTING'].includes(d.status)
+  ).length;
 });
 
 const sendMessage = <T>(message: MessageAction): Promise<MessageResponse<T>> => {
@@ -53,30 +77,53 @@ const loadDrafts = async () => {
   }
 };
 
-const handleGenerate = async () => {
-  const { value: keywordValue } = keyword;
-  const { value: refMsgValue } = refMsg;
-  const { value: serviceValue } = service;
-  if (!keywordValue.trim() || isLoading.value) return;
+const handleBatchStart = async () => {
+  const list = keywordList.value;
+  if (list.length === 0 || isBatchRunning.value) return;
 
+  isBatchRunning.value = true;
   isLoading.value = true;
-  try {
+
+  for (const kw of list) {
+    if (!isBatchRunning.value) break;
+
     const response = await sendMessage({
       type: 'GENERATE_DRAFT',
       payload: {
-        keyword: keywordValue.trim(),
-        refMsg: refMsgValue.trim(),
-        service: serviceValue,
+        keyword: kw,
+        refMsg: refMsg.value.trim(),
+        service: service.value,
+        withImage: withImage.value,
       },
     });
-    if (response.success) {
-      keyword.value = '';
-      refMsg.value = '';
+
+    if (response.success && withImage.value) {
       await loadDrafts();
+      const draft = drafts.value.find((d) => d.keyword === kw && d.status === 'COMPLETED');
+      if (draft) {
+        await sendMessage({
+          type: 'GENERATE_IMAGE',
+          payload: { id: draft.id, keyword: kw },
+        });
+      }
     }
-  } finally {
-    isLoading.value = false;
+
+    await loadDrafts();
   }
+
+  isBatchRunning.value = false;
+  isLoading.value = false;
+  keywords.value = '';
+};
+
+const handleBatchStop = () => {
+  isBatchRunning.value = false;
+  isLoading.value = false;
+};
+
+const handleClearAll = async () => {
+  await sendMessage({ type: 'CLEAR_ALL_DRAFTS' });
+  await loadDrafts();
 };
 
 const handleCopy = async (draft: Draft) => {
@@ -112,12 +159,23 @@ const handleDelete = async (id: string) => {
   await loadDrafts();
 };
 
+const handleGenerateImage = async (draft: Draft) => {
+  await sendMessage({
+    type: 'GENERATE_IMAGE',
+    payload: { id: draft.id, keyword: draft.keyword },
+  });
+  await loadDrafts();
+};
+
 const getStatusLabel = (status: DraftStatus) => {
   const labels: Record<DraftStatus, string> = {
     PENDING: '대기',
-    GENERATING: '생성중',
+    GENERATING: '원고 생성중',
+    IMAGE_GENERATING: '이미지 생성중',
     COMPLETED: '완료',
     COPIED: '복사됨',
+    POSTING: '발행중',
+    POSTED: '발행완료',
     ERROR: '오류',
   };
   return labels[status] || status;
@@ -127,8 +185,11 @@ const getStatusClass = (status: DraftStatus) => {
   const classes: Record<DraftStatus, string> = {
     PENDING: 'status-pending',
     GENERATING: 'status-generating',
+    IMAGE_GENERATING: 'status-image',
     COMPLETED: 'status-completed',
     COPIED: 'status-copied',
+    POSTING: 'status-posting',
+    POSTED: 'status-posted',
     ERROR: 'status-error',
   };
   return classes[status] || '';
@@ -162,18 +223,15 @@ onBeforeUnmount(() => {
 <template>
   <div class="panel">
     <header class="panel-header">
-      <h1 class="panel-title">21Lab AI Agent</h1>
+      <h1 class="panel-title">21Lab 자동화 봇</h1>
+      <span class="panel-badge">{{ completedCount }}/{{ drafts.length }}</span>
     </header>
 
     <section class="input-section">
-      <div class="service-row">
+      <div class="config-row">
         <div class="input-group">
           <label class="input-label-text">서비스</label>
-          <Select
-            v-model="service"
-            :options="MODEL_OPTIONS"
-            size="sm"
-          />
+          <Select v-model="service" :options="MODEL_OPTIONS" size="sm" />
         </div>
         <div class="char-counter">
           <label class="input-label-text">글자수</label>
@@ -189,13 +247,35 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <Input
-        v-model="keyword"
-        label="키워드"
-        placeholder="키워드를 입력하세요"
-        size="sm"
-        :on-enter="handleGenerate"
-      />
+      <div class="options-row">
+        <label class="option-item">
+          <Switch v-model="withImage" size="sm" />
+          <span class="option-label">이미지 자동생성</span>
+        </label>
+        <label class="option-item">
+          <Switch v-model="autoSchedule" size="sm" />
+          <span class="option-label">예약발행</span>
+        </label>
+        <input
+          v-if="autoSchedule"
+          v-model="scheduleStartTime"
+          type="time"
+          class="time-input"
+        />
+      </div>
+
+      <div class="input-group">
+        <label class="input-label-text">
+          키워드 ({{ keywordList.length }}개)
+        </label>
+        <textarea
+          v-model="keywords"
+          class="keywords-textarea"
+          placeholder="키워드를 줄바꿈으로 구분하여 입력하세요&#10;예시:&#10;강남 맛집&#10;홍대 카페&#10;부산 여행"
+          rows="6"
+          :disabled="isBatchRunning"
+        />
+      </div>
 
       <div class="input-group">
         <button class="toggle-ref-btn" @click="showRefInput = !showRefInput">
@@ -211,22 +291,48 @@ onBeforeUnmount(() => {
         />
       </div>
 
-      <Button
-        display="full"
-        size="md"
-        :loading="isLoading"
-        :disabled="!keyword.trim()"
-        @click="handleGenerate"
-      >
-        원고 생성
-      </Button>
+      <div class="action-row">
+        <Button
+          v-if="!isBatchRunning"
+          display="full"
+          size="md"
+          :loading="isLoading"
+          :disabled="keywordList.length === 0"
+          @click="handleBatchStart"
+        >
+          배치 시작 ({{ keywordList.length }}개)
+        </Button>
+        <Button
+          v-else
+          display="full"
+          size="md"
+          color="danger"
+          @click="handleBatchStop"
+        >
+          중지
+        </Button>
+      </div>
     </section>
 
     <section class="queue-section">
-      <h2 class="section-title">원고 큐 ({{ drafts.length }})</h2>
+      <div class="queue-header">
+        <h2 class="section-title">
+          원고 큐
+          <span v-if="processingCount > 0" class="processing-badge">
+            {{ processingCount }} 처리중
+          </span>
+        </h2>
+        <button
+          v-if="drafts.length > 0"
+          class="clear-btn"
+          @click="handleClearAll"
+        >
+          전체 삭제
+        </button>
+      </div>
 
       <div v-if="sortedDrafts.length === 0" class="empty-state">
-        생성된 원고가 없습니다
+        키워드를 입력하고 배치를 시작하세요
       </div>
 
       <ul class="draft-list">
@@ -247,10 +353,13 @@ onBeforeUnmount(() => {
           <div class="draft-meta">
             <span class="draft-service">{{ draft.service }}</span>
             <span class="draft-time">{{ formatTime(draft.createdAt) }}</span>
+            <span v-if="draft.images?.length" class="draft-images">
+              📷 {{ draft.images.length }}장
+            </span>
           </div>
 
           <p v-if="draft.content" class="draft-preview">
-            {{ draft.content.substring(0, 100) }}...
+            {{ draft.content.substring(0, 80) }}...
           </p>
 
           <p v-if="draft.error" class="draft-error">
@@ -259,7 +368,15 @@ onBeforeUnmount(() => {
 
           <div class="draft-actions">
             <Button
-              v-if="draft.status === 'COMPLETED' || draft.status === 'COPIED'"
+              v-if="draft.status === 'COMPLETED' && !draft.images?.length"
+              size="sm"
+              color="light"
+              @click.stop="handleGenerateImage(draft)"
+            >
+              이미지
+            </Button>
+            <Button
+              v-if="['COMPLETED', 'COPIED'].includes(draft.status)"
               size="sm"
               color="primary"
               @click.stop="handleCopy(draft)"
@@ -279,7 +396,7 @@ onBeforeUnmount(() => {
     </section>
 
     <footer class="panel-footer">
-      <p class="hint-text">더블클릭으로 빠른 복사</p>
+      <p class="hint-text">더블클릭으로 빠른 복사 | 2시간 간격 자동 예약</p>
     </footer>
   </div>
 </template>
@@ -295,6 +412,9 @@ onBeforeUnmount(() => {
 }
 
 .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--space-4);
   border-bottom: 1px solid var(--color-border-primary);
   background: var(--color-primary);
@@ -307,6 +427,15 @@ onBeforeUnmount(() => {
   color: white;
 }
 
+.panel-badge {
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: white;
+}
+
 .input-section {
   padding: var(--space-4);
   display: flex;
@@ -315,10 +444,39 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--color-border-primary);
 }
 
-.service-row {
+.config-row {
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
+}
+
+.options-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.option-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.time-input {
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 .input-group {
@@ -366,6 +524,29 @@ onBeforeUnmount(() => {
   color: var(--color-text-secondary);
 }
 
+.keywords-textarea {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.keywords-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.keywords-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .toggle-ref-btn {
   align-self: flex-start;
   padding: var(--space-2) var(--space-3);
@@ -382,17 +563,59 @@ onBeforeUnmount(() => {
   background: rgba(98, 194, 176, 0.1);
 }
 
+.action-row {
+  margin-top: var(--space-2);
+}
+
 .queue-section {
   flex: 1;
   overflow-y: auto;
   padding: var(--space-4);
 }
 
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
 .section-title {
-  margin: 0 0 var(--space-3);
+  margin: 0;
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.processing-badge {
+  padding: 2px 8px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.clear-btn {
+  padding: var(--space-1) var(--space-2);
+  font-size: 11px;
+  color: var(--color-urgent);
+  background: transparent;
+  border: 1px solid var(--color-urgent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.clear-btn:hover {
+  background: var(--color-urgent-bg);
 }
 
 .empty-state {
@@ -440,7 +663,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 70%;
+  max-width: 60%;
 }
 
 .draft-status {
@@ -460,6 +683,11 @@ onBeforeUnmount(() => {
   color: #0c5460;
 }
 
+.status-image {
+  background: #d4edda;
+  color: #155724;
+}
+
 .status-completed {
   background: var(--color-success-bg);
   color: #155724;
@@ -468,6 +696,16 @@ onBeforeUnmount(() => {
 .status-copied {
   background: #cce5ff;
   color: #004085;
+}
+
+.status-posting {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-posted {
+  background: #c3e6cb;
+  color: #155724;
 }
 
 .status-error {
@@ -481,6 +719,11 @@ onBeforeUnmount(() => {
   font-size: 11px;
   color: var(--color-text-tertiary);
   margin-bottom: var(--space-2);
+}
+
+.draft-images {
+  color: var(--color-primary);
+  font-weight: var(--font-medium);
 }
 
 .draft-preview {
