@@ -5,11 +5,18 @@ import type {
   MessageAction,
   MessageResponse,
   DraftStatus,
+  ImageItem,
 } from './types';
 
 interface GenerateDraftResponse {
   content?: string;
   _id?: string;
+}
+
+interface ImageGenerationResponse {
+  images: ImageItem[];
+  total: number;
+  failed: number;
 }
 
 const API_BASE_URL =
@@ -20,13 +27,10 @@ const generateId = (): string => {
 };
 
 const getStorage = async (): Promise<StorageData> => {
-  const { draftQueue = [], eventLog = [] } = await chrome.storage.local.get([
-    'draftQueue',
-    'eventLog',
-  ]);
+  const result = await chrome.storage.local.get(['draftQueue', 'eventLog']);
   return {
-    draftQueue,
-    eventLog,
+    draftQueue: (result.draftQueue as Draft[]) || [],
+    eventLog: (result.eventLog as EventLog[]) || [],
   };
 };
 
@@ -190,6 +194,76 @@ const deleteDraft = async (id: string): Promise<boolean> => {
   return true;
 };
 
+const generateImage = async (id: string, keyword: string): Promise<Draft | null> => {
+  const storage = await getStorage();
+  const draftIndex = storage.draftQueue.findIndex((d) => d.id === id);
+  if (draftIndex === -1) return null;
+
+  const draft = storage.draftQueue[draftIndex];
+  const updatingDraft: Draft = {
+    ...draft,
+    status: 'IMAGE_GENERATING',
+    updatedAt: Date.now(),
+  };
+
+  const updatedDrafts = [...storage.draftQueue];
+  updatedDrafts[draftIndex] = updatingDraft;
+  await saveDrafts(updatedDrafts);
+
+  try {
+    const endpoint = `${API_BASE_URL}/generate/image`;
+    console.log('[generateImage] Fetching:', endpoint);
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyword }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image API Error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as ImageGenerationResponse;
+    const { images } = data;
+
+    const completedDraft: Draft = {
+      ...updatingDraft,
+      images,
+      status: 'COMPLETED',
+      updatedAt: Date.now(),
+    };
+
+    const currentStorage = await getStorage();
+    const finalDrafts = currentStorage.draftQueue.map((d) =>
+      d.id === id ? completedDraft : d
+    );
+    await saveDrafts(finalDrafts);
+
+    return completedDraft;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDraft: Draft = {
+      ...updatingDraft,
+      status: 'ERROR',
+      error: errorMessage,
+      updatedAt: Date.now(),
+    };
+
+    const currentStorage = await getStorage();
+    const finalDrafts = currentStorage.draftQueue.map((d) =>
+      d.id === id ? errorDraft : d
+    );
+    await saveDrafts(finalDrafts);
+
+    return errorDraft;
+  }
+};
+
+const clearAllDrafts = async (): Promise<void> => {
+  await saveDrafts([]);
+};
+
 chrome.runtime.onMessage.addListener(
   (
     message: MessageAction,
@@ -220,6 +294,20 @@ chrome.runtime.onMessage.addListener(
 
         case 'DELETE_DRAFT': {
           await deleteDraft(message.payload.id);
+          return { success: true };
+        }
+
+        case 'GENERATE_IMAGE': {
+          const { id, keyword } = message.payload;
+          const draft = await generateImage(id, keyword);
+          if (draft) {
+            return { success: true, data: draft };
+          }
+          return { success: false, error: 'Draft not found' };
+        }
+
+        case 'CLEAR_ALL_DRAFTS': {
+          await clearAllDrafts();
           return { success: true };
         }
 
