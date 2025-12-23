@@ -20,9 +20,8 @@ interface LogEntry {
   timestamp: number;
 }
 
-// 계정은 extension/accounts.ts에서 가져옴
-import { NAVER_ACCOUNTS } from '@extension/accounts';
-const ACCOUNTS = NAVER_ACCOUNTS;
+// 웹 앱에서는 직접입력 모드 사용 (프리셋은 extension에서만 사용)
+const ACCOUNTS: Array<{ id: string; password: string }> = [];
 
 // 세션 관리
 const sessionId = ref<string | null>(null);
