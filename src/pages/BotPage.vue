@@ -62,6 +62,19 @@ const loginStatus = ref<LoginStatus>('LOGGED_OUT');
 const currentAccountIndex = ref(0);
 const isLoginLoading = ref(false);
 
+// 계정 입력 모드 (false: 프리셋, true: 직접입력)
+const useManualAccount = ref(false);
+const manualId = ref('');
+const manualPassword = ref('');
+
+// 현재 사용할 계정
+const currentAccount = computed(() => {
+  if (useManualAccount.value) {
+    return { id: manualId.value.trim(), password: manualPassword.value };
+  }
+  return ACCOUNTS[currentAccountIndex.value] || null;
+});
+
 // 발행 관련
 const isPublishing = ref(false);
 const isBotRunning = ref(false);
@@ -120,9 +133,9 @@ const loginStatusClass = computed(() => {
 const handleLogin = async () => {
   if (isLoginLoading.value) return;
 
-  const account = ACCOUNTS[currentAccountIndex.value];
+  const account = currentAccount.value;
   if (!account?.id || !account?.password) {
-    addLog('ERROR', '계정 정보가 없습니다', 'ACCOUNTS 배열에 id/password를 입력하세요');
+    addLog('ERROR', '계정 정보가 없습니다', useManualAccount.value ? '아이디/비밀번호를 입력하세요' : 'ACCOUNTS 배열에 계정을 추가하세요');
     return;
   }
 
@@ -325,9 +338,9 @@ const handleStopBot = () => {
 const handleAutoBot = async () => {
   if (isBotRunning.value) return;
 
-  const account = ACCOUNTS[currentAccountIndex.value];
+  const account = currentAccount.value;
   if (!account?.id || !account?.password) {
-    addLog('ERROR', '계정 정보가 없습니다');
+    addLog('ERROR', '계정 정보가 없습니다', useManualAccount.value ? '아이디/비밀번호를 입력하세요' : 'ACCOUNTS 배열에 계정을 추가하세요');
     return;
   }
 
@@ -403,7 +416,25 @@ onMounted(() => {
                 {{ loginStatusLabel }}
               </span>
             </div>
-            <div class="login-content">
+
+            <!-- 계정 모드 토글 -->
+            <div class="account-mode-toggle">
+              <button
+                :class="['mode-btn', { active: !useManualAccount }]"
+                @click="useManualAccount = false"
+              >
+                프리셋
+              </button>
+              <button
+                :class="['mode-btn', { active: useManualAccount }]"
+                @click="useManualAccount = true"
+              >
+                직접입력
+              </button>
+            </div>
+
+            <!-- 프리셋 모드 -->
+            <div v-if="!useManualAccount" class="login-content">
               <div class="account-display">
                 <span class="account-id">{{ ACCOUNTS[currentAccountIndex]?.id || '계정 없음' }}</span>
                 <span v-if="ACCOUNTS.length > 1" class="account-count">
@@ -426,6 +457,49 @@ onMounted(() => {
                 color="light"
                 :loading="isLoginLoading"
                 class="login-btn"
+                @click="handleLogout"
+              >
+                로그아웃
+              </Button>
+            </div>
+
+            <!-- 직접입력 모드 -->
+            <div v-else class="manual-login-form">
+              <div class="form-field">
+                <input
+                  v-model="manualId"
+                  type="text"
+                  class="field-input"
+                  placeholder="네이버 아이디"
+                  :disabled="loginStatus === 'LOGGED_IN'"
+                />
+              </div>
+              <div class="form-field">
+                <input
+                  v-model="manualPassword"
+                  type="password"
+                  class="field-input"
+                  placeholder="비밀번호"
+                  :disabled="loginStatus === 'LOGGED_IN'"
+                />
+              </div>
+              <Button
+                v-if="loginStatus !== 'LOGGED_IN'"
+                size="sm"
+                color="primary"
+                display="full"
+                :loading="isLoginLoading"
+                :disabled="!manualId || !manualPassword"
+                @click="handleLogin"
+              >
+                로그인
+              </Button>
+              <Button
+                v-else
+                size="sm"
+                color="light"
+                display="full"
+                :loading="isLoginLoading"
                 @click="handleLogout"
               >
                 로그아웃
@@ -756,6 +830,37 @@ onMounted(() => {
 }
 
 /* 로그인 섹션 */
+.account-mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  color: #e2e8f0;
+}
+
+.mode-btn.active {
+  background: rgba(99, 102, 241, 0.3);
+  color: #e2e8f0;
+}
+
 .login-content {
   display: flex;
   justify-content: space-between;
@@ -782,6 +887,20 @@ onMounted(() => {
 
 .login-btn {
   min-width: 80px;
+}
+
+.manual-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.manual-login-form .form-field {
+  margin: 0;
+}
+
+.manual-login-form .field-input {
+  height: 38px;
 }
 
 /* 옵션 섹션 */
