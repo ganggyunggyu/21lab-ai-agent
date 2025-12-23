@@ -5,7 +5,7 @@ import { Button, Switch, Card } from '@/components/ui';
 
 // Auth API (Playwright 백엔드)
 const authApi = axios.create({
-  baseURL: import.meta.env.VITE_AUTH_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   timeout: 60000,
 });
 
