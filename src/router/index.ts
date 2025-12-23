@@ -31,6 +31,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/pages/ComponentsPage.vue'),
     meta: { title: '컴포넌트 쇼케이스' },
   },
+  {
+    path: '/bot',
+    name: 'Bot',
+    component: () => import('@/pages/BotPage.vue'),
+    meta: { title: '자동화 봇' },
+  },
 ];
 
 const router = createRouter({
