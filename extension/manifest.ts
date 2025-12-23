@@ -31,12 +31,16 @@ export default defineManifest({
 
   content_scripts: [
     {
-      matches: ['https://blog.naver.com/*', 'https://*.blog.naver.com/*'],
+      matches: [
+        'https://blog.naver.com/*',
+        'https://*.blog.naver.com/*',
+        'https://nid.naver.com/*',
+      ],
       js: ['extension/content_script.ts'],
     },
   ],
 
-  permissions: ['storage', 'sidePanel', 'activeTab'],
+  permissions: ['storage', 'sidePanel', 'activeTab', 'tabs'],
 
   host_permissions: [
     'https://blog.naver.com/*',

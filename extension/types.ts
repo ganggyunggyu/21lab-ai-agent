@@ -38,9 +38,18 @@ export interface EventLog {
   data?: Record<string, unknown>;
 }
 
+export interface NaverAccount {
+  id: string;
+  password: string;
+}
+
+export type LoginStatus = 'LOGGED_OUT' | 'LOGGING_IN' | 'LOGGED_IN' | 'ERROR';
+
 export interface StorageData {
   draftQueue: Draft[];
   eventLog: EventLog[];
+  account?: NaverAccount;
+  loginStatus?: LoginStatus;
 }
 
 export interface BatchOptions {
@@ -60,7 +69,10 @@ export type MessageAction =
   | { type: 'UPDATE_DRAFT_IMAGES'; payload: { id: string; images: ImageItem[] } }
   | { type: 'DELETE_DRAFT'; payload: { id: string } }
   | { type: 'CLEAR_ALL_DRAFTS' }
-  | { type: 'CLEAR_LOGS' };
+  | { type: 'CLEAR_LOGS' }
+  | { type: 'NAVER_LOGIN' }
+  | { type: 'NAVER_LOGOUT' }
+  | { type: 'GET_LOGIN_STATUS' };
 
 export interface MessageResponse<T = unknown> {
   success: boolean;

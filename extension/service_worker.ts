@@ -6,7 +6,9 @@ import type {
   MessageResponse,
   DraftStatus,
   ImageItem,
+  LoginStatus,
 } from './types';
+import { NAVER_ACCOUNTS, getCurrentAccount, getAccountCount } from './accounts';
 
 interface GenerateDraftResponse {
   content?: string;
@@ -264,6 +266,79 @@ const clearAllDrafts = async (): Promise<void> => {
   await saveDrafts([]);
 };
 
+// 로그인 관련
+let currentLoginStatus: LoginStatus = 'LOGGED_OUT';
+let currentAccountIdx = 0;
+
+const getLoginState = () => ({
+  loginStatus: currentLoginStatus,
+  accountCount: getAccountCount(),
+  currentIndex: currentAccountIdx,
+});
+
+const setLoginStatus = (status: LoginStatus) => {
+  currentLoginStatus = status;
+  chrome.storage.local.set({ loginStatus: status });
+};
+
+const naverLogin = async (): Promise<boolean> => {
+  const account = getCurrentAccount(currentAccountIdx);
+  if (!account) {
+    console.error('[naverLogin] No account found');
+    return false;
+  }
+
+  setLoginStatus('LOGGING_IN');
+  console.log('[naverLogin] Logging in with account:', account.id);
+
+  try {
+    // 네이버 로그인 페이지 열기
+    const tabs = await chrome.tabs.query({ url: 'https://nid.naver.com/*' });
+    let loginTab: chrome.tabs.Tab;
+
+    if (tabs.length > 0 && tabs[0].id) {
+      loginTab = tabs[0];
+      await chrome.tabs.update(tabs[0].id, { active: true });
+    } else {
+      loginTab = await chrome.tabs.create({
+        url: 'https://nid.naver.com/nidlogin.login',
+        active: true,
+      });
+    }
+
+    // Content script에 로그인 실행 메시지 전달
+    if (loginTab.id) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await chrome.tabs.sendMessage(loginTab.id, {
+        type: 'EXECUTE_LOGIN',
+        payload: { id: account.id, password: account.password },
+      });
+    }
+
+    setLoginStatus('LOGGED_IN');
+    return true;
+  } catch (error) {
+    console.error('[naverLogin] Error:', error);
+    setLoginStatus('ERROR');
+    return false;
+  }
+};
+
+const naverLogout = async (): Promise<boolean> => {
+  try {
+    setLoginStatus('LOGGED_OUT');
+    // 네이버 로그아웃 URL로 이동
+    await chrome.tabs.create({
+      url: 'https://nid.naver.com/nidlogin.logout',
+      active: false,
+    });
+    return true;
+  } catch (error) {
+    console.error('[naverLogout] Error:', error);
+    return false;
+  }
+};
+
 chrome.runtime.onMessage.addListener(
   (
     message: MessageAction,
@@ -314,6 +389,20 @@ chrome.runtime.onMessage.addListener(
         case 'CLEAR_LOGS': {
           await chrome.storage.local.set({ eventLog: [] });
           return { success: true };
+        }
+
+        case 'NAVER_LOGIN': {
+          const success = await naverLogin();
+          return { success, data: getLoginState() };
+        }
+
+        case 'NAVER_LOGOUT': {
+          const success = await naverLogout();
+          return { success, data: getLoginState() };
+        }
+
+        case 'GET_LOGIN_STATUS': {
+          return { success: true, data: getLoginState() };
         }
 
         default:
