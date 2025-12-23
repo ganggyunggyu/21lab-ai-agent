@@ -27,3 +27,6 @@ dist-extension.zip
 
 .env*
 
+# Naver accounts (sensitive)
+extension/accounts.ts
+
