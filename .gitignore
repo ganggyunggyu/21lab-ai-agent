@@ -12,6 +12,8 @@ dist
 dist-ssr
 dist-extension
 dist-extension.zip
+dist-extension.crx
+dist-extension.pem
 *.local
 
 # Editor directories and files
