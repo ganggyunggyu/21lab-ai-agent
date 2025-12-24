@@ -133,6 +133,9 @@ export const useFolderUpload = () => {
   };
 
   const handleUploadFolders = async () => {
+    console.log('handleUploadFolders called', uploadedFolderList.value.length);
+    addLog('INFO', '업로드 버튼 클릭됨');
+
     if (uploadedFolderList.value.length === 0) {
       addLog('ERROR', '업로드할 폴더가 없습니다');
       return;
@@ -171,7 +174,7 @@ export const useFolderUpload = () => {
       const formData = new FormData();
       formData.append('file', zipBlob, 'manuscripts.zip');
 
-      const response = await authApi.post('/bot/upload-zip', formData, {
+      const response = await authApi.post('/bot/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000,
       });

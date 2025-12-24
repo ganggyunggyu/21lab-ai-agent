@@ -3,11 +3,12 @@ import { storeToRefs } from 'pinia';
 import { useBotStore } from '../stores/botStore';
 import type { LogType, LogEntry } from '@/types';
 
+// 싱글톤 ref - 여러 번 호출해도 동일한 ref 유지
+const logContainer = ref<HTMLElement | null>(null);
+
 export const useBotLog = () => {
   const botStore = useBotStore();
   const { logs } = storeToRefs(botStore);
-
-  const logContainer = ref<HTMLElement | null>(null);
 
   const addLog = (type: LogType, message: string, detail?: string) => {
     const entry: LogEntry = {
