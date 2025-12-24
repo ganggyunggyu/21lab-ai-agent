@@ -51,6 +51,11 @@ export const MODEL_OPTIONS: ModelOption[] = [
     value: 'gemini-ceo',
     description: 'Gemini 3 Flash 글쓰기2 프롬프트',
   },
+  {
+    label: 'GEM_카페',
+    value: 'gemini-cafe',
+    description: '카페용 200~300자 짧은 글',
+  },
   // { label: 'GROK_CLEAN', value: 'grok-ver3-clean', description: '' },
   // { label: 'GEM3_FLASH', value: 'gemini-3-flash', description: '' },
   // { label: 'GEM3_FLASH_CLEAN', value: 'gemini-3-flash-clean', description: '' },
