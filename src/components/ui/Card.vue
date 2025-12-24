@@ -34,6 +34,8 @@ const variantClass = computed(() => {
 
 <style scoped>
 .card-base {
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background-color: var(--color-bg-primary);
@@ -65,6 +67,9 @@ const variantClass = computed(() => {
 }
 
 .card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   padding: var(--space-6);
 }
 

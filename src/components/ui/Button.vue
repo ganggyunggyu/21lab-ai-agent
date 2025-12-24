@@ -110,7 +110,7 @@ const buttonClasses = computed(() => {
 });
 
 const handleClick = (event: MouseEvent) => {
-  if (!props.disabled && !props.loading) {
+  if (!props.disabled) {
     emit('click', event);
   }
 };
@@ -120,7 +120,7 @@ const handleClick = (event: MouseEvent) => {
   <component
     :is="as"
     :class="buttonClasses"
-    :disabled="disabled || loading"
+    :disabled="disabled"
     @click="handleClick"
     :aria-busy="loading"
     :aria-disabled="disabled"
