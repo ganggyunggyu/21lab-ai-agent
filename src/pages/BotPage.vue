@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
 import axios from 'axios';
+import JSZip from 'jszip';
 import { Button, Switch, Card } from '@/components/ui';
 
 // Auth API (Playwright 백엔드)
@@ -90,6 +91,163 @@ const refText = ref('');
 const generateImages = ref(true);
 const imageCount = ref(5);
 const delayBetweenPosts = ref(60);
+
+// 폴더 업로드 관련
+interface UploadedFolder {
+  name: string;
+  manuscriptFile: File | null;
+  imageFiles: File[];
+}
+const uploadedFolderList = ref<UploadedFolder[]>([]);
+const isUploading = ref(false);
+const isDragOver = ref(false);
+
+// 드래그앤드랍 핸들러
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault();
+  isDragOver.value = true;
+};
+
+const handleDragLeave = () => {
+  isDragOver.value = false;
+};
+
+const handleDrop = async (e: DragEvent) => {
+  e.preventDefault();
+  isDragOver.value = false;
+
+  const items = e.dataTransfer?.items;
+  if (!items) return;
+
+  for (const item of Array.from(items)) {
+    if (item.kind === 'file') {
+      const entry = item.webkitGetAsEntry();
+      if (entry?.isDirectory) {
+        await processDirectory(entry as FileSystemDirectoryEntry);
+      }
+    }
+  }
+};
+
+const processDirectory = async (dirEntry: FileSystemDirectoryEntry) => {
+  const folderName = dirEntry.name;
+  const folder: UploadedFolder = {
+    name: folderName,
+    manuscriptFile: null,
+    imageFiles: [],
+  };
+
+  const readEntries = (reader: FileSystemDirectoryReader): Promise<FileSystemEntry[]> => {
+    return new Promise((resolve, reject) => {
+      reader.readEntries(resolve, reject);
+    });
+  };
+
+  const getFile = (fileEntry: FileSystemFileEntry): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      fileEntry.file(resolve, reject);
+    });
+  };
+
+  const processEntry = async (entry: FileSystemEntry, path = '') => {
+    if (entry.isFile) {
+      const fileEntry = entry as FileSystemFileEntry;
+      const file = await getFile(fileEntry);
+      const fullPath = path + entry.name;
+
+      if (file.name.endsWith('.txt')) {
+        folder.manuscriptFile = file;
+      } else if (file.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) {
+        folder.imageFiles.push(file);
+      }
+    } else if (entry.isDirectory) {
+      const dirReader = (entry as FileSystemDirectoryEntry).createReader();
+      const entries = await readEntries(dirReader);
+      for (const subEntry of entries) {
+        await processEntry(subEntry, path + entry.name + '/');
+      }
+    }
+  };
+
+  const reader = dirEntry.createReader();
+  const entries = await readEntries(reader);
+  for (const entry of entries) {
+    await processEntry(entry);
+  }
+
+  if (folder.manuscriptFile || folder.imageFiles.length > 0) {
+    uploadedFolderList.value.push(folder);
+    addLog('INFO', `폴더 추가: ${folderName}`, `원고: ${folder.manuscriptFile ? '있음' : '없음'}, 이미지: ${folder.imageFiles.length}개`);
+  }
+};
+
+const removeFolder = (index: number) => {
+  const removed = uploadedFolderList.value.splice(index, 1);
+  if (removed.length > 0) {
+    addLog('INFO', `폴더 제거: ${removed[0].name}`);
+  }
+};
+
+const clearFolderList = () => {
+  uploadedFolderList.value = [];
+  addLog('INFO', '폴더 목록 초기화');
+};
+
+// 폴더들을 ZIP으로 압축해서 업로드
+const handleUploadFolders = async () => {
+  if (uploadedFolderList.value.length === 0) {
+    addLog('ERROR', '업로드할 폴더가 없습니다');
+    return;
+  }
+
+  isUploading.value = true;
+  addLog('INFO', 'ZIP 압축 및 업로드 시작...', `${uploadedFolderList.value.length}개 폴더`);
+
+  try {
+    const zip = new JSZip();
+
+    for (const folder of uploadedFolderList.value) {
+      const folderZip = zip.folder(folder.name);
+      if (!folderZip) continue;
+
+      if (folder.manuscriptFile) {
+        const content = await folder.manuscriptFile.text();
+        folderZip.file(`${folder.name}.txt`, content);
+      }
+
+      if (folder.imageFiles.length > 0) {
+        const imagesFolder = folderZip.folder('images');
+        for (const img of folder.imageFiles) {
+          const buffer = await img.arrayBuffer();
+          imagesFolder?.file(img.name, buffer);
+        }
+      }
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const formData = new FormData();
+    formData.append('file', zipBlob, 'manuscripts.zip');
+
+    const response = await authApi.post('/bot/upload-zip', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+    });
+
+    const { success, uploaded = 0, message, error } = response.data;
+
+    if (success) {
+      addLog('SUCCESS', '업로드 완료', `${uploaded}개 폴더 업로드됨`);
+      uploadedFolderList.value = [];
+    } else {
+      addLog('ERROR', '업로드 실패', error || message);
+    }
+  } catch (error: unknown) {
+    const axiosError = error as { message?: string };
+    addLog('ERROR', '업로드 실패', axiosError.message);
+  } finally {
+    isUploading.value = false;
+  }
+};
 
 // 키워드 파싱 (줄바꿈/쉼표 구분)
 const keywordList = computed(() => {
@@ -527,6 +685,54 @@ onMounted(() => {
                   <span class="option-desc">지정 시간에 발행</span>
                 </div>
               </label>
+            </div>
+          </div>
+
+          <!-- 로컬 원고 업로드 (autoGenerateDraft = false) -->
+          <div v-if="!autoGenerateDraft" class="section upload-section">
+            <h3 class="section-title">원고 폴더 업로드</h3>
+            <div
+              class="drop-zone"
+              :class="{ 'drop-zone-active': isDragOver }"
+              @dragover="handleDragOver"
+              @dragleave="handleDragLeave"
+              @drop="handleDrop"
+            >
+              <div class="drop-zone-content">
+                <span class="drop-icon">📁</span>
+                <p class="drop-text">폴더를 여기에 드래그하세요</p>
+                <p class="drop-hint">폴더 안에 원고.txt + images/ 구조</p>
+              </div>
+            </div>
+
+            <!-- 업로드된 폴더 목록 -->
+            <div v-if="uploadedFolderList.length > 0" class="folder-list">
+              <div class="folder-list-header">
+                <span class="folder-count">{{ uploadedFolderList.length }}개 폴더</span>
+                <button class="clear-folder-btn" @click="clearFolderList">전체 삭제</button>
+              </div>
+              <ul class="folder-items">
+                <li v-for="(folder, index) in uploadedFolderList" :key="folder.name" class="folder-item">
+                  <div class="folder-info">
+                    <span class="folder-name">{{ folder.name }}</span>
+                    <span class="folder-meta">
+                      {{ folder.manuscriptFile ? '📄' : '❌' }}
+                      {{ folder.imageFiles.length }}장
+                    </span>
+                  </div>
+                  <button class="remove-folder-btn" @click="removeFolder(index)">×</button>
+                </li>
+              </ul>
+              <Button
+                display="full"
+                size="md"
+                color="primary"
+                :loading="isUploading"
+                class="upload-btn"
+                @click="handleUploadFolders"
+              >
+                서버에 업로드
+              </Button>
             </div>
           </div>
 
@@ -1246,6 +1452,145 @@ onMounted(() => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+/* 폴더 업로드 섹션 */
+.upload-section {
+  background: rgba(59, 130, 246, 0.05);
+  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.drop-zone {
+  padding: 32px 20px;
+  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.4);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drop-zone:hover,
+.drop-zone-active {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.drop-icon {
+  font-size: 32px;
+}
+
+.drop-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+.drop-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.folder-list {
+  margin-top: 16px;
+}
+
+.folder-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.folder-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.clear-folder-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #ef4444;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-folder-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.folder-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.folder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.folder-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.folder-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+.folder-meta {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.remove-folder-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 14px;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.remove-folder-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.upload-btn {
+  margin-top: 12px;
 }
 
 @media (max-width: 900px) {
