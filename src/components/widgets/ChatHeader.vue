@@ -154,7 +154,7 @@ watch(service, (newService) => {
             v-model="naverSearchQuery"
             placeholder="검색어..."
             type="text"
-            class="w-[180px] min-w-[140px] !border-0 !bg-transparent !shadow-none !ring-0 md:w-[100px] md:min-w-[90px]"
+            class="w-[180px] min-w-[140px] border-0! bg-transparent! shadow-none! ring-0! md:w-[100px] md:min-w-[90px]"
             @keydown="handleSearchKeydown"
           />
           <Button
@@ -233,7 +233,7 @@ watch(service, (newService) => {
 
     <Modal v-model:show="showClearModal" title="초기화 확인">
       <p>채팅 내역을 초기화하시겠습니까?</p>
-      <p class="text-[var(--color-text-tertiary)] text-sm mt-2">
+      <p class="text-(--color-text-tertiary) text-sm mt-2">
         이 작업은 되돌릴 수 없습니다.
       </p>
       <template #footer>

@@ -319,7 +319,7 @@ const refStatusClasses = computed(() => {
 
               <div
                 v-show="message.role === 'bot'"
-                class="leading-relaxed text-base break-words md:text-base md:leading-relaxed xs:text-base xs:leading-relaxed message-content-wrapper"
+                class="leading-relaxed text-base wrap-break-word md:text-base md:leading-relaxed xs:text-base xs:leading-relaxed message-content-wrapper"
                 v-html="renderedContent"
                 role="document"
                 aria-label="AI 응답 내용"
