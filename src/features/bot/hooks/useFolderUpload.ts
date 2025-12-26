@@ -10,7 +10,8 @@ const authApi = axiosInstance;
 export const useFolderUpload = () => {
   const botStore = useBotStore();
   const { addLog } = useBotLog();
-  const { uploadedFolderList, isUploading, isDragOver } = storeToRefs(botStore);
+  const { uploadedFolderList, isUploading, isDragOver, batchId, uploadedItems } =
+    storeToRefs(botStore);
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
@@ -142,13 +143,21 @@ export const useFolderUpload = () => {
     }
 
     isUploading.value = true;
-    addLog(
-      'INFO',
-      'ZIP 압축 및 업로드 시작...',
-      `${uploadedFolderList.value.length}개 폴더`
-    );
 
     try {
+      // 1. batch_id 발급
+      addLog('INFO', 'Batch ID 발급 중...');
+      const batchRes = await authApi.get('/bot/batch-id');
+      const newBatchId = batchRes.data.batch_id;
+      addLog('SUCCESS', `Batch ID 발급 완료: ${newBatchId}`);
+
+      // 2. ZIP 압축
+      addLog(
+        'INFO',
+        'ZIP 압축 및 업로드 시작...',
+        `${uploadedFolderList.value.length}개 폴더`
+      );
+
       const zip = new JSZip();
 
       for (const folder of uploadedFolderList.value) {
@@ -166,16 +175,28 @@ export const useFolderUpload = () => {
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       const formData = new FormData();
       formData.append('file', zipBlob, 'manuscripts.zip');
+      formData.append('batch_id', newBatchId);
 
+      // 3. 업로드
       const response = await authApi.post('/bot/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000,
       });
 
-      const { success, uploaded = 0, message, error } = response.data;
+      const { success, batch_id, uploaded, message, error } = response.data;
 
       if (success) {
-        addLog('SUCCESS', '업로드 완료', `${uploaded}개 폴더 업로드됨`);
+        addLog('SUCCESS', `업로드 완료 (Batch: ${batch_id})`, message);
+
+        // store에 저장 (발행 시 사용)
+        batchId.value = batch_id;
+        if (uploaded && Array.isArray(uploaded)) {
+          uploadedItems.value = uploaded;
+          for (const item of uploaded) {
+            addLog('INFO', `📁 ${item.original} → ${item.id}`);
+          }
+        }
+
         uploadedFolderList.value = [];
       } else {
         addLog('ERROR', '업로드 실패', error || message);

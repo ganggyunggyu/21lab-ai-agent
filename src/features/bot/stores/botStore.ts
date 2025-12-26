@@ -50,6 +50,8 @@ export const useBotStore = defineStore('bot', () => {
   const uploadedFolderList = ref<UploadedFolder[]>([]);
   const isUploading = ref(false);
   const isDragOver = ref(false);
+  const batchId = ref<string | null>(null);
+  const uploadedItems = ref<{ original: string; id: string }[]>([]);
 
   // 스케줄 설정
   const now = new Date();
@@ -133,6 +135,8 @@ export const useBotStore = defineStore('bot', () => {
     uploadedFolderList,
     isUploading,
     isDragOver,
+    batchId,
+    uploadedItems,
 
     // 스케줄
     scheduleDate,
