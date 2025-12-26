@@ -75,6 +75,10 @@ const handleSearchPage = () => {
   router.push('/search');
 };
 
+const handleSchedulePage = () => {
+  router.push('/schedule');
+};
+
 const handleNaverSearch = () => {
   window.open('https://naver-search-app-xu8w.vercel.app/', '_blank');
 };
@@ -189,6 +193,16 @@ watch(service, (newService) => {
             class="text-sm whitespace-nowrap font-semibold md:text-[13px]"
           >
             배치생성
+          </Button>
+
+          <Button
+            color="light"
+            size="sm"
+            @click="handleSchedulePage"
+            title="예약발행"
+            class="text-sm whitespace-nowrap font-semibold md:text-[13px]"
+          >
+            예약발행
           </Button>
 
           <section class="min-w-[150px]" aria-label="AI 모델 선택">
