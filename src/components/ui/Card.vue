@@ -69,7 +69,8 @@ const variantClass = computed(() => {
 .card-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-6);
 }
 
