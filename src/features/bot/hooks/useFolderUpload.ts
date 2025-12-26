@@ -152,21 +152,12 @@ export const useFolderUpload = () => {
       const zip = new JSZip();
 
       for (const folder of uploadedFolderList.value) {
-        const folderZip = zip.folder(folder.name);
-        if (!folderZip) continue;
-
         if (folder.manuscriptFile) {
-          folderZip.file(
-            `${folder.name}.txt`,
-            await folder.manuscriptFile.text()
-          );
+          zip.file(folder.manuscriptFile.name, await folder.manuscriptFile.text());
         }
 
-        if (folder.imageFiles.length > 0) {
-          const imagesFolder = folderZip.folder('images');
-          for (const img of folder.imageFiles) {
-            imagesFolder?.file(img.name, await img.arrayBuffer());
-          }
+        for (const img of folder.imageFiles) {
+          zip.file(img.name, await img.arrayBuffer());
         }
       }
 
