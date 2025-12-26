@@ -5,6 +5,11 @@ Vue 3 + TypeScript 기반의 멀티 AI 채팅 및 블로그 자동화 애플리�
 - **Web App**: http://21lab-ai-agent.s3-website.ap-northeast-2.amazonaws.com
 - **Chrome Extension**: 네이버 블로그 자동화 도구
 
+## Requirements
+
+- Node.js 18+
+- pnpm 9+
+
 ## Quick Start
 
 ```bash
@@ -12,11 +17,21 @@ pnpm install
 pnpm dev
 ```
 
+## Local URLs
+
+- Web App: http://localhost:5521
+- Extension Dev Server: http://localhost:5522
+
 ### Environment Variables
+
+웹/확장 모두 `VITE_API_URL`을 사용합니다.
 
 ```bash
 # .env
 VITE_API_URL=http://localhost:8000
+
+# .env.production
+VITE_API_URL=https://blog-analyzer.fly.dev
 ```
 
 ## Features
@@ -73,15 +88,28 @@ src/
 │   ├── BatchPage.vue     # 배치 생성
 │   ├── BotPage.vue       # 자동화 봇
 │   └── SearchPage.vue    # 검색
-├── features/             # 기능 모듈 (FSD)
-│   ├── bot/              # 봇 자동화 기능
-│   └── published/        # 발행 관리
+├── panel/                # Extension sidepanel 엔트리
+│   ├── App.vue
+│   └── main.ts
 ├── components/
 │   ├── ui/               # 재사용 UI 컴포넌트
 │   └── widgets/          # 비즈니스 위젯
+├── features/             # 기능 모듈 (FSD)
+│   ├── bot/              # 봇 자동화 기능
+│   ├── published/        # 발행 관리
+│   └── search/           # 검색 기능
+├── entities/             # 도메인/DTO
+├── hooks/                # 재사용 composable
+├── service/              # API 서비스
 ├── stores/               # Pinia 상태 관리
+├── constants/            # 상수 정의
+├── router/               # Vue Router 설정
 ├── types/                # TypeScript 타입 정의
-└── utils/                # 유틸리티 함수
+├── utils/                # 유틸리티 함수
+├── assets/               # 정적 리소스
+├── App.vue               # Web App 엔트리
+├── main.ts               # Web App 엔트리
+└── style.css             # 전역 스타일
 
 extension/
 ├── manifest.ts           # Chrome Extension 매니페스트
@@ -97,6 +125,7 @@ extension/
 ```bash
 pnpm dev         # 개발 서버 실행
 pnpm build       # 프로덕션 빌드 (타입체크 포함)
+pnpm build:open  # 로컬에서 빌드 결과 열기
 pnpm typecheck   # 타입 체크만 실행
 pnpm preview     # 빌드 결과 프리뷰
 ```
@@ -117,6 +146,12 @@ pnpm ext:zip     # Extension ZIP 패키징
 4. "압축해제된 확장 프로그램을 로드합니다" 클릭
 5. `dist-extension` 폴더 선택
 
+## Build Outputs
+
+- `dist/`: Web App 빌드 결과
+- `dist-extension/`: Extension 빌드 결과
+- `dist-extension.zip`: Extension ZIP 패키징 결과
+
 ## Development Guide
 
 ### Naming Conventions
@@ -132,6 +167,20 @@ handleGenerate()     // Event handler
 createMessage()      // CRUD operation
 isLoading            // Boolean
 messageList          // Array
+```
+
+### Path Aliases
+
+```typescript
+// vite.config.ts / vite.config.extension.ts
+'@'           // src
+'@components' // src/components
+'@pages'      // src/pages
+'@utils'      // src/utils
+'@entities'   // src/entities
+'@features'   // src/features
+'@stores'     // src/stores
+'@extension'  // extension
 ```
 
 ### State Management (FSD)
@@ -164,6 +213,7 @@ import Button from '@/components/ui/Button.vue';
 ## Documentation
 
 자세한 개발 가이드는 [CLAUDE.md](./CLAUDE.md)를 참고하세요.
+프로젝트 작업 규칙은 [AGENTS.md](./AGENTS.md), 에이전트 가이드는 [AGENT.md](./AGENT.md)를 참고하세요.
 
 **Official Docs**:
 - [Vue 3](https://vuejs.org/)
