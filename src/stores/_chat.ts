@@ -5,6 +5,8 @@ import { MODEL_OPTIONS, INTRO_MARKDOWN, PART_SEPARATOR, EXPECTED_RESPONSE_TIME }
 import { getSelectedService, setSelectedService, addBatchHistory } from '@/utils';
 import type { ChatService, Message, SelectedMessagePackage, BatchRequest } from '@/types';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const useChatStore = defineStore(
   'chat',
   () => {
@@ -46,6 +48,10 @@ export const useChatStore = defineStore(
     // 이미지 생성 옵션
     const includeImage = ref(false);
     const onlyImage = ref(false);
+
+    // 스트리밍 모드
+    const useStreaming = ref(true);
+    let streamAbortController: AbortController | null = null;
 
     const displayMessages = computed(() => messages.value);
     const hasMessages = computed(() => messages.value.length > 1);
@@ -265,10 +271,232 @@ export const useChatStore = defineStore(
       }
     };
 
+    const handleStreamGenerate = async () => {
+      if (!keyword.value.trim()) return;
+
+      const input = keyword.value;
+      const refSnapshot = refMsg.value;
+      const baseId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      const shouldGenerateImage = includeImage.value || onlyImage.value;
+
+      // 1. 사용자 메시지 추가
+      messages.value.push({
+        id: `user-${baseId}`,
+        role: 'user',
+        content: input,
+        keyword: input,
+        ref: refSnapshot,
+        service: service.value,
+        timestamp: Date.now(),
+      });
+
+      const streamMessageId = `stream-${baseId}`;
+      const imageLoadingId = `image-${baseId}`;
+
+      // 2. 스트리밍 봇 메시지 추가 (빈 content로 시작)
+      messages.value.push({
+        id: streamMessageId,
+        role: 'bot',
+        content: '',
+        keyword: input,
+        ref: refSnapshot,
+        service: service.value,
+        timestamp: Date.now(),
+        isStreaming: true,
+      });
+      pendingMessages.add(streamMessageId);
+
+      // 3. 이미지 로딩 메시지 추가
+      if (shouldGenerateImage) {
+        messages.value.push({
+          id: imageLoadingId,
+          role: 'bot',
+          content: '',
+          keyword: input,
+          timestamp: Date.now(),
+          imageLoading: true,
+        });
+        pendingMessages.add(imageLoadingId);
+      }
+
+      keyword.value = '';
+      showRefInput.value = false;
+
+      // AbortController 설정
+      streamAbortController = new AbortController();
+      activeRequests.set(streamMessageId, streamAbortController);
+
+      try {
+        const response = await fetch(`${API_URL}/generate/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service: service.value,
+            keyword: input,
+            ref: refSnapshot,
+          }),
+          signal: streamAbortController.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('ReadableStream not supported');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let manuscriptId: string | null = null;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          // SSE 형식 파싱: data: 텍스트\n\n
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+
+              // 종료 신호
+              if (data === '[DONE]') {
+                const msgIndex = messages.value.findIndex(m => m.id === streamMessageId);
+                if (msgIndex !== -1) {
+                  messages.value[msgIndex].isStreaming = false;
+                  if (manuscriptId) {
+                    messages.value[msgIndex].manuscriptId = manuscriptId;
+                  }
+                }
+                break;
+              }
+
+              // JSON 메타데이터 체크 (manuscriptId 등)
+              if (data.startsWith('{') && data.endsWith('}')) {
+                try {
+                  const meta = JSON.parse(data);
+                  if (meta._id) {
+                    manuscriptId = meta._id;
+                  }
+                  continue;
+                } catch {
+                  // JSON 파싱 실패하면 일반 텍스트로 처리
+                }
+              }
+
+              // 실시간 content 업데이트
+              const msgIndex = messages.value.findIndex(m => m.id === streamMessageId);
+              if (msgIndex !== -1) {
+                messages.value[msgIndex].content += data;
+              }
+            }
+          }
+        }
+
+        // 남은 버퍼 처리
+        if (buffer.startsWith('data: ')) {
+          const data = buffer.slice(6);
+          if (data !== '[DONE]' && !data.startsWith('{')) {
+            const msgIndex = messages.value.findIndex(m => m.id === streamMessageId);
+            if (msgIndex !== -1) {
+              messages.value[msgIndex].content += data;
+            }
+          }
+        }
+
+        // 스트리밍 완료
+        const msgIndex = messages.value.findIndex(m => m.id === streamMessageId);
+        if (msgIndex !== -1) {
+          messages.value[msgIndex].isStreaming = false;
+          if (manuscriptId) {
+            messages.value[msgIndex].manuscriptId = manuscriptId;
+          }
+        }
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          // 취소됨
+          const msgIndex = messages.value.findIndex(m => m.id === streamMessageId);
+          if (msgIndex !== -1) {
+            messages.value[msgIndex].isStreaming = false;
+            messages.value[msgIndex].content += ' (취소됨)';
+          }
+        } else {
+          const msgIndex = messages.value.findIndex(m => m.id === streamMessageId);
+          if (msgIndex !== -1) {
+            messages.value[msgIndex].isStreaming = false;
+            messages.value[msgIndex].content = `⚠️ ${(error as Error).message || '스트리밍 오류'}`;
+          }
+        }
+      } finally {
+        pendingMessages.delete(streamMessageId);
+        activeRequests.delete(streamMessageId);
+        streamAbortController = null;
+        refMsg.value = '';
+      }
+
+      // 이미지 요청 (스트리밍과 별개로 처리)
+      if (shouldGenerateImage) {
+        generateImage({ keyword: input })
+          .then((imageRes) => {
+            const imageLoadingIndex = messages.value.findIndex(m => m.id === imageLoadingId);
+            if (imageLoadingIndex !== -1) {
+              if (imageRes.images && imageRes.images.length > 0) {
+                messages.value[imageLoadingIndex] = {
+                  id: imageLoadingId,
+                  role: 'bot',
+                  content: '',
+                  keyword: input,
+                  timestamp: Date.now(),
+                  images: imageRes.images,
+                  imageLoading: false,
+                };
+              } else {
+                messages.value[imageLoadingIndex] = {
+                  id: imageLoadingId,
+                  role: 'bot',
+                  content: '',
+                  keyword: input,
+                  timestamp: Date.now(),
+                  imageError: '이미지 생성 실패',
+                  imageLoading: false,
+                };
+              }
+            }
+          })
+          .catch((err) => {
+            const imageLoadingIndex = messages.value.findIndex(m => m.id === imageLoadingId);
+            if (imageLoadingIndex !== -1) {
+              messages.value[imageLoadingIndex] = {
+                id: imageLoadingId,
+                role: 'bot',
+                content: '',
+                keyword: input,
+                timestamp: Date.now(),
+                imageError: (err as Error).message || '이미지 생성 실패',
+                imageLoading: false,
+              };
+            }
+          })
+          .finally(() => {
+            pendingMessages.delete(imageLoadingId);
+          });
+      }
+    };
+
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        handleGenerate();
+        if (useStreaming.value) {
+          handleStreamGenerate();
+        } else {
+          handleGenerate();
+        }
       }
     };
 
@@ -500,6 +728,7 @@ export const useChatStore = defineStore(
       batchStatuses,
       includeImage,
       onlyImage,
+      useStreaming,
 
       // computed
       displayMessages,
@@ -514,6 +743,7 @@ export const useChatStore = defineStore(
 
       // actions
       handleGenerate,
+      handleStreamGenerate,
       handleKeyPress,
       handleRegenerate,
       updateService,

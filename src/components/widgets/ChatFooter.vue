@@ -6,6 +6,7 @@ import {
   StarOutline as StarOutlineIcon,
   Close as CloseIcon,
   Image as ImageIcon,
+  Flash as StreamIcon,
 } from '@vicons/ionicons5';
 import { Button, Card, Input } from '@/components/ui';
 import { useChatStore } from '@/stores';
@@ -34,10 +35,22 @@ const {
   showRefInput,
   includeImage,
   onlyImage,
+  useStreaming: useStreamingRef,
 } = storeToRefs(chatStore);
+
+// persist에서 undefined일 수 있으므로 기본값 처리
+const isStreamingEnabled = computed({
+  get: () => useStreamingRef?.value ?? true,
+  set: (val: boolean) => {
+    if (useStreamingRef) {
+      useStreamingRef.value = val;
+    }
+  },
+});
 
 const {
   handleGenerate,
+  handleStreamGenerate,
 } = chatStore;
 
 const frequentKeywords = ref<FrequentKeyword[]>([]);
@@ -106,7 +119,11 @@ const handleFavoriteClick = (favorite: FavoriteSearch) => {
   }
   showFavorites.value = false;
 
-  handleGenerate();
+  if (isStreamingEnabled.value) {
+    handleStreamGenerate();
+  } else {
+    handleGenerate();
+  }
 };
 
 const handleRemoveFavorite = (id: string, event: Event) => {
@@ -135,7 +152,11 @@ const handleGenerateWithKeyword = () => {
     loadFrequentKeywords();
     loadSearchHistory();
   }
-  handleGenerate();
+  if (isStreamingEnabled.value) {
+    handleStreamGenerate();
+  } else {
+    handleGenerate();
+  }
 };
 
 const handleClickOutside = (e: MouseEvent) => {
@@ -214,6 +235,19 @@ watch(refMsg, (newVal) => {
           />
 
           <nav class="action-buttons" aria-label="입력 관련 액션">
+              <label class="image-toggle stream-toggle" :class="{ 'image-toggle-active': isStreamingEnabled }">
+                <input
+                  type="checkbox"
+                  v-model="isStreamingEnabled"
+                  class="image-toggle-input"
+                />
+                <span class="image-toggle-switch">
+                  <span class="image-toggle-slider"></span>
+                </span>
+                <StreamIcon class="image-toggle-icon" />
+                <span class="image-toggle-label">STREAM</span>
+              </label>
+
               <label class="image-toggle" :class="{ 'image-toggle-active': includeImage, 'image-toggle-disabled': onlyImage }">
                 <input
                   type="checkbox"
@@ -573,6 +607,20 @@ watch(refMsg, (newVal) => {
 .only-image-toggle.image-toggle-active .image-toggle-icon,
 .only-image-toggle.image-toggle-active .image-toggle-label {
   color: var(--color-accent);
+}
+
+.stream-toggle.image-toggle-active {
+  background-color: rgba(139, 92, 246, 0.15);
+  border-color: #8b5cf6;
+}
+
+.stream-toggle.image-toggle-active .image-toggle-switch {
+  background-color: #8b5cf6;
+}
+
+.stream-toggle.image-toggle-active .image-toggle-icon,
+.stream-toggle.image-toggle-active .image-toggle-label {
+  color: #8b5cf6;
 }
 
 .favorites-wrapper {

@@ -17,6 +17,8 @@ export interface Message {
   images?: ImageItem[];
   imageLoading?: boolean;
   imageError?: string;
+  // 스트리밍 관련 필드
+  isStreaming?: boolean;
 }
 
 // ChatService 타입은 constants/_models.ts에서 자동 추출됨
