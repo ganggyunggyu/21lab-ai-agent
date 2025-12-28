@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import JSZip from 'jszip';
 import { Button, Switch, Card, Input } from '@/components/ui';
 import { axiosInstance } from '@/app/config';
 
@@ -7,11 +8,14 @@ const isLoading = ref(false);
 const result = ref<any>(null);
 const error = ref<string | null>(null);
 
+// 원고 모드: true = AI 생성, false = ZIP 업로드
+const useAiGeneration = ref(true);
+
 // 계정 정보
 const accountId = ref('');
 const accountPassword = ref('');
 
-// 키워드 (줄바꿈 구분, 개수 제한 없음)
+// 키워드 (AI 생성 모드용, 줄바꿈 구분)
 const keywordsText = ref('');
 const keywordList = computed(() =>
   keywordsText.value
@@ -19,6 +23,15 @@ const keywordList = computed(() =>
     .map((k) => k.trim())
     .filter(Boolean)
 );
+
+// ZIP 업로드 모드용
+interface UploadedFolder {
+  name: string;
+  manuscriptFile: File | null;
+  imageFiles: File[];
+}
+const uploadedFolderList = ref<UploadedFolder[]>([]);
+const isDragOver = ref(false);
 
 // 스케줄 설정
 const startDate = ref(new Date().toISOString().split('T')[0]);
@@ -33,15 +46,28 @@ const generateImages = ref(true);
 const imageCount = ref(5);
 const delayBetweenPosts = ref(10);
 
+// 현재 모드에 따른 원고 개수
+const manuscriptCount = computed(() => {
+  if (useAiGeneration.value) {
+    return keywordList.value.length;
+  } else {
+    return uploadedFolderList.value.length;
+  }
+});
+
 // 총 일수 계산
 const totalDays = computed(() => {
-  if (keywordList.value.length === 0) return 0;
-  return Math.ceil(keywordList.value.length / postsPerDay.value);
+  if (manuscriptCount.value === 0) return 0;
+  return Math.ceil(manuscriptCount.value / postsPerDay.value);
 });
 
 // 스케줄 미리보기
 const schedulePreview = computed(() => {
-  if (keywordList.value.length === 0) return null;
+  const items = useAiGeneration.value
+    ? keywordList.value
+    : uploadedFolderList.value.map((f) => f.name);
+
+  if (items.length === 0) return null;
 
   const preview: Record<string, string[]> = {};
   const start = new Date(startDate.value);
@@ -51,21 +77,105 @@ const schedulePreview = computed(() => {
     date.setDate(date.getDate() + day);
     const dateStr = date.toISOString().split('T')[0];
     const startIdx = day * postsPerDay.value;
-    const endIdx = Math.min(startIdx + postsPerDay.value, keywordList.value.length);
-    preview[dateStr] = keywordList.value.slice(startIdx, endIdx);
+    const endIdx = Math.min(startIdx + postsPerDay.value, items.length);
+    preview[dateStr] = items.slice(startIdx, endIdx);
   }
 
   return preview;
 });
 
 const canSubmit = computed(() => {
-  return (
-    accountId.value.trim() !== '' &&
-    accountPassword.value.trim() !== '' &&
-    keywordList.value.length >= 1 &&
-    startDate.value !== ''
-  );
+  const hasAccount =
+    accountId.value.trim() !== '' && accountPassword.value.trim() !== '';
+  const hasManuscripts = manuscriptCount.value >= 1;
+  const hasDate = startDate.value !== '';
+  return hasAccount && hasManuscripts && hasDate;
 });
+
+// 폴더 드래그앤드롭
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault();
+  isDragOver.value = true;
+};
+
+const handleDragLeave = () => {
+  isDragOver.value = false;
+};
+
+const handleDrop = async (e: DragEvent) => {
+  e.preventDefault();
+  isDragOver.value = false;
+  const items = e.dataTransfer?.items;
+  if (!items) return;
+
+  const dirEntries: FileSystemDirectoryEntry[] = [];
+  for (const item of Array.from(items)) {
+    if (item.kind === 'file') {
+      const entry = item.webkitGetAsEntry();
+      if (entry?.isDirectory) {
+        dirEntries.push(entry as FileSystemDirectoryEntry);
+      }
+    }
+  }
+
+  for (const dirEntry of dirEntries) {
+    await processDirectory(dirEntry);
+  }
+};
+
+const processDirectory = async (dirEntry: FileSystemDirectoryEntry) => {
+  const folder: UploadedFolder = {
+    name: dirEntry.name,
+    manuscriptFile: null,
+    imageFiles: [],
+  };
+
+  const readEntries = (
+    reader: FileSystemDirectoryReader
+  ): Promise<FileSystemEntry[]> =>
+    new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+  const getFile = (fileEntry: FileSystemFileEntry): Promise<File> =>
+    new Promise((resolve, reject) => fileEntry.file(resolve, reject));
+
+  const processEntry = async (entry: FileSystemEntry, _path = '') => {
+    if (entry.isFile) {
+      const file = await getFile(entry as FileSystemFileEntry);
+      if (file.name.endsWith('.txt')) {
+        folder.manuscriptFile = file;
+      } else if (
+        file.type.startsWith('image/') ||
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)
+      ) {
+        folder.imageFiles.push(file);
+      }
+    } else if (entry.isDirectory) {
+      const entries = await readEntries(
+        (entry as FileSystemDirectoryEntry).createReader()
+      );
+      for (const subEntry of entries) {
+        await processEntry(subEntry, _path + entry.name + '/');
+      }
+    }
+  };
+
+  const entries = await readEntries(dirEntry.createReader());
+  for (const entry of entries) {
+    await processEntry(entry);
+  }
+
+  if (folder.manuscriptFile || folder.imageFiles.length > 0) {
+    uploadedFolderList.value.push(folder);
+  }
+};
+
+const removeFolder = (index: number) => {
+  uploadedFolderList.value.splice(index, 1);
+};
+
+const clearFolderList = () => {
+  uploadedFolderList.value = [];
+};
 
 const handleSubmit = async () => {
   if (!canSubmit.value) return;
@@ -75,24 +185,64 @@ const handleSubmit = async () => {
   result.value = null;
 
   try {
-    const response = await axiosInstance.post('/bot/auto-schedule', {
-      account: {
-        id: accountId.value,
-        password: accountPassword.value,
-      },
-      keywords: keywordList.value,
-      start_date: startDate.value,
-      start_hour: startHour.value,
-      posts_per_day: postsPerDay.value,
-      interval_hours: intervalHours.value,
-      service: service.value,
-      ref: refText.value,
-      generate_images: generateImages.value,
-      image_count: imageCount.value,
-      delay_between_posts: delayBetweenPosts.value,
-    });
+    if (useAiGeneration.value) {
+      // AI 생성 모드 - /bot/auto-schedule
+      const response = await axiosInstance.post('/bot/auto-schedule', {
+        account: {
+          id: accountId.value,
+          password: accountPassword.value,
+        },
+        keywords: keywordList.value,
+        start_date: startDate.value,
+        start_hour: startHour.value,
+        posts_per_day: postsPerDay.value,
+        interval_hours: intervalHours.value,
+        service: service.value,
+        ref: refText.value,
+        generate_images: generateImages.value,
+        image_count: imageCount.value,
+        delay_between_posts: delayBetweenPosts.value,
+      });
+      result.value = response.data;
+    } else {
+      // ZIP 업로드 모드 - /bot/upload-schedule
+      const zip = new JSZip();
 
-    result.value = response.data;
+      for (const folder of uploadedFolderList.value) {
+        const folderName = folder.name;
+        if (folder.manuscriptFile) {
+          zip.file(
+            `${folderName}/${folder.manuscriptFile.name}`,
+            await folder.manuscriptFile.text()
+          );
+        }
+        for (const img of folder.imageFiles) {
+          zip.file(`${folderName}/${img.name}`, await img.arrayBuffer());
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const formData = new FormData();
+      formData.append('file', zipBlob, 'manuscripts.zip');
+      formData.append('account_id', accountId.value);
+      formData.append('password', accountPassword.value);
+      formData.append('start_date', startDate.value);
+      formData.append('start_hour', startHour.value.toString());
+      formData.append('posts_per_day', postsPerDay.value.toString());
+      formData.append('interval_hours', intervalHours.value.toString());
+      formData.append('delay_between_posts', delayBetweenPosts.value.toString());
+
+      const response = await axiosInstance.post(
+        '/bot/upload-schedule',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 600000,
+        }
+      );
+      result.value = response.data;
+      uploadedFolderList.value = [];
+    }
   } catch (err: any) {
     error.value = err.response?.data?.detail || err.message || '요청 실패';
   } finally {
@@ -124,7 +274,7 @@ const getEndDate = computed(() => {
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-white mb-2">예약발행</h1>
         <p class="text-slate-400 text-sm">
-          키워드 개수에 따라 자동으로 일수가 계산되어 예약 발행됩니다
+          원고 개수에 따라 자동으로 일수가 계산되어 예약 발행됩니다
         </p>
       </div>
 
@@ -157,8 +307,46 @@ const getEndDate = computed(() => {
             </div>
           </Card>
 
-          <!-- 키워드 입력 -->
+          <!-- 원고 소스 선택 -->
           <Card
+            class="bg-white/3 backdrop-blur-[10px] border border-white/8 rounded-2xl p-0!"
+          >
+            <div class="p-5 px-6">
+              <h3
+                class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-4"
+              >
+                원고 소스
+              </h3>
+              <div class="flex gap-1 p-1 bg-slate-900/40 rounded-lg">
+                <button
+                  :class="[
+                    'flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-all',
+                    useAiGeneration
+                      ? 'bg-indigo-500/30 text-slate-200'
+                      : 'text-slate-400 hover:text-slate-200',
+                  ]"
+                  @click="useAiGeneration = true"
+                >
+                  🤖 AI 생성
+                </button>
+                <button
+                  :class="[
+                    'flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-all',
+                    !useAiGeneration
+                      ? 'bg-blue-500/30 text-slate-200'
+                      : 'text-slate-400 hover:text-slate-200',
+                  ]"
+                  @click="useAiGeneration = false"
+                >
+                  📁 ZIP 업로드
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          <!-- AI 생성: 키워드 입력 -->
+          <Card
+            v-if="useAiGeneration"
             class="bg-white/3 backdrop-blur-[10px] border border-white/8 rounded-2xl p-0!"
           >
             <div class="p-5 px-6">
@@ -184,6 +372,89 @@ const getEndDate = computed(() => {
                 placeholder="키워드를 한 줄에 하나씩 입력하세요"
                 class="w-full h-[300px] p-4 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-200 placeholder-slate-500 resize-none focus:outline-none focus:border-blue-500/50"
               />
+            </div>
+          </Card>
+
+          <!-- ZIP 업로드: 폴더 드래그앤드롭 -->
+          <Card
+            v-else
+            class="bg-white/3 backdrop-blur-[10px] border border-white/8 rounded-2xl p-0!"
+          >
+            <div class="p-5 px-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3
+                  class="text-sm font-semibold text-slate-400 uppercase tracking-wide"
+                >
+                  원고 폴더
+                </h3>
+                <span
+                  :class="[
+                    'text-xs font-medium px-2 py-1 rounded',
+                    uploadedFolderList.length >= 1
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'bg-amber-500/20 text-amber-400',
+                  ]"
+                >
+                  {{ uploadedFolderList.length }}개 → {{ totalDays }}일
+                </span>
+              </div>
+
+              <div
+                :class="[
+                  'flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all cursor-pointer',
+                  isDragOver
+                    ? 'border-blue-500 bg-blue-500/10'
+                    : 'border-white/20 hover:border-white/30 bg-slate-900/40',
+                ]"
+                @dragover="handleDragOver"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop"
+              >
+                <span class="text-3xl mb-2">📁</span>
+                <p class="text-sm font-medium text-slate-200">
+                  폴더를 여기에 드래그하세요
+                </p>
+                <p class="text-[11px] text-slate-500 mt-1">
+                  폴더 안에 원고.txt + 이미지 구조
+                </p>
+              </div>
+
+              <div v-if="uploadedFolderList.length > 0" class="mt-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-xs font-medium text-slate-400"
+                    >{{ uploadedFolderList.length }}개 폴더</span
+                  >
+                  <button
+                    class="text-[11px] text-red-400 border border-red-500/30 px-2 py-1 rounded hover:bg-red-500/10 transition-all"
+                    @click="clearFolderList"
+                  >
+                    전체 삭제
+                  </button>
+                </div>
+                <ul class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
+                  <li
+                    v-for="(folder, index) in uploadedFolderList"
+                    :key="folder.name"
+                    class="flex justify-between items-center p-2.5 px-3 bg-white/3 border border-white/6 rounded-lg"
+                  >
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-[13px] font-medium text-slate-200">{{
+                        folder.name
+                      }}</span>
+                      <span class="text-[11px] text-slate-500"
+                        >{{ folder.manuscriptFile ? '📄' : '❌' }}
+                        {{ folder.imageFiles.length }}장</span
+                      >
+                    </div>
+                    <button
+                      class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-red-400 transition-colors"
+                      @click="removeFolder(index)"
+                    >
+                      ×
+                    </button>
+                  </li>
+                </ul>
+              </div>
             </div>
           </Card>
 
@@ -255,8 +526,9 @@ const getEndDate = computed(() => {
             </div>
           </Card>
 
-          <!-- 발행 옵션 -->
+          <!-- 발행 옵션 (AI 생성 모드만) -->
           <Card
+            v-if="useAiGeneration"
             class="bg-white/3 backdrop-blur-[10px] border border-white/8 rounded-2xl p-0!"
           >
             <div class="p-5 px-6">
@@ -340,7 +612,13 @@ const getEndDate = computed(() => {
             display="full"
             @click="handleSubmit"
           >
-            예약발행 시작 ({{ keywordList.length }}개 키워드, {{ totalDays }}일)
+            <template v-if="useAiGeneration">
+              예약발행 시작 ({{ keywordList.length }}개 키워드, {{ totalDays }}일)
+            </template>
+            <template v-else>
+              예약발행 시작 ({{ uploadedFolderList.length }}개 원고,
+              {{ totalDays }}일)
+            </template>
           </Button>
         </div>
 
@@ -366,14 +644,14 @@ const getEndDate = computed(() => {
                 class="flex flex-col gap-3 max-h-[500px] overflow-y-auto"
               >
                 <div
-                  v-for="(keywords, date) in schedulePreview"
+                  v-for="(items, date) in schedulePreview"
                   :key="date"
                   class="p-3 bg-white/3 border border-white/6 rounded-xl"
                 >
                   <div class="text-xs text-slate-500 mb-2">{{ date }}</div>
                   <div class="flex flex-col gap-1.5">
                     <div
-                      v-for="(kw, idx) in keywords"
+                      v-for="(item, idx) in items"
                       :key="idx"
                       class="flex items-center gap-2"
                     >
@@ -381,7 +659,7 @@ const getEndDate = computed(() => {
                         {{ getTimeSlots(startHour, postsPerDay, intervalHours)[idx] }}
                       </span>
                       <span class="text-sm text-slate-300 truncate">{{
-                        kw
+                        item
                       }}</span>
                     </div>
                   </div>
@@ -392,7 +670,12 @@ const getEndDate = computed(() => {
                 v-else
                 class="text-center py-8 text-slate-500 text-sm border border-dashed border-white/10 rounded-xl"
               >
-                키워드를 입력하면<br />스케줄이 표시됩니다
+                <template v-if="useAiGeneration">
+                  키워드를 입력하면<br />스케줄이 표시됩니다
+                </template>
+                <template v-else>
+                  폴더를 업로드하면<br />스케줄이 표시됩니다
+                </template>
               </div>
             </div>
           </Card>
@@ -433,9 +716,11 @@ const getEndDate = computed(() => {
                   class="grid grid-cols-2 gap-2 text-xs"
                 >
                   <div class="p-2 bg-white/3 rounded-lg">
-                    <span class="text-slate-500">생성</span>
+                    <span class="text-slate-500">{{
+                      useAiGeneration ? '생성' : '업로드'
+                    }}</span>
                     <span class="text-slate-200 ml-2">{{
-                      result.summary.generated
+                      result.summary.generated || result.summary.uploaded
                     }}</span>
                   </div>
                   <div class="p-2 bg-white/3 rounded-lg">
