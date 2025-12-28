@@ -6,11 +6,13 @@
 
 1. Windows Terminal
 2. WSL2 + Ubuntu
-3. Git
-4. Node.js (fnm)
-5. pnpm
-6. VS Code
-7. 프로젝트 클론 및 실행
+3. Docker Desktop
+4. Git
+5. Node.js (fnm)
+6. pnpm
+7. VS Code
+8. 백엔드 실행 (Docker)
+9. 프론트엔드 클론 및 실행
 
 ---
 
@@ -55,7 +57,40 @@ sudo apt update && sudo apt upgrade -y
 
 ---
 
-## 3️⃣ Git 설치
+## 3️⃣ Docker Desktop 설치
+
+> 백엔드를 Docker로 실행하면 패키지 의존성 문제 없이 깔끔하게 실행 가능
+
+### 설치
+
+```powershell
+winget install Docker.DockerDesktop
+```
+
+### 설치 후 설정
+
+1. **재부팅** 필요
+2. Docker Desktop 실행
+3. Settings → Resources → WSL Integration → Ubuntu 활성화
+4. Apply & Restart
+
+### 설치 확인
+
+```powershell
+docker --version
+docker-compose --version
+```
+
+### WSL에서도 확인
+
+```bash
+# WSL Ubuntu에서
+docker --version
+```
+
+---
+
+## 4️⃣ Git 설치
 
 ### Windows (PowerShell)
 
@@ -75,7 +110,7 @@ git config --global user.email "이메일@example.com"
 
 ---
 
-## 4️⃣ Node.js 설치 (fnm 사용)
+## 5️⃣ Node.js 설치 (fnm 사용)
 
 > fnm = Fast Node Manager. nvm보다 빠름
 
@@ -128,7 +163,7 @@ npm -v
 
 ---
 
-## 5️⃣ pnpm 설치
+## 6️⃣ pnpm 설치
 
 ### Windows (PowerShell)
 
@@ -154,7 +189,7 @@ pnpm -v
 
 ---
 
-## 6️⃣ VS Code 설치
+## 7️⃣ VS Code 설치
 
 ```powershell
 winget install Microsoft.VisualStudioCode
@@ -185,7 +220,102 @@ code --install-extension ms-vscode-remote.remote-wsl
 
 ---
 
-## 7️⃣ 프로젝트 클론 및 실행
+## 8️⃣ 백엔드 실행 (Docker)
+
+> Python 패키지 의존성 문제 없이 백엔드 서버 실행
+
+### 백엔드 저장소 클론
+
+```bash
+# WSL Ubuntu에서
+mkdir -p ~/projects && cd ~/projects
+git clone https://github.com/your-repo/21lab-backend.git
+cd 21lab-backend
+```
+
+### Docker Compose로 실행
+
+```bash
+# 백엔드 폴더에서
+docker-compose up -d
+```
+
+또는 Dockerfile만 있는 경우:
+
+```bash
+# 이미지 빌드
+docker build -t 21lab-backend .
+
+# 컨테이너 실행
+docker run -d -p 8000:8000 --name backend 21lab-backend
+```
+
+### 실행 확인
+
+```bash
+# 컨테이너 상태 확인
+docker ps
+
+# 로그 확인
+docker logs backend -f
+
+# API 테스트
+curl http://localhost:8000/health
+```
+
+### Docker 명령어 요약
+
+```bash
+# 컨테이너 중지
+docker stop backend
+
+# 컨테이너 재시작
+docker restart backend
+
+# 컨테이너 삭제
+docker rm backend
+
+# 이미지 삭제
+docker rmi 21lab-backend
+
+# 전체 정리
+docker-compose down
+```
+
+### docker-compose.yml 예시
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+```
+
+### .env 파일 설정
+
+```bash
+# 백엔드 폴더에 .env 생성
+cat > .env << 'EOF'
+OPENAI_API_KEY=sk-xxx
+ANTHROPIC_API_KEY=sk-xxx
+# 기타 API 키들...
+EOF
+```
+
+---
+
+## 9️⃣ 프론트엔드 클론 및 실행
+
+> 프론트엔드는 HMR이 빠른 로컬 개발 권장
 
 ### Windows에서 작업하는 경우
 
