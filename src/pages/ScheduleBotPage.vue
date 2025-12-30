@@ -186,13 +186,17 @@ const handleSubmit = async () => {
 
   try {
     if (useAiGeneration.value) {
-      // AI 생성 모드 - /bot/auto-schedule
+      // AI 생성 모드 - /bot/auto-schedule (queues 배열 구조)
       const response = await axiosInstance.post('/bot/auto-schedule', {
-        account: {
-          id: accountId.value,
-          password: accountPassword.value,
-        },
-        keywords: keywordList.value,
+        queues: [
+          {
+            account: {
+              id: accountId.value,
+              password: accountPassword.value,
+            },
+            keywords: keywordList.value,
+          },
+        ],
         start_date: startDate.value,
         start_hour: startHour.value,
         posts_per_day: postsPerDay.value,
@@ -707,7 +711,7 @@ const getEndDate = computed(() => {
                     예약발행이 완료되었습니다
                   </p>
                   <p class="text-xs text-slate-500 mt-1">
-                    Queue ID: {{ result.queue_id }}
+                    Queue ID: {{ result.queue_results?.[0]?.queue_id || result.queue_id }}
                   </p>
                 </div>
 
@@ -717,22 +721,22 @@ const getEndDate = computed(() => {
                 >
                   <div class="p-2 bg-white/3 rounded-lg">
                     <span class="text-slate-500">{{
-                      useAiGeneration ? '생성' : '업로드'
+                      useAiGeneration ? '키워드' : '업로드'
                     }}</span>
                     <span class="text-slate-200 ml-2">{{
-                      result.summary.generated || result.summary.uploaded
+                      result.summary.total_keywords || result.summary.generated || result.summary.uploaded
                     }}</span>
                   </div>
                   <div class="p-2 bg-white/3 rounded-lg">
                     <span class="text-slate-500">발행</span>
                     <span class="text-slate-200 ml-2">{{
-                      result.summary.published
+                      result.summary.total_published || result.summary.published
                     }}</span>
                   </div>
                   <div class="p-2 bg-white/3 rounded-lg">
                     <span class="text-slate-500">실패</span>
                     <span class="text-slate-200 ml-2">{{
-                      result.summary.failed
+                      result.summary.total_failed || result.summary.failed
                     }}</span>
                   </div>
                   <div class="p-2 bg-white/3 rounded-lg">
