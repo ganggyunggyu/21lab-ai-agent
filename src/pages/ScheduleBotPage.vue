@@ -681,7 +681,7 @@ const getEndDate = computed(() => {
                     v-model="startHour"
                     class="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-blue-500/50"
                   >
-                    <option v-for="h in 20" :key="h - 1" :value="h - 1">
+                    <option v-for="h in 24" :key="h - 1" :value="h - 1">
                       {{ (h - 1).toString().padStart(2, '0') }}:00
                     </option>
                   </select>
