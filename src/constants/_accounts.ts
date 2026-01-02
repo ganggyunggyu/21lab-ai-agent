@@ -47,8 +47,8 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
   },
   {
     name: '투디치과 스킨블',
-    id: 'precede1451',
-    password: 'akfalwk12!!',
+    id: 'wound12567',
+    password: 'akfalwk12',
   },
   {
     name: '에스앤비안과-준4',
