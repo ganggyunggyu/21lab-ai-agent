@@ -6,17 +6,17 @@ export interface AccountPreset {
 
 export const ACCOUNT_PRESETS: AccountPreset[] = [
   {
-    name: '규덩이',
+    name: '테스트1',
     id: 'ganggyunggyu',
     password: '12Qwaszx!@',
   },
   {
-    name: '행궁옥탑',
-    id: 'akepkthf12',
+    name: '테스트2',
+    id: 'akepzkthf12',
     password: '12qwaszx',
   },
   {
-    name: '김장철',
+    name: '테스트3',
     id: 'qwzx8019',
     password: '12Qwaszx!@',
   },
