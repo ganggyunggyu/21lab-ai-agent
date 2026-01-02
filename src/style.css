@@ -72,6 +72,10 @@
   --space-12: 48px;
   --space-16: 64px;
 
+  /* Layout Spacing */
+  --spacing-header: 70px;
+  --spacing-main-top: 24px;
+
   /* Typography */
   --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui,
     sans-serif;
