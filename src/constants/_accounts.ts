@@ -41,6 +41,11 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     password: 'dlrbghdqudtls',
   },
   {
+    name: '얼음땡 - 준4',
+    id: 'cookie4931',
+    password: 'akfalwk12!',
+  },
+  {
     name: '토토리토',
     id: 'precede1451',
     password: 'akfalwk12!!',
