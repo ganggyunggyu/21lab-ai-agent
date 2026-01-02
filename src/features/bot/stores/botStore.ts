@@ -7,15 +7,15 @@ import type {
   UploadedFolder,
   NaverAccount,
 } from '@/types';
+import { ACCOUNT_PRESETS } from '@/constants';
 
 export const useBotStore = defineStore('bot', () => {
-  // 계정 목록 (상수)
-  const ACCOUNTS: NaverAccount[] = [
-    {
-      id: 'ganggyunggyu',
-      password: '12Qwaszx!@',
-    },
-  ];
+  // 계정 목록 (상수 파일에서 가져옴)
+  const ACCOUNTS: NaverAccount[] = ACCOUNT_PRESETS.map((account) => ({
+    id: account.id,
+    password: account.password,
+    name: account.name,
+  }));
 
   // 로그 관련
   const logs = ref<LogEntry[]>([]);

@@ -18,4 +18,5 @@ export interface UploadedFolder {
 export interface NaverAccount {
   id: string;
   password: string;
+  name?: string;
 }

@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import JSZip from 'jszip';
-import { Button, Switch, Card, Input } from '@/components/ui';
+import { Button, Switch, Card, Input, Select } from '@/components/ui';
 import { axiosInstance } from '@/app/config';
+import { ACCOUNT_PRESETS, type AccountPreset } from '@/constants';
+
+const selectAccountForQueue = (queue: QueueItem, account: AccountPreset) => {
+  queue.accountId = account.id;
+  queue.accountPassword = account.password;
+};
 
 const isLoading = ref(false);
 const result = ref<any>(null);
@@ -464,6 +470,25 @@ const getEndDate = computed(() => {
                 </button>
               </div>
 
+              <!-- 계정 빠른 선택 -->
+              <div class="p-3 px-6 border-b border-white/5 bg-white/2">
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    v-for="account in ACCOUNT_PRESETS"
+                    :key="account.id + account.name"
+                    :class="[
+                      'px-2.5 py-1 text-[11px] font-medium rounded-md transition-all',
+                      queue.accountId === account.id
+                        ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/40'
+                        : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-slate-200',
+                    ]"
+                    @click="selectAccountForQueue(queue, account)"
+                  >
+                    {{ account.name }}
+                  </button>
+                </div>
+              </div>
+
               <!-- 계정 정보 -->
               <div class="p-4 px-6 border-b border-white/5">
                 <div class="grid grid-cols-2 gap-3">
@@ -508,10 +533,26 @@ const getEndDate = computed(() => {
             >
               <div class="p-5 px-6">
                 <h3
-                  class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-4"
+                  class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3"
                 >
                   네이버 계정
                 </h3>
+                <!-- 계정 빠른 선택 -->
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                  <button
+                    v-for="account in ACCOUNT_PRESETS"
+                    :key="account.id + account.name"
+                    :class="[
+                      'px-2.5 py-1 text-[11px] font-medium rounded-md transition-all',
+                      queues[0].accountId === account.id
+                        ? 'bg-blue-500/30 text-blue-300 border border-blue-500/40'
+                        : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-slate-200',
+                    ]"
+                    @click="selectAccountForQueue(queues[0], account)"
+                  >
+                    {{ account.name }}
+                  </button>
+                </div>
                 <div class="flex flex-col gap-3">
                   <Input
                     v-model="queues[0].accountId"

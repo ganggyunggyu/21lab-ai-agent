@@ -130,38 +130,52 @@ onMounted(() => {
             </div>
 
             <!-- 프리셋 모드 -->
-            <div
-              v-if="!useManualAccount"
-              class="flex justify-between items-center gap-4"
-            >
-              <div class="flex flex-col gap-0.5">
-                <span class="text-[15px] font-medium text-slate-200">{{
-                  ACCOUNTS[currentAccountIndex]?.id || '계정 없음'
-                }}</span>
-                <span
-                  v-if="ACCOUNTS.length > 1"
-                  class="text-[11px] text-slate-500"
-                  >{{ currentAccountIndex + 1 }} / {{ ACCOUNTS.length }}</span
+            <div v-if="!useManualAccount" class="flex flex-col gap-3">
+              <!-- 계정 선택 버튼들 -->
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="(account, index) in ACCOUNTS"
+                  :key="account.id + (account.name || '')"
+                  :class="[
+                    'px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all',
+                    currentAccountIndex === index
+                      ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/40'
+                      : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-slate-200',
+                  ]"
+                  @click="currentAccountIndex = index"
+                >
+                  {{ account.name || account.id }}
+                </button>
+              </div>
+              <!-- 선택된 계정 정보 + 로그인 버튼 -->
+              <div class="flex justify-between items-center gap-4">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-[15px] font-medium text-slate-200">{{
+                    ACCOUNTS[currentAccountIndex]?.id || '계정 없음'
+                  }}</span>
+                  <span class="text-[11px] text-slate-500">
+                    {{ ACCOUNTS[currentAccountIndex]?.name || '' }}
+                  </span>
+                </div>
+                <Button
+                  v-if="loginStatus !== 'LOGGED_IN'"
+                  size="sm"
+                  color="primary"
+                  :loading="isLoginLoading"
+                  class="min-w-[80px]"
+                  @click="handleLogin"
+                  >로그인</Button
+                >
+                <Button
+                  v-else
+                  size="sm"
+                  color="light"
+                  :loading="isLoginLoading"
+                  class="min-w-[80px]"
+                  @click="handleLogout"
+                  >로그아웃</Button
                 >
               </div>
-              <Button
-                v-if="loginStatus !== 'LOGGED_IN'"
-                size="sm"
-                color="primary"
-                :loading="isLoginLoading"
-                class="min-w-[80px]"
-                @click="handleLogin"
-                >로그인</Button
-              >
-              <Button
-                v-else
-                size="sm"
-                color="light"
-                :loading="isLoginLoading"
-                class="min-w-[80px]"
-                @click="handleLogout"
-                >로그아웃</Button
-              >
             </div>
 
             <!-- 직접입력 모드 -->
