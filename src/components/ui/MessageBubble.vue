@@ -7,9 +7,6 @@ import {
   Close as CloseIcon,
   Information as InfoIcon,
   AlertCircle as AlertIcon,
-  DocumentText as DocumentIcon,
-  Images as ImagesIcon,
-  CloudDownload as AllDownloadIcon,
   Link as LinkIcon,
 } from '@vicons/ionicons5';
 import { renderMarkdown, cn, extractKeywordDisplay } from '@/utils';
@@ -40,9 +37,7 @@ defineEmits<Emits>();
 
 const chatStore = useChatStore();
 const { handleRegenerate, deleteMessage } = chatStore;
-const { copyMsg, handleDownloadClick, handleDownloadImages, handleDownloadAll } = useChatActions();
-
-const showDownloadMenu = ref(false);
+const { copyMsg, handleDownloadClick, handleDownloadImages } = useChatActions();
 
 // 이미지 뷰어 상태
 const showImageViewer = ref(false);
@@ -99,27 +94,12 @@ const isImageOnlyMessage = computed(() => {
     (props.message.imageLoading || props.message.images?.length || props.message.imageError);
 });
 
-const toggleDownloadMenu = () => {
-  showDownloadMenu.value = !showDownloadMenu.value;
-};
-
-const closeDownloadMenu = () => {
-  showDownloadMenu.value = false;
-};
-
 const onDownloadText = () => {
   handleDownloadClick(props.message);
-  closeDownloadMenu();
 };
 
 const onDownloadImages = () => {
   handleDownloadImages(props.message);
-  closeDownloadMenu();
-};
-
-const onDownloadAll = () => {
-  handleDownloadAll(props.message);
-  closeDownloadMenu();
 };
 
 const renderedContent = computed(() => {
@@ -377,40 +357,16 @@ const refStatusClasses = computed(() => {
               ID
             </Button>
 
-            <div class="download-menu-wrapper" @mouseleave="closeDownloadMenu">
-              <Button
-                color="light" variant="weak"
-                size="sm"
-                :icon="DownloadIcon"
-                @click="toggleDownloadMenu"
-                class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
-                aria-label="다운로드 메뉴 열기"
-              >
-                저장
-              </Button>
-              <div v-if="showDownloadMenu" class="download-menu">
-                <button class="download-menu-item" @click="onDownloadText">
-                  <DocumentIcon class="download-menu-icon" />
-                  <span>원고 저장</span>
-                </button>
-                <button
-                  class="download-menu-item"
-                  :class="{ 'download-menu-item--disabled': !hasImages }"
-                  :disabled="!hasImages"
-                  @click="onDownloadImages"
-                >
-                  <ImagesIcon class="download-menu-icon" />
-                  <span>이미지 저장</span>
-                </button>
-                <button
-                  class="download-menu-item"
-                  @click="onDownloadAll"
-                >
-                  <AllDownloadIcon class="download-menu-icon" />
-                  <span>전체 저장</span>
-                </button>
-              </div>
-            </div>
+            <Button
+              color="light" variant="weak"
+              size="sm"
+              :icon="DownloadIcon"
+              @click="onDownloadText"
+              class="text-base px-3 py-2 h-auto rounded-lg md:text-base md:px-3.5 md:py-2.5 md:min-h-11 md:min-w-20 xs:text-base xs:px-4 xs:py-3 xs:min-h-12 xs:flex-1 xs:justify-center"
+              aria-label="원고 저장"
+            >
+              저장
+            </Button>
 
             <Button
               color="light" variant="weak"
@@ -626,77 +582,6 @@ const refStatusClasses = computed(() => {
 .image-error-text {
   font-size: 14px;
   color: #ef4444;
-}
-
-/* 다운로드 메뉴 스타일 */
-.download-menu-wrapper {
-  position: relative;
-}
-
-.download-menu {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 140px;
-  z-index: 100;
-  overflow: hidden;
-  animation: menuPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes menuPop {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px) scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-}
-
-.download-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 14px;
-  color: var(--color-text-primary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.download-menu-item:hover {
-  background: var(--color-bg-secondary);
-  padding-left: 18px;
-}
-
-.download-menu-item:hover .download-menu-icon {
-  transform: scale(1.15);
-}
-
-.download-menu-item--disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.download-menu-item--disabled:hover {
-  background: transparent;
-}
-
-.download-menu-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
 }
 
 /* 프로그레스 바 shimmer 효과 */
