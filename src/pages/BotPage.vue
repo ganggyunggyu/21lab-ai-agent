@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Button, Switch, Card } from '@/components/ui';
+import { ACCOUNT_PRESETS } from '@/constants';
 import {
   useBotStore,
   useBotLog,
@@ -64,6 +65,15 @@ const {
 } = useFolderUpload();
 const { handlePublish, handleStartBot, handleStopBot, handleAutoBot } =
   useBotActions();
+
+const currentAccountMvpn = computed(() => {
+  const account = ACCOUNT_PRESETS[currentAccountIndex.value];
+  return account?.mvpn || null;
+});
+
+const copyMvpn = async (mvpn: string) => {
+  await navigator.clipboard.writeText(mvpn);
+};
 
 onMounted(() => {
   const { addLog } = useBotLog();
@@ -175,6 +185,22 @@ onMounted(() => {
                   @click="handleLogout"
                   >로그아웃</Button
                 >
+              </div>
+              <!-- MVPN 표시 -->
+              <div
+                v-if="currentAccountMvpn"
+                class="flex items-center gap-2 mt-2"
+              >
+                <span class="text-[10px] text-slate-500">MVPN:</span>
+                <span class="text-[11px] text-emerald-400 font-mono">{{
+                  currentAccountMvpn
+                }}</span>
+                <button
+                  class="px-1.5 py-0.5 text-[10px] text-slate-400 bg-white/5 border border-white/10 rounded hover:bg-white/10 hover:text-slate-200 transition-all"
+                  @click="copyMvpn(currentAccountMvpn)"
+                >
+                  복사
+                </button>
               </div>
             </div>
 

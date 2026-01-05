@@ -10,6 +10,15 @@ const selectAccountForQueue = (queue: QueueItem, account: AccountPreset) => {
   queue.accountPassword = account.password;
 };
 
+const getAccountMvpn = (accountId: string) => {
+  const account = ACCOUNT_PRESETS.find((a) => a.id === accountId);
+  return account?.mvpn || null;
+};
+
+const copyMvpn = async (mvpn: string) => {
+  await navigator.clipboard.writeText(mvpn);
+};
+
 const isLoading = ref(false);
 const result = ref<any>(null);
 const error = ref<string | null>(null);
@@ -504,6 +513,22 @@ const getEndDate = computed(() => {
                     class="bg-white/5 border-white/10"
                   />
                 </div>
+                <!-- MVPN 표시 -->
+                <div
+                  v-if="getAccountMvpn(queue.accountId)"
+                  class="mt-2 flex items-center gap-2"
+                >
+                  <span class="text-[10px] text-slate-500">MVPN:</span>
+                  <span class="text-[11px] text-emerald-400 font-mono">{{
+                    getAccountMvpn(queue.accountId)
+                  }}</span>
+                  <button
+                    class="px-1.5 py-0.5 text-[10px] text-slate-400 bg-white/5 border border-white/10 rounded hover:bg-white/10 hover:text-slate-200 transition-all"
+                    @click="copyMvpn(getAccountMvpn(queue.accountId)!)"
+                  >
+                    복사
+                  </button>
+                </div>
               </div>
 
               <!-- 키워드 입력 -->
@@ -565,6 +590,22 @@ const getEndDate = computed(() => {
                     placeholder="비밀번호"
                     class="bg-white/5 border-white/10"
                   />
+                </div>
+                <!-- MVPN 표시 -->
+                <div
+                  v-if="getAccountMvpn(queues[0].accountId)"
+                  class="mt-3 flex items-center gap-2"
+                >
+                  <span class="text-[10px] text-slate-500">MVPN:</span>
+                  <span class="text-[11px] text-emerald-400 font-mono">{{
+                    getAccountMvpn(queues[0].accountId)
+                  }}</span>
+                  <button
+                    class="px-1.5 py-0.5 text-[10px] text-slate-400 bg-white/5 border border-white/10 rounded hover:bg-white/10 hover:text-slate-200 transition-all"
+                    @click="copyMvpn(getAccountMvpn(queues[0].accountId)!)"
+                  >
+                    복사
+                  </button>
                 </div>
               </div>
             </Card>
