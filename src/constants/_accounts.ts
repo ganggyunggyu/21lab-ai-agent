@@ -65,6 +65,36 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     id: 'zoeofx5611',
     password: 'ddito3088',
   },
+  {
+    name: '도그마루(강아지) - 웨드',
+    id: 'weddindg1218',
+    password: 'akfalwk12!',
+  },
+  {
+    name: '도그마루(강아지) - 에일리',
+    id: 'alien8118',
+    password: 'akfalwk12',
+  },
+  {
+    name: '도그마루(고양이) - 마이블',
+    id: 'disadvantage6171',
+    password: 'akfalwk12',
+  },
+  {
+    name: '서리펫 - loand',
+    id: 'loand3324',
+    password: 'akfalwk12!',
+  },
+  {
+    name: '서리펫 - fail',
+    id: 'fail5644',
+    password: 'akfalwk12!',
+  },
+  {
+    name: '도그마루 - compare',
+    id: 'compare14310',
+    password: 'Ibnu_08_08!!!',
+  },
 ];
 
 export const ACCOUNT_OPTIONS = ACCOUNT_PRESETS.map((account) => ({
