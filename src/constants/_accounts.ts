@@ -51,7 +51,7 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
   {
     name: '에스앤비안과-준4',
     id: 'vocabulary1215',
-    password: 'jito308138',
+    password: 'AKFALWK12',
     mvpn: 'gkgb4040',
   },
   {
