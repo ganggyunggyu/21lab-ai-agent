@@ -7,21 +7,6 @@ export interface AccountPreset {
 
 export const ACCOUNT_PRESETS: AccountPreset[] = [
   {
-    name: '테스트1',
-    id: 'ganggyunggyu',
-    password: '12Qwaszx!@',
-  },
-  {
-    name: '테스트2',
-    id: 'akepzkthf12',
-    password: '12qwaszx',
-  },
-  {
-    name: '테스트3',
-    id: 'qwzx8019',
-    password: '12Qwaszx!@',
-  },
-  {
     name: '레플전용',
     id: 'boy848',
     password: 'jito308154',
@@ -152,6 +137,21 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     id: 'compare14310',
     password: 'akfalwk112!',
     mvpn: 'gkgb5005',
+  },
+  {
+    name: '테스트1',
+    id: 'ganggyunggyu',
+    password: '12Qwaszx!@',
+  },
+  {
+    name: '테스트2',
+    id: 'akepzkthf12',
+    password: '12qwaszx',
+  },
+  {
+    name: '테스트3',
+    id: 'qwzx8019',
+    password: '12Qwaszx!@',
   },
 ];
 
