@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import JSZip from 'jszip';
 import { Button, Switch, Card, Input, Select } from '@/components/ui';
-import { axiosInstance } from '@/app/config';
+import { scheduleAxiosInstance } from '@/app/config';
 import { ACCOUNT_PRESETS, type AccountPreset } from '@/constants';
 
 const selectAccountForQueue = (queue: QueueItem, account: AccountPreset) => {
@@ -312,7 +312,7 @@ const handleSubmit = async () => {
         keywords: getKeywordList(queue),
       }));
 
-      const response = await axiosInstance.post('/bot/auto-schedule', {
+      const response = await scheduleAxiosInstance.post('/bot/auto-schedule', {
         queues: queuePayload,
         start_date: startDate.value,
         start_hour: startHour.value,
@@ -354,7 +354,7 @@ const handleSubmit = async () => {
       formData.append('interval_hours', intervalHours.value.toString());
       formData.append('delay_between_posts', delayBetweenPosts.value.toString());
 
-      const response = await axiosInstance.post(
+      const response = await scheduleAxiosInstance.post(
         '/bot/upload-schedule',
         formData,
         {

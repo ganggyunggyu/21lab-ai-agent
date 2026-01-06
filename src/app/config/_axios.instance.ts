@@ -5,3 +5,7 @@ export const axiosConfig = axios.create({
 });
 
 export const axiosInstance = axiosConfig;
+
+export const scheduleAxiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_SCHEDULE_API_URL,
+});

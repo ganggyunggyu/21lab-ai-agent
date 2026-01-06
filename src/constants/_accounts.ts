@@ -153,6 +153,11 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     id: 'qwzx8019',
     password: '12Qwaszx!@',
   },
+  {
+    name: '테스트4',
+    id: 'qwzx16',
+    password: '12Qwaszx!@',
+  },
 ];
 
 export const ACCOUNT_OPTIONS = ACCOUNT_PRESETS.map((account) => ({
