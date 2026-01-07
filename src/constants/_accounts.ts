@@ -6,6 +6,7 @@ export interface AccountPreset {
 }
 
 export const ACCOUNT_PRESETS: AccountPreset[] = [
+  // gkgb6060
   {
     name: '레플전용',
     id: 'boy848',
@@ -30,6 +31,7 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     password: 'dhtksk1pp',
     mvpn: 'gkgb6060',
   },
+  // gkgb9900
   {
     name: 'chill guy - 준3',
     id: 'dlfgydnjs1p',
@@ -48,6 +50,7 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     password: 'dlrbghdqudtls',
     mvpn: 'gkgb9900',
   },
+  // gkgb4040
   {
     name: '에스앤비안과-준4',
     id: 'vocabulary1215',
@@ -60,6 +63,7 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     password: 'ddito3088',
     mvpn: 'gkgb4040',
   },
+  // gkgb6600
   {
     name: '토토로-준3',
     id: 'tjthtjs5p',
@@ -85,6 +89,31 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     mvpn: 'gkgb6600',
   },
   {
+    name: '글로벌',
+    id: 'gmezz',
+    password: 'sadito0006',
+    mvpn: 'gkgb6600',
+  },
+  {
+    name: '새로운',
+    id: 'zhuwl',
+    password: 'akfalwk12',
+    mvpn: 'gkgb6600',
+  },
+  {
+    name: '으리의리',
+    id: 'enugii',
+    password: 'sadito0229!',
+    mvpn: 'gkgb6600',
+  },
+  {
+    name: '이야기',
+    id: 'nnhha',
+    password: 'akfalwk12',
+    mvpn: 'gkgb6600',
+  },
+  // gkgb660
+  {
     name: '얼음땡 - 준4',
     id: 'cookie4931',
     password: 'akfalwk12!',
@@ -102,6 +131,7 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     password: 'akfalwk12!!',
     mvpn: 'gkgb660',
   },
+  // gkgb5050
   {
     name: '도그마루(강아지) - 웨드',
     id: 'weddindg1218',
@@ -121,6 +151,25 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     mvpn: 'gkgb5050',
   },
   {
+    name: '운명의 마법사',
+    id: 'dyulp',
+    password: 'sadito0229!',
+    mvpn: 'gkgb5050',
+  },
+  {
+    name: '맛집 탐험대',
+    id: 'lesyt',
+    password: 'sadito0229!',
+    mvpn: 'gkgb5050',
+  },
+  {
+    name: '먹방 여행기',
+    id: 'aryunt',
+    password: 'sadito0229!',
+    mvpn: 'gkgb5050',
+  },
+  // gkgb5005
+  {
     name: '라우드',
     id: 'loand3324',
     password: 'akfalwk123!',
@@ -138,6 +187,7 @@ export const ACCOUNT_PRESETS: AccountPreset[] = [
     password: 'akfalwk112!',
     mvpn: 'gkgb5005',
   },
+  // 테스트 계정
   {
     name: '테스트1',
     id: 'ganggyunggyu',
