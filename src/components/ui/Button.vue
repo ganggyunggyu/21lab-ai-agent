@@ -120,10 +120,10 @@ const handleClick = (event: MouseEvent) => {
   <component
     :is="as"
     :class="buttonClasses"
-    :disabled="disabled"
+    :disabled="disabled || loading"
     @click="handleClick"
     :aria-busy="loading"
-    :aria-disabled="disabled"
+    :aria-disabled="disabled || loading"
   >
     <!-- 로딩 상태: Lottie 애니메이션 -->
     <div v-if="loading" class="btn-loader">
